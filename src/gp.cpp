@@ -8,7 +8,7 @@ using namespace std;
 
 
 template <class T>
-T gaussianKernel(T x1, T x2, T *pars, int npars)
+T gaussianKernel(T x1, T x2, Matrix<T, Dynamic, 1>pars)
 {
     T d = x1 - x2;
     d *= d / pars[1];
@@ -19,8 +19,8 @@ T gaussianKernel(T x1, T x2, T *pars, int npars)
 template <class T>
 SparseMatrix<T> buildK(Matrix<T, Dynamic, 1> x1,
                        Matrix<T, Dynamic, 1> x2,
-                       T (*k) (T, T, T*, int),
-                       T *pars, int npars)
+                       Matrix<T, Dynamic, 1> pars,
+                       T (*k) (T, T, Matrix<T, Dynamic, 1>))
 {
     int i, j;
     int N1 = x1.rows(), N2 = x2.rows();
@@ -32,7 +32,7 @@ SparseMatrix<T> buildK(Matrix<T, Dynamic, 1> x1,
 
     for (i = 0; i < N1; i++) {
         for (j = 0; j < N2; j++) {
-            T val = k(x1[i], x2[j], pars, npars);
+            T val = k(x1[i], x2[j], pars);
 
             // MAGIC: sparse zero cutoff.
             if (val > 1e-5)
@@ -47,6 +47,46 @@ SparseMatrix<T> buildK(Matrix<T, Dynamic, 1> x1,
 }
 
 
+int evaluateGP(VectorXd x, VectorXd y, VectorXd target,
+               VectorXd *mean, VectorXd *variance)
+{
+    VectorXd pars(2);
+    pars << 1.0, 1.0;
+
+    /* Build the base kernel */
+    SparseMatrix<double> Kxx = buildK<double>(x, x, pars,
+                                              gaussianKernel<double>);
+
+    /* Find alpha */
+    SimplicialLLT<SparseMatrix<double> > L(Kxx);
+    if (L.info() != Success)
+        return -1;
+
+    VectorXd alpha = L.solve(y);
+    if (L.info() != Success)
+        return -2;
+
+    /* Compute the mean */
+    SparseMatrix<double> kstar = buildK<double>(x, target, pars,
+                                                gaussianKernel<double>);
+    *mean = kstar.transpose() * alpha;
+
+    /* Compute the variance */
+    (*variance).resize(target.rows());
+    for (int i = 0; i < kstar.outerSize(); ++i) {
+        VectorXd k = VectorXd::Zero(x.rows());
+        for (SparseMatrix<double>::InnerIterator it(kstar, i); it; ++it)
+            k[it.row()] = it.value();
+        (*variance)[i] = gaussianKernel<double>(target[i], target[i], pars)
+                                    - k.transpose() * L.solve(k);
+        if (L.info() != Success)
+            return -3;
+    }
+
+    return 0;
+}
+
+
 int main()
 {
     const int ndata = 5;
@@ -54,33 +94,10 @@ int main()
     x << -4.0, -3.6, -0.2, 0.5, 4.6;
     VectorXd y(ndata);
     y << -2.0, 5.6, 2.1, -0.5, 3.0;
+    VectorXd target = VectorXd::LinSpaced(Sequential, 100, -5.0, 5.0);
+    VectorXd mean(1), variance(1);
 
-    const int ntarget = 100;
-    VectorXd target = VectorXd::LinSpaced(Sequential, ntarget, -5.0, 5.0);
-
-    const int npars = 2;
-    double pars[] = {1.0, 1.0};
-
-    SparseMatrix<double> m = buildK<double>(x, x,
-                                            gaussianKernel<double>,
-                                            pars, npars);
-
-    // for (int k = 0; k < m.outerSize(); ++k) {
-    //     for (SparseMatrix<double>::InnerIterator it(m, k); it; ++it) {
-    //         it.value();
-    //         it.row();   // row index
-    //         it.col();   // col index (here it is equal to k)
-    //         it.index(); // inner index, here it is equal to it.row()
-    //     }
-    // }
-
-    SimplicialLLT<SparseMatrix<double> > L(m);
-    VectorXd alpha = L.solve(y);
-
-    SparseMatrix<double> kstar = buildK<double>(target, x,
-                                            gaussianKernel<double>,
-                                            pars, npars);
-    cout << kstar * alpha << endl;
+    evaluateGP(x, y, target, &mean, &variance);
 
     return 0;
 }
