@@ -52,25 +52,42 @@ extern "C" void init_gp(void)
 
 static PyObject *gp_evaluate(PyObject *self, PyObject *args)
 {
-    PyObject *xobj, *yobj, *yerrobj;
-    if (!PyArg_ParseTuple(args, "OOO", &xobj, &yobj, &yerrobj))
+    PyObject *xobj, *yobj, *yerrobj, *x0obj;
+    if (!PyArg_ParseTuple(args, "OOOO", &xobj, &yobj, &yerrobj, &x0obj))
         return NULL;
 
+    /* Read in the data and convert to Eigen::VectorXd objects */
     Py_ssize_t n = PyList_Size(xobj);
+    if (PyErr_Occurred() != NULL) {
+        PyErr_SetString(PyExc_TypeError, "The data objects must be lists.");
+        return NULL;
+    }
     if (n != PyList_Size(yobj) || n != PyList_Size(yerrobj)) {
         PyErr_SetString(PyExc_TypeError, "Dimension mismatch.");
         return NULL;
     }
-
     VectorXd x(n), y(n), yerr(n);
     for (Py_ssize_t i = 0; i < n; ++i) {
-        x[int(i)] = PyFloat_AsDouble(PyList_GetItem(xobj, i));
-        y[int(i)] = PyFloat_AsDouble(PyList_GetItem(yobj, i));
-        yerr[int(i)] = PyFloat_AsDouble(PyList_GetItem(yerrobj, i));
+        x[i] = PyFloat_AsDouble(PyList_GetItem(xobj, i));
+        y[i] = PyFloat_AsDouble(PyList_GetItem(yobj, i));
+        yerr[i] = PyFloat_AsDouble(PyList_GetItem(yerrobj, i));
     }
+    if (PyErr_Occurred() != NULL)
+        return NULL;
+
+    /* Read in the test vector */
+    Py_ssize_t m = PyList_Size(x0obj);
+    if (PyErr_Occurred() != NULL) {
+        PyErr_SetString(PyExc_TypeError, "The target vector must be a list.");
+        return NULL;
+    }
+    VectorXd x0(m);
+    for (Py_ssize_t i = 0; i < m; ++i)
+        x0[i] = PyFloat_AsDouble(PyList_GetItem(x0obj, i));
+    if (PyErr_Occurred() != NULL)
+        return NULL;
 
     double lnlike = 0.0;
-    VectorXd x0 = VectorXd::LinSpaced(Sequential, 100, -5, 5);
     VectorXd mean(1), variance(1);
 
     int ret = evaluateGP(x, y, yerr, x0, &mean, &variance, &lnlike);
@@ -80,8 +97,45 @@ static PyObject *gp_evaluate(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    printf("%f\n", lnlike);
+    /* Build the output */
+    PyObject *mean_out = PyList_New(m);
+    PyObject *var_out = PyList_New(m);
+    if (mean_out == NULL || var_out == NULL) {
+        Py_XDECREF(mean_out);
+        Py_XDECREF(var_out);
+        return NULL;
+    }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    for (Py_ssize_t i = 0; i < m; i++) {
+        PyObject *m = PyFloat_FromDouble(mean[i]);
+        PyObject *v = PyFloat_FromDouble(variance[i]);
+
+        if (m == NULL || v == NULL) {
+            Py_XDECREF(m);
+            Py_XDECREF(v);
+            Py_DECREF(mean_out);
+            Py_DECREF(var_out);
+            return NULL;
+        }
+
+        if (PyList_SetItem(mean_out, i, m) != 0 ||
+                PyList_SetItem(var_out, i, v) != 0) {
+            Py_XDECREF(m);
+            Py_XDECREF(v);
+            Py_DECREF(mean_out);
+            Py_DECREF(var_out);
+            return NULL;
+        }
+    }
+
+    PyObject *tuple_out = Py_BuildValue("OOd", &mean_out, &var_out, &lnlike);
+    if (tuple_out == NULL) {
+        Py_DECREF(mean_out);
+        Py_DECREF(var_out);
+        Py_XDECREF(tuple_out);
+        return NULL;
+    }
+
+    Py_INCREF(tuple_out);
+    return tuple_out;
 }
