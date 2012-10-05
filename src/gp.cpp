@@ -5,32 +5,28 @@ using namespace Eigen;
 using namespace std;
 
 
-template <class T>
-T gaussianKernel(T x1, T x2, Matrix<T, Dynamic, 1>pars)
+double isotropicKernel(VectorXd x1, VectorXd x2, VectorXd pars)
 {
-    T d = x1 - x2;
-    d *= d / pars[1];
-    return pars[0] * exp(-0.5 * d);
+    VectorXd d = x1 - x2;
+    double result = pars[0] * exp(-0.5 * d.dot(d) / pars[1]);
+    return result;
 }
 
 
-template <class T>
-SparseMatrix<T> buildK(Matrix<T, Dynamic, 1> x1,
-                       Matrix<T, Dynamic, 1> x2,
-                       Matrix<T, Dynamic, 1> pars,
-                       T (*k) (T, T, Matrix<T, Dynamic, 1>))
+SparseMatrix<double> buildK(MatrixXd x1, MatrixXd x2, VectorXd pars,
+                            double (*k) (VectorXd, VectorXd, VectorXd))
 {
     int i, j;
     int N1 = x1.rows(), N2 = x2.rows();
 
-    SparseMatrix<T> m(N1, N2);
+    SparseMatrix<double> m(N1, N2);
 
-    typedef Triplet<T> triplet;
+    typedef Triplet<double> triplet;
     vector<triplet> triplets;
 
     for (i = 0; i < N1; i++) {
         for (j = 0; j < N2; j++) {
-            T val = k(x1[i], x2[j], pars);
+            double val = k(x1.row(i), x2.row(j), pars);
 
             // MAGIC: sparse zero cutoff.
             if (val > 1e-5)
@@ -45,15 +41,15 @@ SparseMatrix<T> buildK(Matrix<T, Dynamic, 1> x1,
 }
 
 
-int evaluateGP(VectorXd x, VectorXd y, VectorXd sigma, VectorXd target,
+int evaluateGP(MatrixXd x, VectorXd y, VectorXd sigma, MatrixXd target,
+               double (*kernel) (VectorXd, VectorXd, VectorXd),
                VectorXd *mean, VectorXd *variance, double *loglike)
 {
     VectorXd pars(2);
     pars << 1.0, 1.0;
 
     /* Build the base kernel */
-    SparseMatrix<double> Kxx = buildK<double>(x, x, pars,
-                                              gaussianKernel<double>);
+    SparseMatrix<double> Kxx = buildK(x, x, pars, kernel);
 
     /* Add in the noise */
     for (int n = 0; n < x.rows(); ++n)
@@ -69,8 +65,7 @@ int evaluateGP(VectorXd x, VectorXd y, VectorXd sigma, VectorXd target,
         return -2;
 
     /* Compute the mean */
-    SparseMatrix<double> kstar = buildK<double>(x, target, pars,
-                                                gaussianKernel<double>);
+    SparseMatrix<double> kstar = buildK(x, target, pars, kernel);
     *mean = kstar.transpose() * alpha;
 
     /* Compute the variance */
@@ -79,7 +74,7 @@ int evaluateGP(VectorXd x, VectorXd y, VectorXd sigma, VectorXd target,
         VectorXd k = VectorXd::Zero(x.rows());
         for (SparseMatrix<double>::InnerIterator it(kstar, i); it; ++it)
             k[it.row()] = it.value();
-        (*variance)[i] = gaussianKernel<double>(target[i], target[i], pars)
+        (*variance)[i] = kernel(target.row(i), target.row(i), pars)
                                     - k.transpose() * L.solve(k);
         if (L.info() != Success)
             return -3;
@@ -93,24 +88,29 @@ int evaluateGP(VectorXd x, VectorXd y, VectorXd sigma, VectorXd target,
 }
 
 
-/* int main() */
-/* { */
-/*     const int ndata = 5; */
+int main()
+{
+    const int ndata = 5, ntarget = 100, ndim = 1;
 
-/*     VectorXd x(ndata); */
-/*     x << -4.0, -3.6, -0.2, 0.5, 4.6; */
-/*     VectorXd y(ndata); */
-/*     y << -2.0, 5.6, 2.1, -0.5, 3.0; */
-/*     VectorXd sigma(ndata); */
-/*     y << 1.0, 0.76, 0.5, 0.6, 1.3; */
+    MatrixXd x(ndata, ndim);
+    x << -4.0, -3.6, -0.2, 0.5, 4.6;
+    VectorXd y(ndata);
+    y << -2.0, 5.6, 2.1, -0.5, 3.0;
+    VectorXd sigma(ndata);
+    y << 1.0, 0.76, 0.5, 0.6, 1.3;
 
-/*     VectorXd target = VectorXd::LinSpaced(Sequential, 100, -5.0, 5.0); */
-/*     VectorXd mean(1), variance(1); */
-/*     double loglike; */
+    double mn = -5.0, mx = 5.0;
+    MatrixXd target(ntarget, ndim);
+    for (int i = 0; i < ntarget; ++i)
+        target(i) = double(i) / ntarget * (mx - mn) + mn;
 
-/*     evaluateGP(x, y, sigma, target, &mean, &variance, &loglike); */
+    VectorXd mean(1), variance(1);
+    double loglike;
 
-/*     cout << loglike << endl; */
+    evaluateGP(x, y, sigma, target, isotropicKernel,
+               &mean, &variance, &loglike);
 
-/*     return 0; */
-/* } */
+    cout << loglike << endl;
+
+    return 0;
+}
