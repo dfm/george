@@ -13,7 +13,7 @@ from numpy.distutils.misc_util import get_numpy_include_dirs
 
 
 gp_ext = Extension("gp._gp",
-                sources=["src/_gp.cpp", "src/gp.cpp"],
+                sources=["src/gp.cpp", "src/_gp.cpp"],
                 include_dirs=["include", "src"] + get_numpy_include_dirs(),
                 )
 
