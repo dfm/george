@@ -4,13 +4,23 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
-int evaluateGP(Eigen::VectorXd x,
-               Eigen::VectorXd y,
+int evaluateGP(Eigen::MatrixXd x,
+               Eigen::MatrixXd y,
                Eigen::VectorXd sigma,
-               Eigen::VectorXd target,
+               Eigen::MatrixXd target,
+               Eigen::VectorXd pars,
                double (*kernel) (Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd),
                Eigen::VectorXd *mean,
                Eigen::VectorXd *variance,
-               double *loglike);
+               double *loglike,
+               double sparsetol);
+
+//
+// Kernels.
+//
+
+
+double isotropicKernel (Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd);
+double diagonalKernel  (Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd);
 
 #endif;
