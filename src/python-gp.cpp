@@ -66,7 +66,8 @@ int nparray2matrix(PyObject *obj, T *m)
     int ndim = PyArray_NDIM(array);
     if (ndim == 0 || ndim > 2) {
         Py_DECREF(array);
-        PyErr_SetString(PyExc_TypeError, "The input array can only be 1 or 2 dimensional");
+        PyErr_SetString(PyExc_TypeError,
+                            "The input array can only be 1 or 2 dimensional");
         return 2;
     }
 
@@ -90,30 +91,51 @@ int nparray2matrix(PyObject *obj, T *m)
 
 static PyObject *gp_evaluate(PyObject *self, PyObject *args)
 {
-    PyObject *xobj, *yobj, *yerrobj, *x0obj;
-    if (!PyArg_ParseTuple(args, "OOOO", &xobj, &yobj, &yerrobj, &x0obj))
+    PyObject *xobj, *yobj, *yerrobj, *x0obj, *parsobj;
+    int kerneltype;
+    if (!PyArg_ParseTuple(args, "OOOOOi", &xobj, &yobj, &yerrobj, &x0obj,
+                &parsobj, &kerneltype))
         return NULL;
 
     // Parse the input numpy arrays and cast them as Eigen objects.
     MatrixXd x, x0;
-    VectorXd y, yerr;
+    VectorXd y, yerr, pars;
     nparray2matrix<MatrixXd>(xobj, &x);
     nparray2matrix<VectorXd>(yobj, &y);
     nparray2matrix<VectorXd>(yerrobj, &yerr);
     nparray2matrix<MatrixXd>(x0obj, &x0);
+    nparray2matrix<VectorXd>(parsobj, &pars);
+
     if (PyErr_Occurred() != NULL)
         return NULL;
 
-    // Set up the parameters vector.
-    VectorXd pars(x.cols() + 1);
-    pars(0) = 1;
-    for (int i = 0; i < x.cols(); ++i)
-        pars(i + 1) = 1.0;
+    // Which type of kernel?
+    double (*k)(VectorXd, VectorXd, VectorXd);
+    if (kerneltype == 1) {
+        if (pars.rows() != 2) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "The isotropic kernel requires 2 parameters.");
+            return NULL;
+        }
+
+        k = isotropicKernel;
+    } else if (kerneltype == 2) {
+        if (pars.rows() != 1 + x.cols()) {
+            PyErr_SetString(PyExc_RuntimeError,
+                        "The diagonal kernel requires 1 + ndim parameters.");
+            return NULL;
+        }
+
+        k = diagonalKernel;
+    } else {
+        PyErr_SetString(PyExc_RuntimeError, "Unknown kernel type.");
+        return NULL;
+    }
 
     // Run the inference.
     double lnlike = 0.5;
     VectorXd mean(1), variance(1);
-    int ret = evaluateGP(x, y, yerr, x0, pars, isotropicKernel, &mean,
+    int ret = evaluateGP(x, y, yerr, x0, pars, k, &mean,
                          &variance, &lnlike, 1e-5);
 
     if (ret == -1) {
