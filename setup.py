@@ -12,17 +12,17 @@ except ImportError:
 from numpy.distutils.misc_util import get_numpy_include_dirs
 
 
-gp_ext = Extension("gp._gp",
+gp_ext = Extension("george._gp",
                 sources=["src/gp.cpp", "src/python-gp.cpp"],
-                include_dirs=["include", "src"] + get_numpy_include_dirs(),
+                include_dirs=["src"] + get_numpy_include_dirs(),
                 )
 
 setup(
-    name="gp",
-    version="0.0.1",
+    name="george",
+    version="0",
     author="Daniel Foreman-Mackey",
     author_email="danfm@nyu.edu",
-    packages=["gp"],
+    packages=["george"],
     ext_modules=[gp_ext],
-    description="Gaussian Processes.",
+    description="Blazingly fast Gaussian Processes.",
 )
