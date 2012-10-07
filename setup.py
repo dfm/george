@@ -9,12 +9,12 @@ except ImportError:
     setup, Extension
 
 
-from numpy.distutils.misc_util import get_numpy_include_dirs
+import numpy
 
 
 gp_ext = Extension("george._gp",
                 sources=["src/gp.cpp", "src/python-gp.cpp"],
-                include_dirs=["src"] + get_numpy_include_dirs(),
+                include_dirs=["src", numpy.get_include()],
                 )
 
 setup(

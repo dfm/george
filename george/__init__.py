@@ -1,4 +1,1 @@
-from _gp import evaluate
-
-
-__version__ = "0"
+from ._gp import evaluate
