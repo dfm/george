@@ -99,34 +99,3 @@ int evaluateGP(MatrixXd x, VectorXd y, VectorXd sigma, MatrixXd target,
 
     return 0;
 }
-
-
-/* int main() */
-/* { */
-/*     const int ndata = 5, ntarget = 100, ndim = 1; */
-
-/*     MatrixXd x(ndata, ndim); */
-/*     x << -4.0, -3.6, -0.2, 0.5, 4.6; */
-/*     VectorXd y(ndata); */
-/*     y << -2.0, 5.6, 2.1, -0.5, 3.0; */
-/*     VectorXd sigma(ndata); */
-/*     y << 1.0, 0.76, 0.5, 0.6, 1.3; */
-
-/*     double mn = -5.0, mx = 5.0; */
-/*     MatrixXd target(ntarget, ndim); */
-/*     for (int i = 0; i < ntarget; ++i) */
-/*         target(i) = double(i) / ntarget * (mx - mn) + mn; */
-
-/*     VectorXd mean(1), variance(1); */
-/*     double loglike; */
-
-/*     VectorXd pars(2); */
-/*     pars << 1.0, 2.0; */
-
-/*     evaluateGP(x, y, sigma, target, pars, isotropicKernel, */
-/*                &mean, &variance, &loglike); */
-
-/*     cout << loglike << endl; */
-
-/*     return 0; */
-/* } */
