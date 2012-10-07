@@ -52,7 +52,8 @@ extern "C" void init_gp(void)
 #endif
 }
 
-int nparray2matrix(PyObject *obj, MatrixXd *m)
+template <class T>
+int nparray2matrix(PyObject *obj, T *m)
 {
     // Load the array.
     PyObject *array = PyArray_FROM_OTF(obj, NPY_DOUBLE, NPY_IN_ARRAY);
@@ -86,36 +87,6 @@ int nparray2matrix(PyObject *obj, MatrixXd *m)
     return 0;
 }
 
-int nparray2vector(PyObject *obj, VectorXd *m)
-{
-    // Load the array.
-    PyObject *array = PyArray_FROM_OTF(obj, NPY_DOUBLE, NPY_IN_ARRAY);
-    if (array == NULL) {
-        PyErr_SetString(PyExc_TypeError, "The input object is not an array.");
-        return 1;
-    }
-
-    // Get the dimensions.
-    int ndim = PyArray_NDIM(array);
-    if (ndim != 0) {
-        Py_DECREF(array);
-        PyErr_SetString(PyExc_TypeError, "The input array can only be 1 dimensional");
-        return 2;
-    }
-
-    // Get the shape.
-    int N = PyArray_DIM(array, 0), M = 1;
-    (*m).resize(N);
-
-    // Access the data.
-    double *data = (double*)PyArray_DATA(array);
-    for (int i = 0; i < N; ++i)
-            (*m)(i) = data[i];
-
-    Py_DECREF(array);
-    return 0;
-}
-
 
 static PyObject *gp_evaluate(PyObject *self, PyObject *args)
 {
@@ -126,108 +97,62 @@ static PyObject *gp_evaluate(PyObject *self, PyObject *args)
     // Parse the input numpy arrays and cast them as Eigen objects.
     MatrixXd x, x0;
     VectorXd y, yerr;
-
-    nparray2matrix(xobj, &x);
-    nparray2vector(yobj, &y);
-    nparray2vector(yerrobj, &yerr);
-    nparray2matrix(x0obj, &x0);
-
+    nparray2matrix<MatrixXd>(xobj, &x);
+    nparray2matrix<VectorXd>(yobj, &y);
+    nparray2matrix<VectorXd>(yerrobj, &yerr);
+    nparray2matrix<MatrixXd>(x0obj, &x0);
     if (PyErr_Occurred() != NULL)
         return NULL;
 
+    // Set up the parameters vector.
     VectorXd pars(x.cols() + 1);
     pars(0) = 1;
     for (int i = 0; i < x.cols(); ++i)
         pars(i + 1) = 1.0;
 
-    double lnlike;
+    // Run the inference.
+    double lnlike = 0.5;
     VectorXd mean(1), variance(1);
-    evaluateGP(x, y, yerr, x0, pars, isotropicKernel, &mean, &variance,
-               &lnlike, 1e-5);
+    int ret = evaluateGP(x, y, yerr, x0, pars, isotropicKernel, &mean,
+                         &variance, &lnlike, 1e-5);
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    if (ret == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't factorize K.");
+        return NULL;
+    } else if (ret == -2) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't solve for alpha.");
+        return NULL;
+    } else if (ret == -3) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't solve for variance.");
+        return NULL;
+    } else if (ret != 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to evaluate GP.");
+        return NULL;
+    }
 
-    /* /1* Read in the data and convert to Eigen::VectorXd objects *1/ */
-    /* Py_ssize_t n = PyList_Size(xobj); */
-    /* if (PyErr_Occurred() != NULL) { */
-    /*     PyErr_SetString(PyExc_TypeError, "The data objects must be lists."); */
-    /*     return NULL; */
-    /* } */
-    /* if (n != PyList_Size(yobj) || n != PyList_Size(yerrobj)) { */
-    /*     PyErr_SetString(PyExc_TypeError, "Dimension mismatch."); */
-    /*     return NULL; */
-    /* } */
-    /* VectorXd x(n), y(n), yerr(n); */
-    /* for (Py_ssize_t i = 0; i < n; ++i) { */
-    /*     x[i] = PyFloat_AsDouble(PyList_GetItem(xobj, i)); */
-    /*     y[i] = PyFloat_AsDouble(PyList_GetItem(yobj, i)); */
-    /*     yerr[i] = PyFloat_AsDouble(PyList_GetItem(yerrobj, i)); */
-    /* } */
-    /* if (PyErr_Occurred() != NULL) */
-    /*     return NULL; */
+    // Build the output objects:
+    npy_intp dims[] = {mean.rows()};
 
-    /* /1* Read in the test vector *1/ */
-    /* Py_ssize_t m = PyList_Size(x0obj); */
-    /* if (PyErr_Occurred() != NULL) { */
-    /*     PyErr_SetString(PyExc_TypeError, "The target vector must be a list."); */
-    /*     return NULL; */
-    /* } */
-    /* VectorXd x0(m); */
-    /* for (Py_ssize_t i = 0; i < m; ++i) */
-    /*     x0[i] = PyFloat_AsDouble(PyList_GetItem(x0obj, i)); */
-    /* if (PyErr_Occurred() != NULL) */
-    /*     return NULL; */
+    // Build the empty numpy arrays.
+    PyObject *mean_array = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
+    PyObject *variance_array = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
 
-    /* double lnlike = 0.0; */
-    /* VectorXd mean(1), variance(1); */
+    // Fill the data pointer.
+    double *mean_data = (double*)PyArray_DATA(mean_array);
+    double *variance_data = (double*)PyArray_DATA(variance_array);
+    for (int i = 0; i < mean.rows(); ++i) {
+        mean_data[i] = mean[i];
+        variance_data[i] = variance[i];
+    }
 
-    /* int ret = evaluateGP(x, y, yerr, x0, &mean, &variance, &lnlike); */
+    // Build the full output tuple.
+    PyObject *tuple_out = Py_BuildValue("NNd", mean_array, variance_array,
+                                        lnlike);
+    if (tuple_out == NULL) {
+        Py_DECREF(mean_array);
+        Py_DECREF(variance_array);
+        return NULL;
+    }
 
-    /* if (ret != 0) { */
-    /*     PyErr_SetString(PyExc_RuntimeError, "GP evaluation failed."); */
-    /*     return NULL; */
-    /* } */
-
-    /* /1* Build the output *1/ */
-    /* PyObject *mean_out = PyList_New(m); */
-    /* PyObject *var_out = PyList_New(m); */
-    /* if (mean_out == NULL || var_out == NULL) { */
-    /*     Py_XDECREF(mean_out); */
-    /*     Py_XDECREF(var_out); */
-    /*     return NULL; */
-    /* } */
-
-    /* for (Py_ssize_t i = 0; i < m; i++) { */
-    /*     PyObject *m = PyFloat_FromDouble(mean[i]); */
-    /*     PyObject *v = PyFloat_FromDouble(variance[i]); */
-
-    /*     if (m == NULL || v == NULL) { */
-    /*         Py_XDECREF(m); */
-    /*         Py_XDECREF(v); */
-    /*         Py_DECREF(mean_out); */
-    /*         Py_DECREF(var_out); */
-    /*         return NULL; */
-    /*     } */
-
-    /*     if (PyList_SetItem(mean_out, i, m) != 0 || */
-    /*             PyList_SetItem(var_out, i, v) != 0) { */
-    /*         Py_XDECREF(m); */
-    /*         Py_XDECREF(v); */
-    /*         Py_DECREF(mean_out); */
-    /*         Py_DECREF(var_out); */
-    /*         return NULL; */
-    /*     } */
-    /* } */
-
-    /* PyObject *tuple_out = Py_BuildValue("OOd", &mean_out, &var_out, &lnlike); */
-    /* if (tuple_out == NULL) { */
-    /*     Py_DECREF(mean_out); */
-    /*     Py_DECREF(var_out); */
-    /*     Py_XDECREF(tuple_out); */
-    /*     return NULL; */
-    /* } */
-
-    /* Py_INCREF(tuple_out); */
-    /* return tuple_out; */
+    return tuple_out;
 }
