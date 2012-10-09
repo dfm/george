@@ -134,9 +134,10 @@ static PyObject *gp_evaluate(PyObject *self, PyObject *args)
 
     // Run the inference.
     double lnlike = 0.5;
-    VectorXd mean(1), variance(1);
+    VectorXd mean(1);
+    MatrixXd variance(1, 1);
     int ret = evaluateGP(x, y, yerr, x0, pars, k, &mean,
-                         &variance, &lnlike, 1e-5);
+                         &variance, &lnlike);
 
     if (ret == -1) {
         PyErr_SetString(PyExc_RuntimeError, "Couldn't factorize K.");
@@ -152,19 +153,21 @@ static PyObject *gp_evaluate(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    // Build the output objects:
-    npy_intp dims[] = {mean.rows()};
-
     // Build the empty numpy arrays.
-    PyObject *mean_array = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    PyObject *variance_array = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
+    int n = mean.rows();
+    npy_intp dim[] = {n};
+    PyObject *mean_array = PyArray_EMPTY(1, dim, NPY_DOUBLE, 0);
+
+    npy_intp dims[] = {n, n};
+    PyObject *variance_array = PyArray_EMPTY(2, dims, NPY_DOUBLE, 0);
 
     // Fill the data pointer.
     double *mean_data = (double*)PyArray_DATA(mean_array);
     double *variance_data = (double*)PyArray_DATA(variance_array);
-    for (int i = 0; i < mean.rows(); ++i) {
+    for (int i = 0; i < n; ++i) {
         mean_data[i] = mean[i];
-        variance_data[i] = variance[i];
+        for (int j = 0; j < n; ++j)
+            variance_data[i * n + j] = variance(i, j);
     }
 
     // Build the full output tuple.

@@ -5,3 +5,4 @@
 include/Eigen
 test
 .syntastic_cpp_config
+*.png

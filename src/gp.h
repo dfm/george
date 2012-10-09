@@ -2,7 +2,6 @@
 #define _GP_H
 
 #include <Eigen/Dense>
-#include <Eigen/Sparse>
 
 int evaluateGP(Eigen::MatrixXd x,
                Eigen::VectorXd y,
@@ -14,10 +13,8 @@ int evaluateGP(Eigen::MatrixXd x,
                                  Eigen::VectorXd),
 
                Eigen::VectorXd *mean,
-               Eigen::VectorXd *variance,
-               double *loglike,
-
-               double sparsetol);
+               Eigen::MatrixXd *cov,
+               double *loglike);
 
 //
 // Kernels.

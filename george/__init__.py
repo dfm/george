@@ -1,1 +1,1 @@
-from ._gp import evaluate
+from .george import *
