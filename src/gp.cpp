@@ -6,6 +6,7 @@ using namespace Eigen;
 
 int GaussianProcess::fit(MatrixXd x, VectorXd y, VectorXd yerr)
 {
+    computed_ = false;
     x_ = x;
     y_ = y;
     yerr_ = yerr;
@@ -33,6 +34,7 @@ int GaussianProcess::fit(MatrixXd x, VectorXd y, VectorXd yerr)
     if (L_.info() != Success)
         return -2;
 
+    computed_ = true;
     return 0;
 }
 
@@ -46,13 +48,16 @@ double GaussianProcess::evaluate()
 
 int GaussianProcess::predict(MatrixXd x, VectorXd *mean, MatrixXd *cov)
 {
+    if (!computed_)
+        return -1;
+
     MatrixXd kstar = K(x_, x);
     *mean = kstar.transpose() * alpha_;
 
     *cov = K(x, x);
     *cov -= kstar.transpose() * L_.solve(kstar);
     if (L_.info() != Success)
-        return -1;
+        return -2;
 
     return 0;
 }

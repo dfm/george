@@ -22,6 +22,7 @@ x = np.atleast_2d(np.linspace(-10, 20, 1001)).T
 
 gp = GaussianProcess([0.1, 1.0])
 mu, var, logprob = gp(X, y, x, yerr=yerr)
+print(logprob)
 
 std = np.sqrt(var.diagonal())
 

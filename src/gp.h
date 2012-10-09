@@ -7,6 +7,7 @@ class GaussianProcess {
 
     private:
 
+        bool computed_;
         double l2pi_;
 
         Eigen::VectorXd pars_;
@@ -25,9 +26,10 @@ class GaussianProcess {
 
         GaussianProcess(Eigen::VectorXd pars, double (*kernel) (
                     Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd)) {
+            computed_ = false;
+            l2pi_ = log(2 * M_PI);
             pars_ = pars;
             kernel_ = kernel;
-            l2pi_ = log(2 * M_PI);
         };
 
         Eigen::MatrixXd K(Eigen::MatrixXd x1, Eigen::MatrixXd x2);

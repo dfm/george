@@ -1,1 +1,1 @@
-from .george import *
+from .george import GaussianProcess
