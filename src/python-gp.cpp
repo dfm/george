@@ -95,11 +95,6 @@ static int _gp_init(_gp *self, PyObject *args, PyObject *kwds)
 
         k = isotropicKernel;
     } else if (kerneltype == 2) {
-        /* if (pars.rows() != 1 + x.cols()) { */
-        /*     PyErr_SetString(PyExc_RuntimeError, */
-        /*                 "The diagonal kernel requires 1 + ndim parameters."); */
-        /*     return -1; */
-        /* } */
         k = diagonalKernel;
     } else {
         PyErr_SetString(PyExc_RuntimeError, "Unknown kernel type.");
@@ -111,9 +106,7 @@ static int _gp_init(_gp *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-static PyMemberDef _gp_members[] = {
-    {NULL}  /* Sentinel */
-};
+static PyMemberDef _gp_members[] = {{NULL}};  // We don't haz no members.
 
 static PyObject *_gp_fit(_gp *self, PyObject *args)
 {
@@ -129,6 +122,10 @@ static PyObject *_gp_fit(_gp *self, PyObject *args)
     nparray2matrix<VectorXd>(yerrobj, &yerr);
     if (PyErr_Occurred() != NULL)
         return NULL;
+
+    //
+    // TODO: Check dimensions + number of parameters against kernel type.
+    //
 
     // Do the fit.
     int ret = self->gp.fit(x, y, yerr);
@@ -216,6 +213,7 @@ static PyMethodDef _gp_methods[] = {
     {NULL}  /* Sentinel */
 };
 
+static char _gp_doc[] = "This is the ``_gp`` object. There is some black magic.";
 static PyTypeObject _gp_type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
@@ -238,7 +236,7 @@ static PyTypeObject _gp_type = {
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "The _gp object",          /* tp_doc */
+    _gp_doc,                   /* tp_doc */
     0,                         /* tp_traverse */
     0,                         /* tp_clear */
     0,                         /* tp_richcompare */

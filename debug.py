@@ -6,23 +6,26 @@ from matplotlib import pyplot as pl
 from george import GaussianProcess
 
 
-np.random.seed(1)
+np.random.seed(42)
 
 
 def f(x):
     return x * np.sin(x)
 
-X = [1., 3., 5., 6., 7., 8.]
+X = 10 * np.random.rand(50)
 
 # Observations
 y = f(X).ravel()
-yerr = 0.1 * np.ones_like(y)
+yerr = np.ones_like(y)
 
-x = np.atleast_2d(np.linspace(-10, 20, 1001)).T
+x = np.atleast_2d(np.linspace(-5, 15, 1001)).T
 
 gp = GaussianProcess([0.1, 1.0])
-mu, var, logprob = gp(X, y, x, yerr=yerr)
-print(logprob)
+gp.optimize(X, y, yerr=yerr)
+
+mu, var = gp.predict(x)
+
+print(gp.evaluate())
 
 std = np.sqrt(var.diagonal())
 
@@ -34,5 +37,5 @@ pl.plot(x, vals.T, "k", alpha=0.1)
 pl.plot(x, mu + std, ":r")
 pl.plot(x, mu - std, ":r")
 
-pl.plot(X, y, ".r")
+pl.errorbar(X, y, yerr=yerr, fmt=".r")
 pl.savefig("debug.png")
