@@ -18,7 +18,7 @@ X = [1., 3., 5., 6., 7., 8.]
 y = f(X).ravel()
 yerr = 0.1 * np.ones_like(y)
 
-x = np.atleast_2d(np.linspace(0, 10, 1001)).T
+x = np.atleast_2d(np.linspace(-10, 20, 1001)).T
 
 gp = GaussianProcess([0.1, 1.0])
 mu, var, logprob = gp(X, y, x, yerr=yerr)
@@ -28,9 +28,7 @@ std = np.sqrt(var.diagonal())
 vals = np.random.multivariate_normal(mu, var, 100)
 
 pl.plot(x, mu, "k")
-# pl.plot(x, vals.T, "k", alpha=0.1)
-
-pl.plot(x, mu + np.std(vals, axis=0), "b")
+pl.plot(x, vals.T, "k", alpha=0.1)
 
 pl.plot(x, mu + std, ":r")
 pl.plot(x, mu - std, ":r")
