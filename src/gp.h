@@ -1,27 +1,44 @@
-#ifndef _GP_H
-#define _GP_H
+#ifndef GEORGE_GP_H
+#define GEORGE_GP_H
 
 #include <Eigen/Dense>
 
-int evaluateGP(Eigen::MatrixXd x,
-               Eigen::VectorXd y,
-               Eigen::VectorXd sigma,
-               Eigen::MatrixXd target,
+class GaussianProcess {
 
-               Eigen::VectorXd pars,
-               double (*kernel) (Eigen::VectorXd, Eigen::VectorXd,
-                                 Eigen::VectorXd),
+    private:
 
-               Eigen::VectorXd *mean,
-               Eigen::MatrixXd *cov,
-               double *loglike);
+        double l2pi_;
 
-//
-// Kernels.
-//
+        Eigen::VectorXd pars_;
+
+        int ndim_, nsamples_;
+        Eigen::MatrixXd x_;
+        Eigen::VectorXd y_, yerr_;
+
+        Eigen::MatrixXd Kxx_;
+        Eigen::LDLT<Eigen::MatrixXd> L_;
+        Eigen::VectorXd alpha_;
+
+        double (*kernel_) (Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd);
+
+    public:
+
+        GaussianProcess(Eigen::VectorXd pars, double (*kernel) (
+                    Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd)) {
+            pars_ = pars;
+            kernel_ = kernel;
+            l2pi_ = log(2 * M_PI);
+        };
+
+        Eigen::MatrixXd K(Eigen::MatrixXd x1, Eigen::MatrixXd x2);
+
+        int fit(Eigen::MatrixXd x, Eigen::VectorXd y, Eigen::VectorXd yerr);
+        double evaluate();
+        int predict(Eigen::MatrixXd x, Eigen::VectorXd *mean,
+                                       Eigen::MatrixXd *cov);
+
+};
 
 
-double isotropicKernel (Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd);
-double diagonalKernel  (Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd);
-
-#endif;
+#endif
+// </GEORGE_GP_H>

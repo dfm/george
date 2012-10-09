@@ -1,37 +1,64 @@
-#include <iostream>
 #include "gp.h"
 
 
 using namespace Eigen;
-using namespace std;
 
 
-//
-// Kernels.
-//
-
-double isotropicKernel(VectorXd x1, VectorXd x2, VectorXd pars)
+int GaussianProcess::fit(MatrixXd x, VectorXd y, VectorXd yerr)
 {
-    VectorXd d = x1 - x2;
-    double result = pars[0] * exp(-0.5 * d.dot(d) / pars[1]);
-    return result;
+    x_ = x;
+    y_ = y;
+    yerr_ = yerr;
+
+    ndim_ = x.cols();
+    nsamples_ = x.rows();
+
+    // Sanity check the dimensions
+    if (y.rows() != nsamples_) return 1;
+    if (yerr.rows() != nsamples_) return 2;
+
+    // Build the base kernel
+    Kxx_ = K(x, x);
+
+    // Add in the noise
+    for (int n = 0; n < nsamples_; ++n)
+        Kxx_(n, n) += yerr(n) * yerr(n);
+
+    // Compute the decomposition of K(X, X)
+    L_ = LDLT<MatrixXd>(Kxx_);
+    if (L_.info() != Success)
+        return -1;
+
+    alpha_ = L_.solve(y);
+    if (L_.info() != Success)
+        return -2;
+
+    return 0;
 }
 
-double diagonalKernel(VectorXd x1, VectorXd x2, VectorXd pars)
+
+double GaussianProcess::evaluate()
 {
-    VectorXd d = x1 - x2;
-    double result = 0.0;
-    for (int i = 0; i < d.rows(); ++i)
-        result += d[i] * d[i] / pars[i + 1];
-    return pars[0] * exp(-0.5 * result);
+    double logdet = log(L_.vectorD().array()).sum();
+    return -0.5 * (y_.transpose() * alpha_ + logdet + nsamples_ * l2pi_);
 }
 
-//
-// Algorithm.
-//
 
-MatrixXd buildK(MatrixXd x1, MatrixXd x2, VectorXd pars,
-                double (*k) (VectorXd, VectorXd, VectorXd))
+int GaussianProcess::predict(MatrixXd x, VectorXd *mean, MatrixXd *cov)
+{
+    MatrixXd kstar = K(x_, x);
+    *mean = kstar.transpose() * alpha_;
+
+    *cov = K(x, x);
+    *cov -= kstar.transpose() * L_.solve(kstar);
+    if (L_.info() != Success)
+        return -1;
+
+    return 0;
+}
+
+
+MatrixXd GaussianProcess::K(MatrixXd x1, MatrixXd x2)
 {
     int i, j;
     int N1 = x1.rows(), N2 = x2.rows();
@@ -39,52 +66,7 @@ MatrixXd buildK(MatrixXd x1, MatrixXd x2, VectorXd pars,
 
     for (i = 0; i < N1; i++)
         for (j = 0; j < N2; j++)
-            m(i, j) = k(x1.row(i), x2.row(j), pars);
+            m(i, j) = kernel_(x1.row(i), x2.row(j), pars_);
 
     return m;
-}
-
-int evaluateGP(MatrixXd x, VectorXd y, VectorXd sigma, MatrixXd target,
-               VectorXd pars,
-               double (*kernel) (VectorXd, VectorXd, VectorXd),
-               VectorXd *mean, MatrixXd *cov, double *loglike)
-{
-    int ndim = x.cols();
-    int nsamples = x.rows();
-    int ntarget = target.rows();
-
-    if (y.rows() != nsamples) return 1;
-    if (sigma.rows() != nsamples) return 2;
-    if (target.cols() != ndim) return 3;
-
-    /* Build the base kernel */
-    MatrixXd Kxx = buildK(x, x, pars, kernel);
-
-    /* Add in the noise */
-    for (int n = 0; n < nsamples; ++n)
-        Kxx(n, n) += sigma(n) * sigma(n);
-
-    /* Find alpha */
-    LDLT<MatrixXd> L(Kxx);
-    if (L.info() != Success)
-        return -1;
-
-    VectorXd alpha = L.solve(y);
-    if (L.info() != Success)
-        return -2;
-
-    /* Compute the mean */
-    MatrixXd kstar = buildK(x, target, pars, kernel);
-    *mean = kstar.transpose() * alpha;
-
-    /* Compute the covariance */
-    *cov = buildK(target, target, pars, kernel);
-    *cov -= kstar.transpose() * L.solve(kstar);
-
-    /* Compute the log-likelihood */
-    double logdet = log(L.vectorD().array()).sum();
-    *loglike = -0.5 * (y.transpose() * alpha + logdet
-                                                + nsamples * log(2 * M_PI));
-
-    return 0;
 }

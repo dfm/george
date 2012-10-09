@@ -13,7 +13,7 @@ import numpy
 
 
 gp_ext = Extension("george._gp",
-                sources=["src/gp.cpp", "src/python-gp.cpp"],
+                sources=["src/gp.cpp", "src/kernels.cpp", "src/python-gp.cpp"],
                 include_dirs=["src", numpy.get_include()],
                 )
 

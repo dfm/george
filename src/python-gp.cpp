@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
+#include "kernels.h"
 #include "gp.h"
 
 
@@ -133,23 +134,28 @@ static PyObject *gp_evaluate(PyObject *self, PyObject *args)
     }
 
     // Run the inference.
-    double lnlike = 0.5;
     VectorXd mean(1);
     MatrixXd variance(1, 1);
-    int ret = evaluateGP(x, y, yerr, x0, pars, k, &mean,
-                         &variance, &lnlike);
 
+    GaussianProcess gp(pars, k);
+
+    int ret = gp.fit(x, y, yerr);
     if (ret == -1) {
         PyErr_SetString(PyExc_RuntimeError, "Couldn't factorize K.");
         return NULL;
     } else if (ret == -2) {
         PyErr_SetString(PyExc_RuntimeError, "Couldn't solve for alpha.");
         return NULL;
-    } else if (ret == -3) {
-        PyErr_SetString(PyExc_RuntimeError, "Couldn't solve for variance.");
-        return NULL;
     } else if (ret != 0) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to evaluate GP.");
+        return NULL;
+    }
+
+    double lnlike = gp.evaluate();
+
+    ret = gp.predict(x0, &mean, &variance);
+    if (ret != 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't solve for variance.");
         return NULL;
     }
 
