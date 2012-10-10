@@ -1,9 +1,6 @@
 George
 ======
 
-Blazingly fast Gaussian Processes
----------------------------------
-
 Installation:
 
 ::
