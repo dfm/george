@@ -7,7 +7,7 @@ from ._gp import _gp
 class GaussianProcess(object):
     def __init__(self, pars):
         self.pars = pars
-        self.gp = _gp(pars, 1)
+        self.gp = _gp(pars, 2)
         self.computed = False
 
     def prepare(self, x, y, yerr=None, normalize=True):
@@ -58,12 +58,12 @@ class GaussianProcess(object):
         x, y, yerr = self.prepare(*args, **kwargs)
 
         def nll(p):
-            gp = _gp(p ** 2, 1)
+            gp = _gp(p ** 2, 2)
             gp.fit(x, y, yerr)
             r = -gp.evaluate()
             return r
 
         p = op.fmin_bfgs(nll, np.sqrt(self.pars), disp=False)
         self.pars = p ** 2
-        self.gp = _gp(self.pars, 1)
+        self.gp = _gp(self.pars, 2)
         self.fit(*args, **kwargs)
