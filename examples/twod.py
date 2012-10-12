@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+import time
 
 import numpy as np
 from matplotlib import pyplot as pl
@@ -27,9 +28,14 @@ gp.optimize(x, y, yerr=yerr)
 # Grid.
 X, Y = np.meshgrid(np.linspace(-3, 3, 40), np.linspace(-3, 3, 40))
 target = np.vstack([X.ravel(), Y.ravel()]).T
-mu, var = gp.predict(target)
 
-print(np.max(var.diagonal() - gp.predict(target, full_cov=False)[1]))
+s = time.time()
+mu, var = gp.predict(target)
+print(time.time() - s)
+
+s = time.time()
+gp.predict(target, full_cov=False)[1]
+print(time.time() - s)
 
 ymin, ymax = y.min(), y.max()
 colors = (y - ymin) / ymax
