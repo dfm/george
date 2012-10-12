@@ -46,7 +46,28 @@ double GaussianProcess::evaluate()
 }
 
 
-int GaussianProcess::predict(MatrixXd x, VectorXd *mean, MatrixXd *cov)
+int GaussianProcess::predict(MatrixXd x, VectorXd *mean, VectorXd *var)
+{
+    if (!computed_)
+        return -1;
+
+    MatrixXd kstar = K(x_, x);
+    *mean = kstar.transpose() * alpha_;
+
+    int N = x.rows();
+    (*var).resize(x.rows());
+    for (int i = 0; i < x.rows(); ++i) {
+        (*var)(i) = kernel_(x.row(i), x.row(i), pars_)
+                    - kstar.row(i) * L_.solve(kstar.col(i));
+        if (L_.info() != Success)
+            return -2;
+    }
+
+    return 0;
+}
+
+
+int GaussianProcess::predictFull(MatrixXd x, VectorXd *mean, MatrixXd *cov)
 {
     if (!computed_)
         return -1;

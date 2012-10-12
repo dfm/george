@@ -37,7 +37,9 @@ class GaussianProcess {
         int fit(Eigen::MatrixXd x, Eigen::VectorXd y, Eigen::VectorXd yerr);
         double evaluate();
         int predict(Eigen::MatrixXd x, Eigen::VectorXd *mean,
-                                       Eigen::MatrixXd *cov);
+                                       Eigen::VectorXd *var);
+        int predictFull(Eigen::MatrixXd x, Eigen::VectorXd *mean,
+                                           Eigen::MatrixXd *cov);
 
 };
 

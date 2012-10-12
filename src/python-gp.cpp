@@ -147,7 +147,7 @@ static PyObject *_gp_fit(_gp *self, PyObject *args)
     return Py_None;
 }
 
-static PyObject *_gp_predict(_gp *self, PyObject *args)
+static PyObject *_gp_predict_full(_gp *self, PyObject *args)
 {
     PyObject *xobj;
     if (!PyArg_ParseTuple(args, "O", &xobj))
@@ -162,7 +162,7 @@ static PyObject *_gp_predict(_gp *self, PyObject *args)
     // Do the prediction.
     VectorXd mu(1);
     MatrixXd cov(1, 1);
-    int ret = self->gp.predict(x, &mu, &cov);
+    int ret = self->gp.predictFull(x, &mu, &cov);
     if (ret == -1) {
         PyErr_SetString(PyExc_RuntimeError, "You have to fit the GP first.");
         return NULL;
@@ -199,6 +199,55 @@ static PyObject *_gp_predict(_gp *self, PyObject *args)
     return tuple_out;
 }
 
+
+static PyObject *_gp_predict(_gp *self, PyObject *args)
+{
+    PyObject *xobj;
+    if (!PyArg_ParseTuple(args, "O", &xobj))
+        return NULL;
+
+    // Parse the input numpy arrays and cast them as Eigen objects.
+    MatrixXd x;
+    nparray2matrix<MatrixXd>(xobj, &x);
+    if (PyErr_Occurred() != NULL)
+        return NULL;
+
+    // Do the prediction.
+    VectorXd mu(1), var(1);
+    int ret = self->gp.predict(x, &mu, &var);
+    if (ret == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "You have to fit the GP first.");
+        return NULL;
+    } else if (ret != 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't solve for the mean/covariance.");
+        return NULL;
+    }
+
+    // Build the empty numpy arrays for output.
+    int n = mu.rows();
+    npy_intp dim[] = {n};
+    PyObject *mu_array = PyArray_EMPTY(1, dim, NPY_DOUBLE, 0);
+    PyObject *var_array = PyArray_EMPTY(1, dim, NPY_DOUBLE, 0);
+
+    // Fill in the output data.
+    double *mu_data = (double*)PyArray_DATA(mu_array);
+    double *var_data = (double*)PyArray_DATA(var_array);
+    for (int i = 0; i < n; ++i) {
+        mu_data[i] = mu(i);
+        var_data[i] = var(i);
+    }
+
+    // Build the full output tuple.
+    PyObject *tuple_out = Py_BuildValue("NN", mu_array, var_array);
+    if (tuple_out == NULL) {
+        Py_DECREF(mu_array);
+        Py_DECREF(var_array);
+        return NULL;
+    }
+
+    return tuple_out;
+}
+
 static PyObject *_gp_evaluate(_gp *self)
 {
     double lnlike = self->gp.evaluate();
@@ -210,6 +259,7 @@ static PyMethodDef _gp_methods[] = {
     {"fit", (PyCFunction)_gp_fit, METH_VARARGS, "Fit the GP."},
     {"evaluate", (PyCFunction)_gp_evaluate, METH_NOARGS, "Evaluate the GP."},
     {"predict", (PyCFunction)_gp_predict, METH_VARARGS, "Predict new values."},
+    {"predict_full", (PyCFunction)_gp_predict_full, METH_VARARGS, "Predict new values."},
     {NULL}  /* Sentinel */
 };
 

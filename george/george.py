@@ -45,9 +45,13 @@ class GaussianProcess(object):
 
         return args
 
-    def predict(self, x0):
+    def predict(self, x0, full_cov=True):
         assert self.computed
-        r = self.gp.predict((x0 - self.xmean[None, :]) / self.xstd[None, :])
+        if full_cov:
+            f = self.gp.predict_full
+        else:
+            f = self.gp.predict
+        r = f((x0 - self.xmean[None, :]) / self.xstd[None, :])
         return self.ystd * r[0] + self.ymean, self.ystd * self.ystd * r[1]
 
     def evaluate(self):

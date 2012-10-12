@@ -23,11 +23,13 @@ yerr = 0.01 * np.ones_like(y)
 
 gp = GaussianProcess([0.1, 1.0, 1.0])
 gp.optimize(x, y, yerr=yerr)
-print(gp.pars)
 
 # Grid.
 X, Y = np.meshgrid(np.linspace(-3, 3, 40), np.linspace(-3, 3, 40))
-mu, var = gp.predict(np.vstack([X.ravel(), Y.ravel()]).T)
+target = np.vstack([X.ravel(), Y.ravel()]).T
+mu, var = gp.predict(target)
+
+print(np.max(var.diagonal() - gp.predict(target, full_cov=False)[1]))
 
 ymin, ymax = y.min(), y.max()
 colors = (y - ymin) / ymax
@@ -44,20 +46,3 @@ for i in range(samples.shape[0]):
     pl.gca().set_xticklabels([])
     pl.gca().set_yticklabels([])
     pl.savefig("2d/{0:04d}.png".format(i))
-
-# mu, var = gp.predict(x)
-
-# print(gp.evaluate())
-
-# std = np.sqrt(var.diagonal())
-
-# vals = np.random.multivariate_normal(mu, var, 100)
-
-# pl.plot(x, mu, "k")
-# pl.plot(x, vals.T, "k", alpha=0.1)
-
-# pl.plot(x, mu + std, ":r")
-# pl.plot(x, mu - std, ":r")
-
-# pl.errorbar(X, y, yerr=yerr, fmt=".r")
-# pl.savefig("debug.png")
