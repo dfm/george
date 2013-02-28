@@ -51,6 +51,11 @@ class GaussianProcess(object):
             f = self.gp.predict_full
         else:
             f = self.gp.predict
+
+        # Deal with multiple dimensions.
+        if len(np.shape(x0)) == 1:
+            x0 = np.atleast_2d(x0).T
+
         r = f((x0 - self.xmean[None, :]) / self.xstd[None, :])
         return self.ystd * r[0] + self.ymean, self.ystd * self.ystd * r[1]
 
