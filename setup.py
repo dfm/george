@@ -20,9 +20,8 @@ import numpy
 
 gp_ext = Extension("george._gp",
                 sources=["src/gp.cpp", "src/kernels.cpp", "src/python-gp.cpp"],
-                include_dirs=["src", numpy.get_include(),
-                    os.environ.get("EIGEN_DIR", "/usr/local/include/eigen3")],
-                )
+                include_dirs=["src", "src/eigen3", numpy.get_include()]
+            )
 
 setup(
     name="george",

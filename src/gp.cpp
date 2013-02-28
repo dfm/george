@@ -55,8 +55,8 @@ int GaussianProcess::predict(MatrixXd x, VectorXd *mean, VectorXd *var)
     *mean = kstar.transpose() * alpha_;
 
     int N = x.rows();
-    (*var).resize(x.rows());
-    for (int i = 0; i < x.rows(); ++i) {
+    (*var).resize(N);
+    for (int i = 0; i < N; ++i) {
         (*var)(i) = kernel_(x.row(i), x.row(i), pars_)
                     - kstar.row(i) * L_.solve(kstar.col(i));
         if (L_.info() != Success)
