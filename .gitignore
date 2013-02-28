@@ -7,3 +7,5 @@ test
 .syntastic_cpp_config
 *.png
 *.gif
+dist
+*.egg-info
