@@ -17,11 +17,23 @@ except ImportError:
 
 import numpy
 
+include_dirs = [
+    "george",
+    numpy.get_include(),
+    "/usr/local/include/eigen3",
+    "/usr/local/homebrew/include",
+    "/usr/local/homebrew/include/eigen3",
+]
 
-gp_ext = Extension("george._gp",
-                sources=["src/gp.cpp", "src/kernels.cpp", "src/python-gp.cpp"],
-                include_dirs=["src", "src/eigen3", numpy.get_include()]
-            )
+sources = [
+    os.path.join("george", "george.cpp"),
+    os.path.join("george", "_george.cpp"),
+    os.path.join("george", "kernels.cpp"),
+]
+
+gp_ext = Extension("george._george",
+                   sources=sources,
+                   include_dirs=include_dirs)
 
 setup(
     name="george",

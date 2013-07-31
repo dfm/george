@@ -9,3 +9,4 @@ test
 *.gif
 dist
 *.egg-info
+.syntastic_c_config
