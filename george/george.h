@@ -1,7 +1,6 @@
 #ifndef _GEORGE_H_
 #define _GEORGE_H_
 
-#include <iostream>
 #include <vector>
 #include <Eigen/Dense>
 
@@ -23,7 +22,10 @@ namespace George {
             pars_ = pars;
         };
 
-        int npars () const { return pars_.rows(); }
+        int npars () const { return pars_.rows(); };
+        VectorXd pars () const { return pars_; };
+        void set_pars (VectorXd pars) { pars_ = pars; };
+
         virtual double evaluate (VectorXd x1, VectorXd x2) {
             return 0.0;
         };
@@ -44,13 +46,13 @@ namespace George {
         IsotropicGaussianKernel() {};
         IsotropicGaussianKernel(VectorXd pars) : Kernel (pars) {};
 
-        virtual double evaluate (VectorXd x1, VectorXd x2) {
+        double evaluate (VectorXd x1, VectorXd x2) {
             VectorXd d = x1 - x2;
             double chi2 = d.dot(d) / pars_[1];
             return pars_[0] * exp(-0.5 * chi2);
         };
 
-        virtual VectorXd gradient (VectorXd x1, VectorXd x2) {
+        VectorXd gradient (VectorXd x1, VectorXd x2) {
             VectorXd d = x1 - x2, grad(pars_.rows());;
             double e = -0.5 * d.dot(d) / pars_[1], value = exp(e);
             grad(0) = value;
@@ -60,21 +62,26 @@ namespace George {
 
     };
 
-    template <class KernelType>
     class GaussianProcess {
 
     private:
-        KernelType kernel_;
+        Kernel kernel_;
         int info_;
         bool computed_;
         MatrixXd x_;
         LDLT<MatrixXd> L_;
 
     public:
-        GaussianProcess (KernelType& kernel) {
+        GaussianProcess (Kernel kernel) {
             info_ = 0;
             computed_ = false;
             kernel_ = kernel;
+        };
+
+        Kernel kernel () const { return kernel_; };
+        void set_kernel (Kernel k) {
+            kernel_ = k;
+            computed_ = false;
         };
 
         int info () const { return info_; };
@@ -161,7 +168,42 @@ namespace George {
             return grad;
         };
 
-        /* int predict (VectorXd y, MatrixXd x, VectorXd *mu, MatrixXd *cov); */
+        int predict (VectorXd y, MatrixXd x, VectorXd *mu, MatrixXd *cov)
+        {
+            int i, j, ntest = x.rows(), nsamples = y.rows();
+            double value;
+            MatrixXd Kxs(nsamples, ntest);
+            VectorXd alpha, ytest;
+
+            if (!computed_ || nsamples != x_.rows()) return -1;
+
+            // Build the kernel matrices.
+            for (i = 0; i < nsamples; ++i)
+                for (j = 0; j < ntest; ++j)
+                    Kxs(i, j) = kernel_.evaluate(x_.row(i), x.row(j));
+
+            (*cov).resize(ntest, ntest);
+            for (i = 0; i < ntest; ++i) {
+                (*cov)(i, i) = kernel_.evaluate(x.row(i), x.row(i));
+                for (j = i + 1; j < ntest; ++j) {
+                    value = kernel_.evaluate(x.row(i), x.row(j));
+                    (*cov)(i, j) = value;
+                    (*cov)(j, i) = value;
+                }
+            }
+
+            alpha = L_.solve(y);
+            if (L_.info() != Success) return -2;
+
+            // Compute and copy the predictive mean vector.
+            *mu = Kxs.transpose() * alpha;
+
+            // Compute the predictive covariance matrix.
+            *cov -= Kxs.transpose() * L_.solve(Kxs);
+            if (L_.info() != Success) return -3;
+
+            return 0;
+        };
 
     };
 }

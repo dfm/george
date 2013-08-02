@@ -1,11 +1,12 @@
 #include <Python.h>
 #include <structmember.h>
 #include <numpy/arrayobject.h>
-
-#include "kernels.h"
 #include "george.h"
 
-using namespace Eigen;
+using Eigen::VectorXd;
+using Eigen::MatrixXd;
+using George::GaussianProcess;
+using George::IsotropicGaussianKernel;
 
 #define PARSE_ARRAY(o) (PyArrayObject*) PyArray_FROM_OTF(o, NPY_DOUBLE, \
         NPY_IN_ARRAY)
@@ -16,7 +17,7 @@ using namespace Eigen;
 
 typedef struct {
     PyObject_HEAD
-    George gp;
+    GaussianProcess<IsotropicGaussianKernel> gp;
 } _george;
 
 static void _george_dealloc(_george *self)
