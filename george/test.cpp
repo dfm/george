@@ -8,6 +8,7 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using Eigen::Matrix;
 using George::GaussianProcess;
+using George::Kernel;
 using George::IsotropicGaussianKernel;
 
 int main ()
@@ -25,7 +26,7 @@ int main ()
 
     std::cout << y.rows() << std::endl;
 
-    GaussianProcess gp(kernel);
+    GaussianProcess<Kernel> gp(kernel);
     gp.compute(x, yerr);
 
     double l0 = gp.lnlikelihood(y), eps = 1e-4;

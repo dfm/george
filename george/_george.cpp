@@ -35,9 +35,8 @@ static PyObject *_george_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static int _george_init(_george *self, PyObject *args, PyObject *kwds)
 {
     PyObject *pars_obj = NULL;
-    int kernel_type;
 
-    if (!PyArg_ParseTuple(args, "Oi", &pars_obj, &kernel_type))
+    if (!PyArg_ParseTuple(args, "O", &pars_obj))
         return -1;
 
     // Parse the parameter vector.
@@ -48,23 +47,14 @@ static int _george_init(_george *self, PyObject *args, PyObject *kwds)
     double *pars = (double*)PyArray_DATA(pars_array);
 
     // Which type of kernel?
-    double (*k) (double, double, int, double*);
-    void (*dk) (double, double, int, double*, double*);
-    if (kernel_type == 1) {
-        if (npars % 2 != 0) {
-            PyErr_SetString(PyExc_RuntimeError,
-                "The isotropic kernel requires an even number of parameters.");
-            return -1;
-        }
-
-        k = isotropicKernel;
-        dk = gradIsotropicKernel;
-    } else {
-        PyErr_SetString(PyExc_RuntimeError, "Unknown kernel type.");
+    if (npars % 2 != 0) {
+        PyErr_SetString(PyExc_RuntimeError,
+            "The isotropic kernel requires an even number of parameters.");
         return -1;
     }
 
-    self->gp = George(npars, pars, k, dk);
+    IsotropicGaussianKernel kernel(VectorXd::Map(pars, npars));
+    self->gp = GaussianProcess<IsotropicGaussianKernel>(kernel);
     return 0;
 }
 
@@ -90,7 +80,11 @@ static PyObject *_george_compute (_george *self, PyObject *args)
     }
 
     // Get the dimensions.
-    int nsamples = (int)PyArray_DIM(x_array, 0);
+    int nsamples = (int)PyArray_DIM(x_array, 0),
+        ndim = 1;
+    if ((int)PyArray_NDIM(x_array) == 2)
+        ndim = (int)PyArray_DIM(x_array, 1);
+
     if ((int)PyArray_DIM(yerr_array, 0) != nsamples) {
         PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
         Py_DECREF(x_array);
@@ -103,7 +97,8 @@ static PyObject *_george_compute (_george *self, PyObject *args)
            *yerr = (double*)PyArray_DATA(yerr_array);
 
     // Fit the GP.
-    int info = self->gp.compute(nsamples, x, yerr);
+    int info = self->gp.compute(MatrixXd::Map(x, nsamples, ndim),
+                                VectorXd::Map(yerr, nsamples));
 
     // Clean up.
     Py_DECREF(x_array);
@@ -147,12 +142,92 @@ static PyObject *_george_lnlikelihood(_george *self, PyObject *args)
     }
 
     double *y = (double*)PyArray_DATA(y_array),
-           lnlike = self->gp.lnlikelihood(nsamples, y);
+           lnlike = self->gp.lnlikelihood(VectorXd::Map(y, nsamples));
 
     // Clean up.
     Py_DECREF(y_array);
 
     return Py_BuildValue("d", lnlike);
+}
+
+static PyObject *_george_predict(_george *self, PyObject *args)
+{
+    PyObject *y_obj, *x_obj;
+    if (!PyArg_ParseTuple(args, "OO", &y_obj, &x_obj)) return NULL;
+
+    if (!self->gp.computed()) {
+        PyErr_SetString(PyExc_RuntimeError,
+            "You need to compute the model first");
+        return NULL;
+    }
+
+    PyArrayObject *y_array = PARSE_ARRAY(y_obj),
+                  *x_array = PARSE_ARRAY(x_obj);
+    if (y_array == NULL || x_array == NULL) {
+        Py_XDECREF(y_array);
+        Py_XDECREF(x_array);
+        PyErr_SetString(PyExc_ValueError,
+            "Failed to parse input objects as numpy arrays");
+        return NULL;
+    }
+
+    // Get the dimension.
+    int nsamples = (int)PyArray_DIM(y_array, 0),
+        ntest = (int)PyArray_DIM(x_array, 0),
+        ndim = 1;
+
+    if ((int)PyArray_NDIM(x_array) == 2)
+        ndim = (int)PyArray_DIM(x_array, 1);
+
+    if (nsamples != self->gp.nsamples()) {
+        PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
+        Py_DECREF(y_array);
+        Py_DECREF(x_array);
+        return NULL;
+    }
+
+    double *y = (double*)PyArray_DATA(y_array),
+           *x = (double*)PyArray_DATA(x_array);
+
+    VectorXd mu_vec(ntest);
+    MatrixXd cov_vec(ntest, ntest);
+    int info = self->gp.predict(VectorXd::Map(y, nsamples),
+                                MatrixXd::Map(x, ntest, ndim),
+                                &mu_vec, &cov_vec);
+
+    // Clean up.
+    Py_DECREF(y_array);
+    Py_DECREF(x_array);
+
+    // Check success.
+    if (info != 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to compute model");
+        return NULL;
+    }
+
+    // Allocate the output arrays.
+    npy_intp dim[1] = {ntest}, dim2[2] = {ntest, ntest};
+    PyArrayObject *mu_array = (PyArrayObject*)PyArray_SimpleNew(1, dim,
+                                                                NPY_DOUBLE),
+                  *cov_array = (PyArrayObject*)PyArray_SimpleNew(2, dim2,
+                                                                 NPY_DOUBLE);
+    if (mu_array == NULL || cov_array == NULL) {
+        Py_XDECREF(mu_array);
+        Py_XDECREF(cov_array);
+        return NULL;
+    }
+
+    // Copy the data over.
+    double *mu = (double*)PyArray_DATA(mu_array),
+           *cov = (double*)PyArray_DATA(cov_array);
+    int i, j;
+    for (i = 0; i < ntest; ++i) {
+        mu[i] = mu_vec(i);
+        for (j = 0; j < ntest; ++j)
+            cov[i * ntest + j] = cov_vec(i, j);
+    }
+
+    return Py_BuildValue("OO", mu_array, cov_array);
 }
 
 static PyMethodDef _george_methods[] = {
@@ -164,6 +239,11 @@ static PyMethodDef _george_methods[] = {
      (PyCFunction)_george_lnlikelihood,
      METH_VARARGS,
      "Get the marginalized ln likelihood of some values."
+    },
+    {"predict",
+     (PyCFunction)_george_predict,
+     METH_VARARGS,
+     "Predict."
     },
     {NULL}  /* Sentinel */
 };

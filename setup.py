@@ -26,9 +26,7 @@ include_dirs = [
 ]
 
 sources = [
-    os.path.join("george", "george.cpp"),
     os.path.join("george", "_george.cpp"),
-    os.path.join("george", "kernels.cpp"),
 ]
 
 gp_ext = Extension("george._george",

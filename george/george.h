@@ -46,13 +46,13 @@ namespace George {
         IsotropicGaussianKernel() {};
         IsotropicGaussianKernel(VectorXd pars) : Kernel (pars) {};
 
-        double evaluate (VectorXd x1, VectorXd x2) {
+        virtual double evaluate (VectorXd x1, VectorXd x2) {
             VectorXd d = x1 - x2;
             double chi2 = d.dot(d) / pars_[1];
             return pars_[0] * exp(-0.5 * chi2);
         };
 
-        VectorXd gradient (VectorXd x1, VectorXd x2) {
+        virtual VectorXd gradient (VectorXd x1, VectorXd x2) {
             VectorXd d = x1 - x2, grad(pars_.rows());;
             double e = -0.5 * d.dot(d) / pars_[1], value = exp(e);
             grad(0) = value;
@@ -62,30 +62,32 @@ namespace George {
 
     };
 
+    template <class KernelType>
     class GaussianProcess {
 
     private:
-        Kernel kernel_;
+        KernelType kernel_;
         int info_;
         bool computed_;
         MatrixXd x_;
         LDLT<MatrixXd> L_;
 
     public:
-        GaussianProcess (Kernel kernel) {
+        GaussianProcess (KernelType kernel) {
             info_ = 0;
             computed_ = false;
             kernel_ = kernel;
         };
 
-        Kernel kernel () const { return kernel_; };
-        void set_kernel (Kernel k) {
+        KernelType kernel () const { return kernel_; };
+        void set_kernel (KernelType k) {
             kernel_ = k;
             computed_ = false;
         };
 
         int info () const { return info_; };
         int computed () const { return computed_; };
+        int nsamples () const { return x_.rows(); };
 
         int compute (MatrixXd x, VectorXd yerr)
         {
