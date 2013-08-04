@@ -10,3 +10,4 @@ test
 dist
 *.egg-info
 .syntastic_c_config
+build
