@@ -20,9 +20,11 @@ import numpy
 include_dirs = [
     "george",
     numpy.get_include(),
+    "/usr/include/eigen3",
     "/usr/local/include/eigen3",
     "/usr/local/homebrew/include",
     "/usr/local/homebrew/include/eigen3",
+    "/opt/local/var/macports/software/eigen3/opt/local/include/eigen3",
 ]
 
 sources = [
