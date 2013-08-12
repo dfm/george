@@ -47,14 +47,14 @@ static int _george_init(_george *self, PyObject *args, PyObject *kwds)
     double *pars = (double*)PyArray_DATA(pars_array);
 
     // Which type of kernel?
-    if (npars % 2 != 0) {
+    if (npars != 3) {
         PyErr_SetString(PyExc_RuntimeError,
-            "The isotropic kernel requires an even number of parameters.");
+            "The isotropic kernel takes exactly 3 parameters.");
         return -1;
     }
 
     IsotropicGaussianKernel kernel(VectorXd::Map(pars, npars));
-    self->gp = GaussianProcess<IsotropicGaussianKernel>(kernel);
+    self->gp.set_kernel(kernel);
     return 0;
 }
 
