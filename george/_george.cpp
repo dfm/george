@@ -17,11 +17,12 @@ using George::IsotropicGaussianKernel;
 
 typedef struct {
     PyObject_HEAD
-    GaussianProcess<IsotropicGaussianKernel> gp;
+    GaussianProcess<IsotropicGaussianKernel> *gp;
 } _george;
 
 static void _george_dealloc(_george *self)
 {
+    delete self->gp;
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -29,6 +30,7 @@ static PyObject *_george_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     _george *self;
     self = (_george*)type->tp_alloc(type, 0);
+    self->gp = new GaussianProcess<IsotropicGaussianKernel> ();
     return (PyObject*)self;
 }
 
@@ -54,7 +56,7 @@ static int _george_init(_george *self, PyObject *args, PyObject *kwds)
     }
 
     IsotropicGaussianKernel kernel(VectorXd::Map(pars, npars));
-    self->gp.set_kernel(kernel);
+    self->gp->set_kernel(kernel);
     return 0;
 }
 
@@ -97,8 +99,8 @@ static PyObject *_george_compute (_george *self, PyObject *args)
            *yerr = (double*)PyArray_DATA(yerr_array);
 
     // Fit the GP.
-    int info = self->gp.compute(MatrixXd::Map(x, nsamples, ndim),
-                                VectorXd::Map(yerr, nsamples));
+    int info = self->gp->compute(MatrixXd::Map(x, nsamples, ndim),
+                                 VectorXd::Map(yerr, nsamples));
 
     // Clean up.
     Py_DECREF(x_array);
@@ -119,7 +121,7 @@ static PyObject *_george_lnlikelihood(_george *self, PyObject *args)
     PyObject *y_obj;
     if (!PyArg_ParseTuple(args, "O", &y_obj)) return NULL;
 
-    if (!self->gp.computed()) {
+    if (!self->gp->computed()) {
         PyErr_SetString(PyExc_RuntimeError,
             "You need to compute the model first");
         return NULL;
@@ -135,14 +137,14 @@ static PyObject *_george_lnlikelihood(_george *self, PyObject *args)
 
     // Get the dimension.
     int nsamples = (int)PyArray_DIM(y_array, 0);
-    if (nsamples != self->gp.nsamples()) {
+    if (nsamples != self->gp->nsamples()) {
         PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
         Py_DECREF(y_array);
         return NULL;
     }
 
     double *y = (double*)PyArray_DATA(y_array),
-           lnlike = self->gp.lnlikelihood(VectorXd::Map(y, nsamples));
+           lnlike = self->gp->lnlikelihood(VectorXd::Map(y, nsamples));
 
     // Clean up.
     Py_DECREF(y_array);
@@ -155,7 +157,7 @@ static PyObject *_george_predict(_george *self, PyObject *args)
     PyObject *y_obj, *x_obj;
     if (!PyArg_ParseTuple(args, "OO", &y_obj, &x_obj)) return NULL;
 
-    if (!self->gp.computed()) {
+    if (!self->gp->computed()) {
         PyErr_SetString(PyExc_RuntimeError,
             "You need to compute the model first");
         return NULL;
@@ -179,7 +181,7 @@ static PyObject *_george_predict(_george *self, PyObject *args)
     if ((int)PyArray_NDIM(x_array) == 2)
         ndim = (int)PyArray_DIM(x_array, 1);
 
-    if (nsamples != self->gp.nsamples()) {
+    if (nsamples != self->gp->nsamples()) {
         PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
         Py_DECREF(y_array);
         Py_DECREF(x_array);
@@ -191,7 +193,7 @@ static PyObject *_george_predict(_george *self, PyObject *args)
 
     VectorXd mu_vec(ntest);
     MatrixXd cov_vec(ntest, ntest);
-    int info = self->gp.predict(VectorXd::Map(y, nsamples),
+    int info = self->gp->predict(VectorXd::Map(y, nsamples),
                                 MatrixXd::Map(x, ntest, ndim),
                                 &mu_vec, &cov_vec);
 
