@@ -8,19 +8,19 @@ import matplotlib.pyplot as pl
 
 np.random.seed(123)
 
-N = 1000
+N = 3000
 x = 100 * np.sort(np.random.rand(N)) - 50
 yerr = 0.05 * np.ones(len(x))
 y = np.sin(0.5 * x) + yerr * np.random.randn(len(x))
 
-gp = george.GaussianProcess([1.0, 2.0, 10.0])
+gp = george.GaussianProcess([1.0, 2.0, 4.5])
 
 strt = time.time()
 gp.compute(x, yerr)
 print(gp.lnlikelihood(y))
 print(time.time() - strt)
 
-ntest = 1000
+ntest = 500
 t = np.linspace(-60, 60, ntest)
 mu, cov = gp.predict(y, t)
 

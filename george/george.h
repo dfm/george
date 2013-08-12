@@ -54,25 +54,39 @@ namespace George {
         virtual double evaluate (VectorXd x1, VectorXd x2) {
             int jp1 = int(0.5 * x1.rows()) + 2;
             VectorXd d = x1 - x2;
-            double chi2 = d.dot(d), r = sqrt(chi2)/fabs(pars_[2]), omr, f;
-            omr = 1.0 - r;
+            double chi2 = d.dot(d),
+                   r = sqrt(chi2)/fabs(pars_[2]),
+                   omr = 1.0 - r, f;
+
+            // Compute the compact envelope function.
+            if (r >= 1.0) return 0.0;
             f = pow(omr, jp1)*(jp1*r + 1);
-            if (f <= 0.0) return 0.0;
+
+            // Compute the squared-exp covariance.
             chi2 /= pars_[1] * pars_[1];
             return pars_[0] * pars_[0] * exp(-0.5 * chi2) * f;
         };
 
         virtual VectorXd gradient (VectorXd x1, VectorXd x2) {
-            VectorXd d = x1 - x2, grad(pars_.rows());
-            double e, value, norm = d.dot(d),
-                   factor = 1.0 - sqrt(norm) / pars_[2];
-            printf("FIXME\n");
-            if (factor <= 0.0) return VectorXd::Zero(pars_.rows());
-            e = -0.5 * norm / pars_[1];
+            int jp1 = int(0.5 * x1.rows()) + 2;
+            VectorXd d = x1 - x2,
+                     grad(pars_.rows());
+            double e, value,
+                   norm = d.dot(d),
+                   r = sqrt(norm)/fabs(pars_[2]),
+                   omr = 1.0 - r, f, fv;
+
+            // Compute the compact kernel.
+            if (r >= 1.0) return VectorXd::Zero(pars_.rows());
+            f = pow(omr, jp1)*(jp1*r + 1);
+
+            // Compute the gradient.
+            e = -0.5 * norm / pars_[1] / pars_[1];
             value = exp(e);
-            grad(0) = value * factor;
-            grad(1) = -e / pars_[1] * pars_[0] * value * factor;
-            grad(2) = pars_[0] * value * sqrt(norm) / pars_[2] / pars_[2];
+            fv = value * f;
+            grad(0) = 2 * pars_[0] * fv;
+            grad(1) = -2 * e * pars_[0] * fv;
+            grad(2) = pars_[0] * pars_[0] * value * r / fabs(pars_[2]);
             return grad;
         };
 
@@ -116,25 +130,19 @@ namespace George {
 
             // Build the sparse covariance matrix.
             for (i = 0; i < nsamples; ++i) {
-                for (j = i + 1; j < nsamples; ++j) {
-                    value = kernel_.evaluate(x.row(i), x.row(j));
-                    if (value > 0) {
-                        entries.push_back(T(i, j, value));
-                        entries.push_back(T(j, i, value));
-                    }
-                }
                 entries.push_back(T(i, i,
                                     kernel_.evaluate(x.row(i), x.row(i))
                                     + yerr[i]*yerr[i]));
+                for (j = i + 1; j < nsamples; ++j) {
+                    value = kernel_.evaluate(x.row(i), x.row(j));
+                    if (value > 0) entries.push_back(T(j, i, value));
+                }
             }
             Kxx.setFromTriplets(entries.begin(), entries.end());
             Kxx.makeCompressed();
 
-            printf("%d %d\n", Kxx.nonZeros(), nsamples * nsamples);
-
             // Factorize the covariance.
             L_ = new SimplicialLDLT<SparseMatrix<double> > (Kxx);
-            printf("%d\n", L_->info());
             if (L_->info() != Success) return -1;
 
             computed_ = true;
