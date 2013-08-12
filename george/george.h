@@ -52,12 +52,14 @@ namespace George {
         IsotropicGaussianKernel(VectorXd pars) : Kernel (pars) {};
 
         virtual double evaluate (VectorXd x1, VectorXd x2) {
+            int jp1 = int(0.5 * x1.rows()) + 2;
             VectorXd d = x1 - x2;
-            double chi2 = d.dot(d), r = sqrt(chi2)/fabs(pars_[2]), factor;
-            factor = (1-r)*(1-r)*(1-r)*(3*r + 1);
-            if (factor <= 0.0) return 0.0;
+            double chi2 = d.dot(d), r = sqrt(chi2)/fabs(pars_[2]), omr, f;
+            omr = 1.0 - r;
+            f = pow(omr, jp1)*(jp1*r + 1);
+            if (f <= 0.0) return 0.0;
             chi2 /= pars_[1] * pars_[1];
-            return pars_[0] * pars_[0] * exp(-0.5 * chi2) * factor;
+            return pars_[0] * pars_[0] * exp(-0.5 * chi2) * f;
         };
 
         virtual VectorXd gradient (VectorXd x1, VectorXd x2) {
