@@ -106,6 +106,10 @@ namespace George {
         GaussianProcess () {
             info_ = 0;
             computed_ = false;
+            L_ = new SimplicialLDLT<SparseMatrix<double> > ();
+        };
+        ~GaussianProcess () {
+            delete L_;
         };
 
         KernelType kernel () const { return kernel_; };
@@ -142,6 +146,7 @@ namespace George {
             Kxx.makeCompressed();
 
             // Factorize the covariance.
+            delete L_;
             L_ = new SimplicialLDLT<SparseMatrix<double> > (Kxx);
             if (L_->info() != Success) return -1;
 

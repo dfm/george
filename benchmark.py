@@ -13,7 +13,7 @@ x = 100 * np.sort(np.random.rand(N)) - 50
 yerr = 0.05 * np.ones(len(x))
 y = np.sin(0.5 * x) + yerr * np.random.randn(len(x))
 
-gp = george.GaussianProcess([1.0, 2.0, 4.5])
+gp = george.GaussianProcess([1.0, 2.0, 10.0])
 
 strt = time.time()
 gp.compute(x, yerr)
