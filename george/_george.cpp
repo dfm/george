@@ -227,7 +227,18 @@ static PyObject *_george_predict(_george *self, PyObject *args)
             cov[i * ntest + j] = cov_vec(i, j);
     }
 
-    return Py_BuildValue("OO", mu_array, cov_array);
+    PyObject *ret = Py_BuildValue("OO", mu_array, cov_array);
+
+    Py_DECREF(mu_array);
+    Py_DECREF(cov_array);
+
+    if (ret == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't build output tuple");
+        Py_XDECREF(ret);
+        return NULL;
+    }
+
+    return ret;
 }
 
 static PyMethodDef _george_methods[] = {
