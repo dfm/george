@@ -37,7 +37,7 @@ gp_ext = Extension("george._george",
 
 setup(
     name="george",
-    version="0.2.0",
+    version="0.2.2",
     author="Daniel Foreman-Mackey",
     author_email="danfm@nyu.edu",
     url="https://github.com/dfm/george",
@@ -45,7 +45,8 @@ setup(
     ext_modules=[gp_ext],
     description="Blazingly fast Gaussian Processes.",
     long_description=open("README.rst").read(),
-    package_data={"": ["README.rst", "LICENSE.rst"]},
+    package_data={"": ["README.rst", "LICENSE.rst"],
+                  "george": ["george.h"]},
     include_package_data=True,
     classifiers=[
         # "Development Status :: 5 - Production/Stable",
