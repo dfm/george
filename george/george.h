@@ -26,6 +26,7 @@ namespace George {
         Kernel (VectorXd pars) {
             pars_ = pars;
         };
+        virtual ~Kernel () { };
 
         int npars () const { return pars_.rows(); };
         VectorXd pars () const { return pars_; };
@@ -92,11 +93,10 @@ namespace George {
 
     };
 
-    template <class KernelType>
     class GaussianProcess {
 
     private:
-        KernelType kernel_;
+        Kernel *kernel_;
         int info_;
         bool computed_;
         MatrixXd x_;
@@ -107,13 +107,16 @@ namespace George {
             info_ = 0;
             computed_ = false;
             L_ = new SimplicialLDLT<SparseMatrix<double> > ();
+            kernel_ = new Kernel ();
         };
         ~GaussianProcess () {
             delete L_;
+            delete kernel_;
         };
 
-        KernelType kernel () const { return kernel_; };
-        void set_kernel (KernelType k) {
+        Kernel *kernel () const { return kernel_; };
+        void set_kernel (Kernel *k) {
+            delete kernel_;
             kernel_ = k;
             computed_ = false;
         };
@@ -135,10 +138,10 @@ namespace George {
             // Build the sparse covariance matrix.
             for (i = 0; i < nsamples; ++i) {
                 entries.push_back(T(i, i,
-                                    kernel_.evaluate(x.row(i), x.row(i))
+                                    kernel_->evaluate(x.row(i), x.row(i))
                                     + yerr[i]*yerr[i]));
                 for (j = i + 1; j < nsamples; ++j) {
-                    value = kernel_.evaluate(x.row(i), x.row(j));
+                    value = kernel_->evaluate(x.row(i), x.row(j));
                     if (value > 0) entries.push_back(T(j, i, value));
                 }
             }
@@ -172,7 +175,7 @@ namespace George {
 
         VectorXd gradlnlikelihood (VectorXd y)
         {
-            int i, j, k, nsamples = y.rows(), npars = kernel_.npars();
+            int i, j, k, nsamples = y.rows(), npars = kernel_->npars();
             VectorXd grad(npars), alpha;
             vector<MatrixXd> dkdt(npars);
 
@@ -193,7 +196,7 @@ namespace George {
             // Compute the gradient matrices.
             for (i = 0; i < nsamples; ++i)
                 for (j = i; j < nsamples; ++j) {
-                    grad = kernel_.gradient(x_.row(i), x_.row(j));
+                    grad = kernel_->gradient(x_.row(i), x_.row(j));
                     for (k = 0; k < npars; ++k) {
                         dkdt[k](i, j) = grad(k);
                         if (j > i) dkdt[k](j, i) = grad(k);
@@ -223,13 +226,13 @@ namespace George {
             // Build the kernel matrices.
             for (i = 0; i < nsamples; ++i)
                 for (j = 0; j < ntest; ++j)
-                    Kxs(i, j) = kernel_.evaluate(x_.row(i), x.row(j));
+                    Kxs(i, j) = kernel_->evaluate(x_.row(i), x.row(j));
 
             (*cov).resize(ntest, ntest);
             for (i = 0; i < ntest; ++i) {
-                (*cov)(i, i) = kernel_.evaluate(x.row(i), x.row(i));
+                (*cov)(i, i) = kernel_->evaluate(x.row(i), x.row(i));
                 for (j = i + 1; j < ntest; ++j) {
-                    value = kernel_.evaluate(x.row(i), x.row(j));
+                    value = kernel_->evaluate(x.row(i), x.row(j));
                     (*cov)(i, j) = value;
                     (*cov)(j, i) = value;
                 }

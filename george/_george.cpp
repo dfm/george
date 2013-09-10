@@ -17,7 +17,7 @@ using George::IsotropicGaussianKernel;
 
 typedef struct {
     PyObject_HEAD
-    GaussianProcess<IsotropicGaussianKernel> *gp;
+    GaussianProcess *gp;
 } _george;
 
 static void _george_dealloc(_george *self)
@@ -30,7 +30,7 @@ static PyObject *_george_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     _george *self;
     self = (_george*)type->tp_alloc(type, 0);
-    self->gp = new GaussianProcess<IsotropicGaussianKernel> ();
+    self->gp = new GaussianProcess ();
     return (PyObject*)self;
 }
 
@@ -55,7 +55,7 @@ static int _george_init(_george *self, PyObject *args, PyObject *kwds)
         return -1;
     }
 
-    IsotropicGaussianKernel kernel(VectorXd::Map(pars, npars));
+    IsotropicGaussianKernel *kernel = new IsotropicGaussianKernel(VectorXd::Map(pars, npars));
     self->gp->set_kernel(kernel);
     return 0;
 }
