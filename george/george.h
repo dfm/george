@@ -41,9 +41,10 @@ namespace George {
             return 0.0;
         };
 
-        virtual VectorXd gradient (VectorXd x1, VectorXd x2) {
-            VectorXd g = VectorXd::Zero(pars_.rows());
-            return g;
+        virtual void gradient (VectorXd x1, VectorXd x2, double *value,
+                               VectorXd *grad) {
+            *value = 0.0;
+            *grad = VectorXd::Zero(pars_.rows());
         };
 
     protected:
@@ -79,7 +80,7 @@ namespace George {
             return compute<double>(x1, x2, pars_);
         };
 
-        VectorXd gradient (VectorXd x1, VectorXd x2) {
+        void gradient (VectorXd x1, VectorXd x2, double *value, VectorXd *grad) {
             typedef Matrix<double, Dynamic, 1> derivative_t;
             typedef AutoDiffScalar<derivative_t> scalar_t;
             typedef Matrix<scalar_t, Dynamic, 1> input_t;
@@ -96,9 +97,10 @@ namespace George {
 
             scalar_t y = compute<scalar_t>(x1, x2, p);
 
-            VectorXd grad = y.derivatives();
-            if (!grad.size()) grad = VectorXd::Zero(pars_.rows());
-            return grad;
+            *grad = y.derivatives();
+            if (!grad->size()) *grad = VectorXd::Zero(pars_.rows());
+
+            *value = y.value();
         };
 
     };
@@ -186,6 +188,7 @@ namespace George {
         VectorXd gradlnlikelihood (VectorXd y)
         {
             int i, j, k, nsamples = y.rows(), npars = kernel_->npars();
+            double tmp;
             VectorXd grad(npars), alpha;
             vector<MatrixXd> dkdt(npars);
 
@@ -206,7 +209,7 @@ namespace George {
             // Compute the gradient matrices.
             for (i = 0; i < nsamples; ++i)
                 for (j = i; j < nsamples; ++j) {
-                    grad = kernel_->gradient(x_.row(i), x_.row(j));
+                    kernel_->gradient(x_.row(i), x_.row(j), &tmp, &grad);
                     for (k = 0; k < npars; ++k) {
                         dkdt[k](i, j) = grad(k);
                         if (j > i) dkdt[k](j, i) = grad(k);
