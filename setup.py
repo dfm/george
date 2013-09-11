@@ -37,7 +37,7 @@ gp_ext = Extension("george._george",
 
 setup(
     name="george",
-    version="0.3.0",
+    version="0.3.1",
     author="Daniel Foreman-Mackey",
     author_email="danfm@nyu.edu",
     url="https://github.com/dfm/george",
