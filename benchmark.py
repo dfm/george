@@ -14,6 +14,9 @@ yerr = 0.05 * np.ones(len(x))
 y = np.sin(0.5 * x) + yerr * np.random.randn(len(x))
 
 gp = george.GaussianProcess([1.0, 2.0, 4.0])
+prior = gp.sample_prior(x, N=1)
+pl.plot(x, prior.T, "k", alpha=0.5)
+pl.savefig("prior.png")
 
 strt = time.time()
 gp.compute(x, yerr)
@@ -29,6 +32,7 @@ ntest = 500
 t = np.linspace(-60, 60, ntest)
 mu, cov = gp.predict(y, t)
 
+pl.clf()
 pl.errorbar(x, y, yerr=yerr, fmt=".k")
 pl.plot(t, mu, "r")
 std = np.sqrt(np.diag(cov))

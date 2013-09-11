@@ -6,6 +6,7 @@
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using George::GaussianProcess;
+using George::Kernel;
 using George::IsotropicGaussianKernel;
 
 #define PARSE_ARRAY(o) (PyArrayObject*) PyArray_FROM_OTF(o, NPY_DOUBLE, \
@@ -55,7 +56,8 @@ static int _george_init(_george *self, PyObject *args, PyObject *kwds)
         return -1;
     }
 
-    IsotropicGaussianKernel *kernel = new IsotropicGaussianKernel(VectorXd::Map(pars, npars));
+    IsotropicGaussianKernel *kernel =
+        new IsotropicGaussianKernel(VectorXd::Map(pars, npars));
     self->gp->set_kernel(kernel);
     return 0;
 }
@@ -301,6 +303,60 @@ static PyObject *_george_predict(_george *self, PyObject *args)
     return ret;
 }
 
+static PyObject *_george_covariance(_george *self, PyObject *args)
+{
+    PyObject *t_obj;
+    if (!PyArg_ParseTuple(args, "O", &t_obj)) return NULL;
+
+    PyArrayObject *t_array = PARSE_ARRAY(t_obj);
+    if (t_array == NULL) {
+        Py_XDECREF(t_array);
+        PyErr_SetString(PyExc_ValueError,
+            "Failed to parse input object as a numpy array");
+        return NULL;
+    }
+
+    int N = (int)PyArray_DIM(t_array, 0),
+        ndim = 1;
+    if ((int)PyArray_NDIM(t_array) == 2)
+        ndim = (int)PyArray_DIM(t_array, 1);
+    MatrixXd t = MatrixXd::Map((double*)PyArray_DATA(t_array), N, ndim);
+
+    // Allocate the output arrays.
+    npy_intp dim[2] = {N, N};
+    PyArrayObject *cov_array = (PyArrayObject*)PyArray_SimpleNew(2, dim,
+                                                                 NPY_DOUBLE);
+    if (cov_array == NULL) {
+        Py_XDECREF(cov_array);
+        return NULL;
+    }
+
+    // Copy the data over.
+    Kernel *k = self->gp->kernel();
+    double value,
+           *cov = (double*)PyArray_DATA(cov_array);
+    int i, j;
+    for (i = 0; i < N; ++i) {
+        cov[i*N+i] = k->evaluate(t.row(i), t.row(i));
+        for (j = i + 1; j < N; ++j) {
+            value = k->evaluate(t.row(i), t.row(j));
+            cov[i*N+j] = value;
+            cov[j*N+i] = value;
+        }
+    }
+
+    PyObject *ret = Py_BuildValue("O", cov_array);
+    Py_DECREF(cov_array);
+
+    if (ret == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't build output tuple");
+        Py_XDECREF(ret);
+        return NULL;
+    }
+
+    return ret;
+}
+
 static PyMethodDef _george_methods[] = {
     {"compute",
      (PyCFunction)_george_compute,
@@ -320,6 +376,11 @@ static PyMethodDef _george_methods[] = {
      (PyCFunction)_george_predict,
      METH_VARARGS,
      "Predict."
+    },
+    {"covariance",
+     (PyCFunction)_george_covariance,
+     METH_VARARGS,
+     "Compute a covariance function."
     },
     {NULL}  /* Sentinel */
 };

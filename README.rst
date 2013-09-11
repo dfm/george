@@ -1,18 +1,19 @@
 George
 ======
 
-Installation:
+You'll need [Eigen 3](http://eigen.tuxfamily.org/) and
+[numpy](http://www.numpy.org/).
+
+Then just:
 
 ::
 
-    python setup.py install -I/path/to/eigen3
+    pip install george
 
-or
+License
+-------
 
-::
+Copyright 2013 Daniel Foreman-Mackey
 
-    python setup.py build_ext --inplace -I/path/to/eigen3
-
-This requires `numpy <http://numpy.scipy.org>`_ and `Eigen3
-<http://eigen.tuxfamily.org/>`_. If you install Eigen using Homebrew on a
-Mac, ``/path/to/eigen`` is probably ``/usr/local/include/eigen3``.
+This is open source software licensed under the MIT license (see
+``LICENSE.rst``)
