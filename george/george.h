@@ -5,7 +5,6 @@
 #include <vector>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
-#include <Eigen/SparseCholesky>
 #include <unsupported/Eigen/AutoDiff>
 
 #define TWOLNPI 1.8378770664093453

@@ -17,8 +17,13 @@ gp = george.GaussianProcess([1.0, 2.0, 4.0])
 
 strt = time.time()
 gp.compute(x, yerr)
+print("compute: ", time.time() - strt)
+strt = time.time()
 print(gp.lnlikelihood(y))
-print(time.time() - strt)
+print("solve: ", time.time() - strt)
+strt = time.time()
+print(gp.lnlikelihood(y))
+print("solve: ", time.time() - strt)
 
 ntest = 500
 t = np.linspace(-60, 60, ntest)
