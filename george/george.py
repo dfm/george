@@ -27,6 +27,10 @@ class GaussianProcess(object):
     def __init__(self, pars, kernel_type="truncated_squared_exp"):
         self._gp = _george(pars)
 
+    @property
+    def computed(self):
+        return self._gp.computed()
+
     def compute(self, x, yerr=None):
         """
         Pre-compute the covariance matrix and factorize it for a set of times

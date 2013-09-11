@@ -357,6 +357,12 @@ static PyObject *_george_covariance(_george *self, PyObject *args)
     return ret;
 }
 
+static PyObject *_george_computed(_george *self, PyObject *args)
+{
+    if (self->gp->computed()) Py_RETURN_TRUE;
+    Py_RETURN_FALSE;
+}
+
 static PyMethodDef _george_methods[] = {
     {"compute",
      (PyCFunction)_george_compute,
@@ -381,6 +387,11 @@ static PyMethodDef _george_methods[] = {
      (PyCFunction)_george_covariance,
      METH_VARARGS,
      "Compute a covariance function."
+    },
+    {"computed",
+     (PyCFunction)_george_computed,
+     METH_NOARGS,
+     "Has the GP been computed?"
     },
     {NULL}  /* Sentinel */
 };
