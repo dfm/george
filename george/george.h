@@ -68,7 +68,7 @@ namespace George {
               f;
 
             // Compute the compact envelope function.
-            if (r >= T(1.0)) return T(0.0);
+            if (r >= 1.0) return 0.0;
             f = pow(omr, jp1)*(jp1*r + 1.0);
 
             // Compute the squared-exp covariance.
@@ -90,10 +90,8 @@ namespace George {
 
             for (i = 0; i < N; ++i) {
                 p(i).derivatives().resize(N);
-                for (j = 0; j < N; ++j) {
-                    p(i).derivatives()(j) = pars_(j);
-                    if (i == j) p(i).derivatives()(j) += 1.0;
-                }
+                for (j = 0; j < N; ++j) p(i).derivatives()(j) = pars_(j);
+                p(i).derivatives()(i) += 1.0;
             }
 
             scalar_t y = compute<scalar_t>(x1, x2, p);
