@@ -180,15 +180,34 @@ static PyObject *_george_gradlnlikelihood(_george *self, PyObject *args)
     }
 
     double *y = (double*)PyArray_DATA(y_array);
-
-    printf("sup\n");
     VectorXd g = self->gp->gradlnlikelihood(VectorXd::Map(y, nsamples));
-    printf("sup2\n");
-
-    // Clean up.
     Py_DECREF(y_array);
 
-    return Py_BuildValue("d", 0.0);
+    if (self->gp->info() != 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't solve for gradient");
+        return NULL;
+    }
+
+    // Allocate the output arrays.
+    int npars = g.size();
+    npy_intp dim[1] = {npars};
+    PyArrayObject *grad_array = (PyArrayObject*)PyArray_SimpleNew(1, dim,
+                                                                  NPY_DOUBLE);
+    if (grad_array == NULL) {
+        Py_XDECREF(grad_array);
+        return NULL;
+    }
+
+    // Copy the data over.
+    double *grad = (double*)PyArray_DATA(grad_array);
+    int i;
+    for (i = 0; i < npars; ++i) grad[i] = g(i);
+
+    PyObject *ret = Py_BuildValue("O", grad_array);
+
+    Py_DECREF(grad_array);
+
+    return ret;
 }
 
 static PyObject *_george_predict(_george *self, PyObject *args)
