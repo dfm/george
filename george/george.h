@@ -1,21 +1,26 @@
 #ifndef _GEORGE_H_
 #define _GEORGE_H_
 
+#include <iostream>
 #include <vector>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <Eigen/SparseCholesky>
+#include <unsupported/Eigen/AutoDiff>
 
 #define TWOLNPI 1.8378770664093453
 
 using std::vector;
 using Eigen::VectorXd;
+using Eigen::Matrix;
 using Eigen::MatrixXd;
+using Eigen::Dynamic;
 using Eigen::LDLT;
 using Eigen::Success;
 using Eigen::Triplet;
 using Eigen::SparseMatrix;
 using Eigen::SimplicialLDLT;
+using Eigen::AutoDiffScalar;
 
 namespace George {
 
@@ -35,6 +40,7 @@ namespace George {
         virtual double evaluate (VectorXd x1, VectorXd x2) {
             return 0.0;
         };
+
         virtual VectorXd gradient (VectorXd x1, VectorXd x2) {
             VectorXd g = VectorXd::Zero(pars_.rows());
             return g;
@@ -52,42 +58,48 @@ namespace George {
         IsotropicGaussianKernel() {};
         IsotropicGaussianKernel(VectorXd pars) : Kernel (pars) {};
 
-        virtual double evaluate (VectorXd x1, VectorXd x2) {
-            int jp1 = int(0.5 * x1.rows()) + 2;
+        template <typename T>
+        T compute (VectorXd x1, VectorXd x2, Matrix<T, Dynamic, 1> p) {
+            int jp1 = int(0.5*x1.rows())+2;
             VectorXd d = x1 - x2;
-            double chi2 = d.dot(d),
-                   r = sqrt(chi2)/fabs(pars_[2]),
-                   omr = 1.0 - r, f;
+            double chi2 = d.dot(d);
+            T r = sqrt(chi2) / sqrt(p[2] * p[2]),
+              omr = 1.0 - r,
+              f;
 
             // Compute the compact envelope function.
-            if (r >= 1.0) return 0.0;
-            f = pow(omr, jp1)*(jp1*r + 1);
+            if (r >= T(1.0)) return T(0.0);
+            f = pow(omr, jp1)*(jp1*r + 1.0);
 
             // Compute the squared-exp covariance.
-            chi2 /= pars_[1] * pars_[1];
-            return pars_[0] * pars_[0] * exp(-0.5 * chi2) * f;
+            return p[0] * p[0] * exp(-0.5 * chi2 / p[1] * p[1]) * f;
         };
 
-        virtual VectorXd gradient (VectorXd x1, VectorXd x2) {
-            int jp1 = int(0.5 * x1.rows()) + 2;
-            VectorXd d = x1 - x2,
-                     grad(pars_.rows());
-            double e, value,
-                   norm = d.dot(d),
-                   r = sqrt(norm)/fabs(pars_[2]),
-                   omr = 1.0 - r, f, fv;
+        double evaluate (VectorXd x1, VectorXd x2) {
+            return compute<double>(x1, x2, pars_);
+        };
 
-            // Compute the compact kernel.
-            if (r >= 1.0) return VectorXd::Zero(pars_.rows());
-            f = pow(omr, jp1)*(jp1*r + 1);
+        VectorXd gradient (VectorXd x1, VectorXd x2) {
+            typedef Matrix<double, Dynamic, 1> derivative_t;
+            typedef AutoDiffScalar<derivative_t> scalar_t;
+            typedef Matrix<scalar_t, Dynamic, 1> input_t;
 
-            // Compute the gradient.
-            e = -0.5 * norm / pars_[1] / pars_[1];
-            value = exp(e);
-            fv = value * f;
-            grad(0) = 2 * pars_[0] * fv;
-            grad(1) = -2 * e * pars_[0] * fv;
-            grad(2) = pars_[0] * pars_[0] * value * r / fabs(pars_[2]);
+            int i, j, N = npars();
+            input_t p(N);
+            p = pars_.cast<scalar_t>();
+
+            for (i = 0; i < N; ++i) {
+                p(i).derivatives().resize(N);
+                for (j = 0; j < N; ++j) {
+                    p(i).derivatives()(j) = pars_(j);
+                    if (i == j) p(i).derivatives()(j) += 1.0;
+                }
+            }
+
+            scalar_t y = compute<scalar_t>(x1, x2, p);
+
+            VectorXd grad = y.derivatives();
+            if (!grad.size()) grad = VectorXd::Zero(pars_.rows());
             return grad;
         };
 

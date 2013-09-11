@@ -152,6 +152,45 @@ static PyObject *_george_lnlikelihood(_george *self, PyObject *args)
     return Py_BuildValue("d", lnlike);
 }
 
+static PyObject *_george_gradlnlikelihood(_george *self, PyObject *args)
+{
+    PyObject *y_obj;
+    if (!PyArg_ParseTuple(args, "O", &y_obj)) return NULL;
+
+    if (!self->gp->computed()) {
+        PyErr_SetString(PyExc_RuntimeError,
+            "You need to compute the model first");
+        return NULL;
+    }
+
+    PyArrayObject *y_array = PARSE_ARRAY(y_obj);
+    if (y_array == NULL) {
+        Py_XDECREF(y_array);
+        PyErr_SetString(PyExc_ValueError,
+            "Failed to parse input object as a numpy array");
+        return NULL;
+    }
+
+    // Get the dimension.
+    int nsamples = (int)PyArray_DIM(y_array, 0);
+    if (nsamples != self->gp->nsamples()) {
+        PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
+        Py_DECREF(y_array);
+        return NULL;
+    }
+
+    double *y = (double*)PyArray_DATA(y_array);
+
+    printf("sup\n");
+    VectorXd g = self->gp->gradlnlikelihood(VectorXd::Map(y, nsamples));
+    printf("sup2\n");
+
+    // Clean up.
+    Py_DECREF(y_array);
+
+    return Py_BuildValue("d", 0.0);
+}
+
 static PyObject *_george_predict(_george *self, PyObject *args)
 {
     PyObject *y_obj, *x_obj;
@@ -252,6 +291,11 @@ static PyMethodDef _george_methods[] = {
      (PyCFunction)_george_lnlikelihood,
      METH_VARARGS,
      "Get the marginalized ln likelihood of some values."
+    },
+    {"gradlnlikelihood",
+     (PyCFunction)_george_gradlnlikelihood,
+     METH_VARARGS,
+     "Get the marginalized ln likelihood and gradient of some values."
     },
     {"predict",
      (PyCFunction)_george_predict,
