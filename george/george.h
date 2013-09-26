@@ -72,7 +72,7 @@ namespace George {
             f = pow(omr, jp1)*(jp1*r + 1.0);
 
             // Compute the squared-exp covariance.
-            return p[0] * p[0] * exp(-0.5 * chi2 / p[1] * p[1]) * f;
+            return p[0] * p[0] * exp(-0.5 * chi2 / p[1] / p[1]) * f;
         };
 
         double evaluate (VectorXd x1, VectorXd x2) {
