@@ -112,6 +112,7 @@ namespace George {
         bool computed_;
         MatrixXd x_;
         SimplicialLDLT<SparseMatrix<double> > *L_;
+        double logdet_;
 
     public:
         GaussianProcess () {
@@ -164,13 +165,15 @@ namespace George {
             L_ = new SimplicialLDLT<SparseMatrix<double> > (Kxx);
             if (L_->info() != Success) return -1;
 
+            // Pre-compute the determinant.
+            logdet_ = log(L_->vectorD().array()).sum();
+
             computed_ = true;
             return 0;
         };
 
         double lnlikelihood (VectorXd y)
         {
-            double logdet;
             VectorXd alpha;
 
             if (!computed_ || y.rows() != x_.rows())
@@ -180,8 +183,7 @@ namespace George {
             if (L_->info() != Success)
                 return -INFINITY;
 
-            logdet = log(L_->vectorD().array()).sum();
-            return -0.5 * (y.transpose() * alpha + logdet + y.rows() * TWOLNPI);
+            return -0.5 * (y.transpose() * alpha + logdet_ + y.rows() * TWOLNPI);
         };
 
         VectorXd gradlnlikelihood (VectorXd y)
