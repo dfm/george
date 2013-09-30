@@ -76,7 +76,21 @@ namespace George {
         };
 
         double evaluate (VectorXd x1, VectorXd x2) {
-            return compute<double>(x1, x2, pars_);
+            // return compute<double>(x1, x2, pars_);
+            int jp1 = int(0.5*x1.rows())+2;
+            VectorXd d = x1 - x2;
+            VectorXd p = pars_;
+            double chi2 = d.dot(d),
+                   r = sqrt(chi2) / sqrt(p[2] * p[2]),
+                   omr = 1.0 - r,
+                   f;
+
+            // Compute the compact envelope function.
+            if (r >= 1.0) return 0.0;
+            f = pow(omr, jp1)*(jp1*r + 1.0);
+
+            // Compute the squared-exp covariance.
+            return p[0] * p[0] * exp(-0.5 * chi2 / p[1] / p[1]) * f;
         };
 
         void gradient (VectorXd x1, VectorXd x2, double *value, VectorXd *grad) {
