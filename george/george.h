@@ -119,16 +119,19 @@ namespace George {
             info_ = 0;
             computed_ = false;
             L_ = new SimplicialLDLT<SparseMatrix<double> > ();
-            kernel_ = new Kernel ();
+        };
+        GaussianProcess (Kernel *kernel) {
+            info_ = 0;
+            computed_ = false;
+            L_ = new SimplicialLDLT<SparseMatrix<double> > ();
+            kernel_ = kernel;
         };
         ~GaussianProcess () {
             delete L_;
-            delete kernel_;
         };
 
         Kernel *kernel () const { return kernel_; };
         void set_kernel (Kernel *k) {
-            delete kernel_;
             kernel_ = k;
             computed_ = false;
         };
