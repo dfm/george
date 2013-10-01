@@ -18,7 +18,7 @@ typedef struct george_gp_struct {
 
     // The results of the factorization.
     double logdet;
-    cholmod_common c;
+    cholmod_common *c;
     cholmod_factor *L;
 
 } george_gp;

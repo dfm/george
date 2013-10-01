@@ -59,8 +59,9 @@ george_allocate_gp (double *pars, double (*kernel) (double, double, double*))
     gp->info = 0;
 
     // Start up CHOLMOD.
-    cholmod_start (&(gp->c));
-    gp->L = cholmod_allocate_factor (1, &(gp->c));
+    gp->c = malloc(sizeof(cholmod_common));
+    cholmod_start (gp->c);
+    gp->L = cholmod_allocate_factor (1, gp->c);
 
     return gp;
 }
@@ -69,15 +70,16 @@ void george_free_gp (george_gp *gp)
 {
     if (gp->computed) {
         free (gp->x);
-        cholmod_free_factor (&(gp->L), &(gp->c));
+        cholmod_free_factor (&(gp->L), gp->c);
     }
-    cholmod_finish (&(gp->c));
+    cholmod_finish (gp->c);
+    free (gp->c);
     free (gp);
 }
 
 int george_compute (int n, double *x, double *yerr, george_gp *gp)
 {
-    cholmod_common *c = &(gp->c);
+    cholmod_common *c = gp->c;
     int i, j, k = 0, maxnnz = (n * n + n) / 2,
         *rows = malloc (maxnnz * sizeof(int)),
         *cols = malloc (maxnnz * sizeof(int));
@@ -136,7 +138,7 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
 double george_log_likelihood (double *y, george_gp *gp)
 {
     int i, n = gp->ndata;
-    cholmod_common *c = &(gp->c);
+    cholmod_common *c = gp->c;
 
     // Make sure that things have been properly computed.
     if (!gp->computed) return -INFINITY;
@@ -163,9 +165,9 @@ double george_log_likelihood (double *y, george_gp *gp)
 //
 double george_kernel (double x1, double x2, double *pars)
 {
-    double d = x1 - x2, chi2 = d * d, r, omr;
-    if (chi2 >= pars[2]) return 0.0;
-    r = sqrt(chi2 / pars[2] / pars[2]);
+    double d = x1 - x2, chi2 = d * d, r, omr, p2 = pars[2] * pars[2];
+    if (chi2 >= p2) return 0.0;
+    r = sqrt(chi2 / p2);
     omr = 1.0 - r;
     return pars[0] * pars[0] * exp(-0.5 * chi2 / (pars[1] * pars[1]))
            * omr * omr * (2*r + 1);
