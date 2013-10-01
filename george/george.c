@@ -49,7 +49,8 @@ double george_logdet (cholmod_factor *L, cholmod_common *c)
 // The Gaussian process methods.
 //
 george_gp *
-george_allocate_gp (double *pars, double (*kernel) (double, double, double*))
+george_allocate_gp (double *pars,
+                    double (*kernel) (double, double, void*, int*))
 {
     george_gp *gp = malloc (sizeof (george_gp));
 
@@ -80,7 +81,7 @@ void george_free_gp (george_gp *gp)
 int george_compute (int n, double *x, double *yerr, george_gp *gp)
 {
     cholmod_common *c = gp->c;
-    int i, j, k = 0, maxnnz = (n * n + n) / 2,
+    int i, j, k = 0, maxnnz = (n * n + n) / 2, flag,
         *rows = malloc (maxnnz * sizeof(int)),
         *cols = malloc (maxnnz * sizeof(int));
     double value, *values = malloc (maxnnz * sizeof(double));
@@ -88,9 +89,9 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
     // Compute the covariance matrix in triplet form.
     for (i = 0; i < n; ++i) {
         for (j = i; j < n; ++j) {
-            value = (*(gp->kernel)) (x[i], x[j], gp->pars);
+            value = (*(gp->kernel)) (x[i], x[j], gp->pars, &flag);
             if (i == j) value += yerr[i] * yerr[i];
-            if (value > 0) {
+            if (flag && value > 0) {
                 values[k] = value;
                 rows[k] = i;
                 cols[k] = j;
@@ -163,12 +164,16 @@ double george_log_likelihood (double *y, george_gp *gp)
 //
 // The built in kernel.
 //
-double george_kernel (double x1, double x2, double *pars)
+double george_kernel (double x1, double x2, void *pars, int *flag)
 {
-    double d = x1 - x2, chi2 = d * d, r, omr, p2 = pars[2] * pars[2];
+    double d = x1 - x2, chi2 = d * d, r, omr,
+           *p = pars,
+           p2 = p[2] * p[2];
+    *flag = 0;
     if (chi2 >= p2) return 0.0;
+    *flag = 1;
     r = sqrt(chi2 / p2);
     omr = 1.0 - r;
-    return pars[0] * pars[0] * exp(-0.5 * chi2 / (pars[1] * pars[1]))
+    return p[0] * p[0] * exp(-0.5 * chi2 / (p[1] * p[1]))
            * omr * omr * (2*r + 1);
 }

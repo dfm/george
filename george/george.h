@@ -6,8 +6,8 @@
 typedef struct george_gp_struct {
 
     // The kernel function.
-    double *pars;
-    double (*kernel) (double, double, double*);
+    void *pars;
+    double (*kernel) (double, double, void*, int*);
 
     // Bookkeeping flags.
     int computed, info;
@@ -26,7 +26,7 @@ typedef struct george_gp_struct {
 george_gp *george_allocate_gp
 (
     double *pars,
-    double (*kernel) (double, double, double*)
+    double (*kernel) (double, double, void*, int*)
 );
 
 void george_free_gp (
@@ -48,7 +48,8 @@ double george_log_likelihood (
 double george_kernel (
     double x1,
     double x2,
-    double *pars
+    void *pars,
+    int *flag
 );
 
 #endif
