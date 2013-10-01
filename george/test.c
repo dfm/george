@@ -1,4 +1,6 @@
 #include "time.h"
+#include "george.h"
+#include "math.h"
 
 
 int main ()

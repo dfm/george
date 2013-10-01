@@ -1,11 +1,6 @@
-CC = g++
-CFLAGS = -Igeorge -I/usr/local/include/eigen3
-
-.cpp.o:
-	$(CC) $(CFLAGS) -o $*.o -c $*.cpp
-
-test: george/test.cpp george/george.h
-	$(CC) $(CFLAGS) george/test.cpp -o test
+test: george/george.h george/george.c george/test.c
+	cc -lamd -lcamd -lccolamd -lcholmod -lcolamd -lcxsparse -lblas -llapack \
+		george/george.c george/test.c -o test
 
 clean:
-	rm -rf test george/*.o
+	rm -rf test
