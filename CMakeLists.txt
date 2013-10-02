@@ -332,5 +332,6 @@ MACRO (GEORGE_TEST NAME)
              COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${NAME}_test)
 ENDMACRO (GEORGE_TEST)
 
+GEORGE_TEST (cholmod_version)
 GEORGE_TEST (kernel_gradient)
 GEORGE_TEST (hyper_gradient)
