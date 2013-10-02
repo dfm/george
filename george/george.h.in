@@ -3,9 +3,9 @@
 
 #include "cholmod.h"
 
-#define GEORGE_VERSION_MAJOR    0
-#define GEORGE_VERSION_MINOR    1
-#define GEORGE_VERSION_RELEASE  0
+#define GEORGE_VERSION_MAJOR @GEORGE_VERSION_MAJOR@
+#define GEORGE_VERSION_MINOR @GEORGE_VERSION_MINOR@
+#define GEORGE_VERSION_PATCH @GEORGE_VERSION_PATCH@
 
 void george_version (int *version);
 void george_print_version ();

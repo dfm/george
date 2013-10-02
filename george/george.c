@@ -7,7 +7,7 @@ void george_version (int *version)
 {
     version[0] = GEORGE_VERSION_MAJOR;
     version[1] = GEORGE_VERSION_MINOR;
-    version[2] = GEORGE_VERSION_RELEASE;
+    version[2] = GEORGE_VERSION_PATCH;
 }
 
 void george_print_version ()
@@ -15,7 +15,7 @@ void george_print_version ()
     printf ("George Gaussian process version: %d.%d.%d\n",
             GEORGE_VERSION_MAJOR,
             GEORGE_VERSION_MINOR,
-            GEORGE_VERSION_RELEASE);
+            GEORGE_VERSION_PATCH);
 }
 
 //
