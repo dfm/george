@@ -6,15 +6,17 @@
 typedef struct george_gp_struct {
 
     // The kernel function.
-    void *pars;
-    double (*kernel) (double, double, void*, int*);
+    int npars;
+    double *pars;
+    void *meta;
+    double (*kernel) (double, double, double*, void*, int, double*, int*);
 
     // Bookkeeping flags.
     int computed, info;
 
     // The input data used to compute the factorization.
     int ndata;
-    double *x;
+    double *x, *yerr;
 
     // The results of the factorization.
     double logdet;
@@ -25,8 +27,10 @@ typedef struct george_gp_struct {
 
 george_gp *george_allocate_gp
 (
+    int npars,
     double *pars,
-    double (*kernel) (double, double, void*, int*)
+    void *meta,
+    double (*kernel) (double, double, double*, void*, int, double*, int*)
 );
 
 void george_free_gp (
@@ -45,10 +49,19 @@ double george_log_likelihood (
     george_gp *gp
 );
 
+int george_grad_log_likelihood (
+    double *y,
+    double *grad_out,
+    george_gp *gp
+);
+
 double george_kernel (
     double x1,
     double x2,
-    void *pars,
+    double *pars,
+    void *meta,
+    int compute_grad,
+    double *grad,
     int *flag
 );
 

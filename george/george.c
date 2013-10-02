@@ -49,12 +49,15 @@ double george_logdet (cholmod_factor *L, cholmod_common *c)
 // The Gaussian process methods.
 //
 george_gp *
-george_allocate_gp (double *pars,
-                    double (*kernel) (double, double, void*, int*))
+george_allocate_gp (int npars, double *pars, void *meta,
+                    double (*kernel) (double, double, double*, void*, int,
+                                      double*, int*))
 {
     george_gp *gp = malloc (sizeof (george_gp));
 
+    gp->npars = npars;
     gp->pars = pars;
+    gp->meta = meta;
     gp->kernel = kernel;
     gp->computed = 0;
     gp->info = 0;
@@ -71,6 +74,7 @@ void george_free_gp (george_gp *gp)
 {
     if (gp->computed) {
         free (gp->x);
+        free (gp->yerr);
         cholmod_free_factor (&(gp->L), gp->c);
     }
     cholmod_finish (gp->c);
@@ -89,7 +93,8 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
     // Compute the covariance matrix in triplet form.
     for (i = 0; i < n; ++i) {
         for (j = i; j < n; ++j) {
-            value = (*(gp->kernel)) (x[i], x[j], gp->pars, &flag);
+            value = (*(gp->kernel)) (x[i], x[j], gp->pars, gp->meta, 0, NULL,
+                                     &flag);
             if (i == j) value += yerr[i] * yerr[i];
             if (flag && value > 0) {
                 values[k] = value;
@@ -126,9 +131,16 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
 
     // Save the data.
     gp->ndata = n;
-    if (gp->computed) free(gp->x);
+    if (gp->computed) {
+        free(gp->x);
+        free(gp->yerr);
+    }
     gp->x = malloc(n * sizeof(double));
-    for (i = 0; i < n; ++i) gp->x[i] = x[i];
+    gp->yerr = malloc(n * sizeof(double));
+    for (i = 0; i < n; ++i) {
+        gp->x[i] = x[i];
+        gp->yerr[i] = yerr[i];
+    }
 
     // Update the bookkeeping flags.
     gp->computed = 1;
@@ -161,19 +173,131 @@ double george_log_likelihood (double *y, george_gp *gp)
     return -0.5 * lnlike;
 }
 
+int george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
+{
+    int i, j, k, flag, n = gp->ndata, npars = gp->npars;
+    double value,
+           *grad = malloc (npars * sizeof(double)),
+           *x = gp->x;
+    cholmod_common *c = gp->c;
+
+    // Make sure that things have been properly computed.
+    if (!gp->computed) return -1;
+
+    // Copy the column vector over.
+    cholmod_dense *b = cholmod_allocate_dense(n, 1, n, CHOLMOD_REAL, c);
+    for (i = 0; i < n; ++i) ((double*)b->x)[i] = y[i];
+
+    // Solve for alpha.
+    cholmod_dense *alpha = cholmod_solve (CHOLMOD_A, gp->L, b, c);
+    double *alpha_data = (double*)alpha->x;
+    cholmod_free_dense (&b, c);
+
+    // Compute alpha.alpha^T.
+    cholmod_dense *aat = cholmod_allocate_dense (n, n, n, CHOLMOD_REAL, c);
+    double *aat_data = (double*)aat->x;
+    for (i = 0; i < n; ++i) {
+        aat_data[i*n+i] = alpha_data[i] * alpha_data[i];
+        for (j = i+1; j < n; ++j) {
+            value = alpha_data[i] * alpha_data[j];
+            aat_data[i*n+j] = value;
+            aat_data[j*n+i] = value;
+        }
+    }
+    cholmod_free_dense (&alpha, c);
+
+    // Allocate memory for the kernel matrix gradients.
+    cholmod_dense **dkdt = malloc(npars*sizeof(cholmod_dense*));
+    double **dkdt_data = malloc(npars*sizeof(double*));
+
+    for (k = 0; k < npars; ++k) {
+        dkdt[k] = cholmod_allocate_dense (n, n, n, CHOLMOD_REAL, c);
+        dkdt_data[k] = (double*)dkdt[k]->x;
+    }
+
+    // Loop over the data points and compute the kernel matrix gradients.
+    for (i = 0; i < n; ++i) {
+        // Compute the diagonal terms.
+        (*(gp->kernel)) (x[i], x[i], gp->pars, gp->meta, 1, grad, &flag);
+        if (flag)
+            for (k = 0; k < npars; ++k) dkdt_data[k][i*n+i] = grad[k];
+        else
+            for (k = 0; k < npars; ++k) dkdt_data[k][i*n+i] = 0.0;
+
+        // And the off-diagonal terms.
+        for (j = i+1; j < n; ++j) {
+            (*(gp->kernel)) (x[i], x[j], gp->pars, gp->meta, 1, grad, &flag);
+            if (flag)
+                for (k = 0; k < npars; ++k) {
+                    dkdt_data[k][i*n+j] = grad[k];
+                    dkdt_data[k][j*n+i] = grad[k];
+                }
+            else
+                for (k = 0; k < npars; ++k) {
+                    dkdt_data[k][i*n+j] = 0.0;
+                    dkdt_data[k][j*n+i] = 0.0;
+                }
+        }
+    }
+    free (grad);
+
+    // Loop over each hyperparameter and solve for the gradient.
+    int ind;
+    cholmod_dense *kdkdt;
+    double *kdkdt_data;
+    for (k = 0; k < npars; ++k) {
+        // Solve the system.
+        kdkdt = cholmod_solve (CHOLMOD_A, gp->L, dkdt[k], c);
+        kdkdt_data = (double*)kdkdt->x;
+
+        // Take the trace.
+        grad_out[k] = 0.0;
+        for (i = 0; i < n; ++i) {
+            grad_out[k] -= kdkdt_data[i*n+i];
+            for (j = 0; j < n; ++j) {
+                ind = i*n+j;
+                grad_out[k] += aat_data[ind] * dkdt_data[k][ind];
+            }
+        }
+        grad_out[k] *= 0.5;
+
+        cholmod_free_dense (&dkdt[k], c);
+        cholmod_free_dense (&kdkdt, c);
+    }
+
+    cholmod_free_dense (&aat, c);
+
+    return 0;
+}
+
 //
 // The built in kernel.
 //
-double george_kernel (double x1, double x2, void *pars, int *flag)
+double george_kernel (double x1, double x2, double *pars, void *meta,
+                      int compute_grad, double *grad, int *flag)
 {
-    double d = x1 - x2, chi2 = d * d, r, omr,
+    double d = x1 - x2, chi2 = d * d, r, omr, k0, k,
            *p = pars,
-           p2 = p[2] * p[2];
+           p2 = p[2] * p[2],
+           p1 = p[1] * p[1];
+
+    // If the distance is greater than the support, bail.
     *flag = 0;
     if (chi2 >= p2) return 0.0;
+
+    // Compute the kernel value.
     *flag = 1;
     r = sqrt(chi2 / p2);
     omr = 1.0 - r;
-    return p[0] * p[0] * exp(-0.5 * chi2 / (p[1] * p[1]))
-           * omr * omr * (2*r + 1);
+    k0 = p[0] * p[0] * exp(-0.5 * chi2 / p1);
+    k = k0 * omr * omr * (2*r + 1);
+
+    // Compute the gradient.
+    if (compute_grad) {
+        grad[0] = 2 * k / p[0];
+        grad[1] = k * chi2 / (p[1] * p1);
+        grad[2] = 6 * k0 * omr * r * r / p[2];
+    }
+
+    return k;
 }
