@@ -18,17 +18,44 @@ except ImportError:
 import numpy
 
 include_dirs = [
-    "george",
+    "${CMAKE_BINARY_DIR}/george",
+    "${AMD_INCLUDE}",
+    "${CAMD_INCLUDE}",
+    "${COLAMD_INCLUDE}",
+    "${CCOLAMD_INCLUDE}",
+    "${CHOLMOD_INCLUDE}",
+    "${SUITESPARSE_CONFIG_INCLUDE}",
     numpy.get_include(),
-    "/usr/include/eigen3",
-    "/usr/local/include/eigen3",
-    "/usr/local/homebrew/include",
-    "/usr/local/homebrew/include/eigen3",
-    "/opt/local/var/macports/software/eigen3/opt/local/include/eigen3",
+]
+
+library_dirs = map(lambda p: os.path.split(p)[0], [
+    "${CHOLMOD_LIB}",
+    "${CCOLAMD_LIB}",
+    "${CAMD_LIB}",
+    "${COLAMD_LIB}",
+    "${AMD_LIB}",
+    "${SUITESPARSE_CONFIG_LIB}",
+    "${CXSPARSE_LIB}",
+    "${LAPACK_LIB}",
+    "${BLAS_LIB}",
+])
+
+libraries = [
+    "m",
+    "cholmod",
+    "amd",
+    "camd",
+    "colamd",
+    "ccolamd",
+    "suitesparseconfig",
+    "blas",
+    "lapack",
+    "cxsparse",
+    "george",
 ]
 
 sources = [
-    os.path.join("george", "_george.cpp"),
+    "${CMAKE_CURRENT_SOURCE_DIR}/george/_george.cpp",
 ]
 
 gp_ext = Extension("george._george",
@@ -37,17 +64,15 @@ gp_ext = Extension("george._george",
 
 setup(
     name="george",
-    version="0.3.1",
+    version="${GEORGE_VERSION}",
     author="Daniel Foreman-Mackey",
     author_email="danfm@nyu.edu",
     url="https://github.com/dfm/george",
     packages=["george"],
     ext_modules=[gp_ext],
     description="Blazingly fast Gaussian Processes.",
-    long_description=open("README.rst").read(),
-    package_data={"": ["README.rst", "LICENSE.rst"],
-                  "george": ["george.h"]},
-    include_package_data=True,
+    long_description=open("${CMAKE_CURRENT_SOURCE_DIR}/README.rst").read(),
+    package_dir={"": "${CMAKE_CURRENT_SOURCE_DIR}"},
     classifiers=[
         # "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
