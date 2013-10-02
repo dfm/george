@@ -51,6 +51,9 @@ CONFIGURE_FILE (
     "${CMAKE_BINARY_DIR}/george/george.h"
 )
 
+# Set up testing.
+ENABLE_TESTING()
+
 # To get a more static build, try the following line on Mac and Linux:
 # SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 
@@ -309,10 +312,25 @@ INSTALL(TARGETS george
 ADD_LIBRARY(george_shared SHARED ${GEORGE_SRC})
 TARGET_LINK_LIBRARIES(george_shared ${GEORGE_LIBRARY_DEPENDENCIES})
 SET_TARGET_PROPERTIES(george_shared PROPERTIES
-    VERSION ${GEORGE_VERSION}
-    SOVERSION ${GEORGE_ABI_VERSION})
+                      VERSION ${GEORGE_VERSION}
+                      SOVERSION ${GEORGE_ABI_VERSION})
 
 INSTALL(TARGETS george_shared
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib${LIB_SUFFIX}
         ARCHIVE DESTINATION lib${LIB_SUFFIX})
+
+
+# ===========================================================================
+#   TESTING
+# ===========================================================================
+
+MACRO (GEORGE_TEST NAME)
+    ADD_EXECUTABLE(${NAME}_test george/${NAME}_test.c)
+    TARGET_LINK_LIBRARIES(${NAME}_test george)
+    ADD_TEST(NAME ${NAME}_test
+             COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${NAME}_test)
+ENDMACRO (GEORGE_TEST)
+
+GEORGE_TEST (kernel_gradient)
+GEORGE_TEST (hyper_gradient)
