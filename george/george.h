@@ -3,6 +3,13 @@
 
 #include "cholmod.h"
 
+#define GEORGE_VERSION_MAJOR    0
+#define GEORGE_VERSION_MINOR    1
+#define GEORGE_VERSION_RELEASE  0
+
+void george_version (int *version);
+void george_print_version ();
+
 typedef struct george_gp_struct {
 
     // The kernel function.

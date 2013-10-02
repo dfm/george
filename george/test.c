@@ -119,6 +119,8 @@ int main ()
     printf("CHOLMOD version: %d\n", v);
 #endif
 
+    george_print_version ();
+
     printf("\nTesting kernel gradients\n");
     double pars[] = {1e-3, 3.0, 8.0};
     test_kernel_grad (0.3, 0.1, 3, pars, NULL, *george_kernel);

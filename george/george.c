@@ -3,6 +3,21 @@
 
 #define TWOLNPI 1.8378770664093453
 
+void george_version (int *version)
+{
+    version[0] = GEORGE_VERSION_MAJOR;
+    version[1] = GEORGE_VERSION_MINOR;
+    version[2] = GEORGE_VERSION_RELEASE;
+}
+
+void george_print_version ()
+{
+    printf ("George Gaussian process version: %d.%d.%d\n",
+            GEORGE_VERSION_MAJOR,
+            GEORGE_VERSION_MINOR,
+            GEORGE_VERSION_RELEASE);
+}
+
 //
 // An extremely brittle function that take the internal representation of a
 // CHOLMOD factorization and tries to compute the log-determinant.
