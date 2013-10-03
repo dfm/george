@@ -98,7 +98,7 @@ typedef struct george_gp_struct {
 
 The following methods for working with this object are also provided.
 
-**george_allocate_gp** To create a new `george_gp` object, call:
+**george_allocate_gp** — To create a new `george_gp` object, call:
 
 ```
 george_gp *george_allocate_gp
@@ -108,6 +108,37 @@ george_gp *george_allocate_gp
     void *meta,             // The metadata object for the kernel.
     double (*kernel)        // A function pointer to the kernel function.
         (double, double, double*, void*, int, double*, int*)
+);
+```
+
+**george_free_gp** — To free the memory allocated by `george_allocate_gp`,
+call:
+
+```
+void george_free_gp (
+    george_gp *gp
+);
+```
+
+**george_compute** — Given a dataset with errorbars, precompute the
+factorization of the covariance matrix using:
+
+```
+int george_compute (
+    int n,                  // The number of data points.
+    double *x,              // The coordinates (timestamps) of the data points.
+    double *yerr,           // The error bars on the datapoints.
+    george_gp *gp           // The Gaussian process workspace.
+);
+```
+
+**george_log_likelihood** — Compute the log-likelihood of a set of
+observations `y` (after calling `george_compute`) using:
+
+```
+double george_log_likelihood (
+    double *y,              // The observations (length: n).
+    george_gp *gp           // The Gaussian process workspace.
 );
 ```
 
