@@ -28,7 +28,7 @@ include_dirs = [
     numpy.get_include(),
 ]
 
-library_dirs = map(lambda p: os.path.split(p)[0], [
+library_dirs = filter(lambda p: len(p), map(lambda p: os.path.split(p)[0], [
     "${CHOLMOD_LIB}",
     "${CCOLAMD_LIB}",
     "${CAMD_LIB}",
@@ -38,7 +38,7 @@ library_dirs = map(lambda p: os.path.split(p)[0], [
     "${CXSPARSE_LIB}",
     "${LAPACK_LIB}",
     "${BLAS_LIB}",
-])
+]))
 
 libraries = [
     "m",
@@ -51,15 +51,18 @@ libraries = [
     "blas",
     "lapack",
     "cxsparse",
-    "george",
+    "george_shared",
 ]
 
 sources = [
-    "${CMAKE_CURRENT_SOURCE_DIR}/george/_george.cpp",
+    "${CMAKE_CURRENT_SOURCE_DIR}/george/_george.c",
 ]
 
 gp_ext = Extension("george._george",
                    sources=sources,
+                   library_dirs=library_dirs,
+                   libraries=libraries,
+                   runtime_library_dirs=library_dirs,
                    include_dirs=include_dirs)
 
 setup(

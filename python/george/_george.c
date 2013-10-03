@@ -3,12 +3,6 @@
 #include <numpy/arrayobject.h>
 #include "george.h"
 
-using Eigen::VectorXd;
-using Eigen::MatrixXd;
-using George::GaussianProcess;
-using George::Kernel;
-using George::IsotropicGaussianKernel;
-
 #define PARSE_ARRAY(o) (PyArrayObject*) PyArray_FROM_OTF(o, NPY_DOUBLE, \
         NPY_IN_ARRAY)
 
@@ -18,14 +12,13 @@ using George::IsotropicGaussianKernel;
 
 typedef struct {
     PyObject_HEAD
-    Kernel *kernel;
-    GaussianProcess *gp;
+    george_gp *gp;
 } _george;
 
 static void _george_dealloc(_george *self)
 {
-    delete self->gp;
-    delete self->kernel;
+    if (self->gp != NULL)
+        george_free_gp (self->gp);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -33,7 +26,7 @@ static PyObject *_george_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     _george *self;
     self = (_george*)type->tp_alloc(type, 0);
-    self->gp = new GaussianProcess ();
+    self->gp = NULL;
     return (PyObject*)self;
 }
 
@@ -58,9 +51,7 @@ static int _george_init(_george *self, PyObject *args, PyObject *kwds)
         return -1;
     }
 
-    self->kernel =
-        new IsotropicGaussianKernel(VectorXd::Map(pars, npars));
-    self->gp->set_kernel(self->kernel);
+    self->gp = george_allocate_gp (npars, pars, NULL, *george_kernel);
     return 0;
 }
 
@@ -103,15 +94,14 @@ static PyObject *_george_compute (_george *self, PyObject *args)
            *yerr = (double*)PyArray_DATA(yerr_array);
 
     // Fit the GP.
-    int info = self->gp->compute(MatrixXd::Map(x, nsamples, ndim),
-                                 VectorXd::Map(yerr, nsamples));
+    int info = george_compute (nsamples, x, yerr, self->gp);
 
     // Clean up.
     Py_DECREF(x_array);
     Py_DECREF(yerr_array);
 
     // Check success.
-    if (info != 0) {
+    if (!info) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to compute model");
         return NULL;
     }
@@ -125,7 +115,7 @@ static PyObject *_george_lnlikelihood(_george *self, PyObject *args)
     PyObject *y_obj;
     if (!PyArg_ParseTuple(args, "O", &y_obj)) return NULL;
 
-    if (!self->gp->computed()) {
+    if (!self->gp->computed) {
         PyErr_SetString(PyExc_RuntimeError,
             "You need to compute the model first");
         return NULL;
@@ -141,14 +131,14 @@ static PyObject *_george_lnlikelihood(_george *self, PyObject *args)
 
     // Get the dimension.
     int nsamples = (int)PyArray_DIM(y_array, 0);
-    if (nsamples != self->gp->nsamples()) {
+    if (nsamples != self->gp->ndata) {
         PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
         Py_DECREF(y_array);
         return NULL;
     }
 
     double *y = (double*)PyArray_DATA(y_array),
-           lnlike = self->gp->lnlikelihood(VectorXd::Map(y, nsamples));
+           lnlike = george_log_likelihood(y, self->gp);
 
     // Clean up.
     Py_DECREF(y_array);
@@ -161,7 +151,7 @@ static PyObject *_george_gradlnlikelihood(_george *self, PyObject *args)
     PyObject *y_obj;
     if (!PyArg_ParseTuple(args, "O", &y_obj)) return NULL;
 
-    if (!self->gp->computed()) {
+    if (!self->gp->computed) {
         PyErr_SetString(PyExc_RuntimeError,
             "You need to compute the model first");
         return NULL;
@@ -177,23 +167,14 @@ static PyObject *_george_gradlnlikelihood(_george *self, PyObject *args)
 
     // Get the dimension.
     int nsamples = (int)PyArray_DIM(y_array, 0);
-    if (nsamples != self->gp->nsamples()) {
+    if (nsamples != self->gp->ndata) {
         PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
         Py_DECREF(y_array);
         return NULL;
     }
 
-    double *y = (double*)PyArray_DATA(y_array);
-    VectorXd g = self->gp->gradlnlikelihood(VectorXd::Map(y, nsamples));
-    Py_DECREF(y_array);
-
-    if (self->gp->info() != 0) {
-        PyErr_SetString(PyExc_RuntimeError, "Couldn't solve for gradient");
-        return NULL;
-    }
-
-    // Allocate the output arrays.
-    int npars = g.size();
+    // Allocate the output array.
+    int npars = self->gp->npars;
     npy_intp dim[1] = {npars};
     PyArrayObject *grad_array = (PyArrayObject*)PyArray_SimpleNew(1, dim,
                                                                   NPY_DOUBLE);
@@ -201,11 +182,11 @@ static PyObject *_george_gradlnlikelihood(_george *self, PyObject *args)
         Py_XDECREF(grad_array);
         return NULL;
     }
-
-    // Copy the data over.
     double *grad = (double*)PyArray_DATA(grad_array);
-    int i;
-    for (i = 0; i < npars; ++i) grad[i] = g(i);
+
+    double *y = (double*)PyArray_DATA(y_array);
+    george_grad_log_likelihood(y, grad, self->gp);
+    Py_DECREF(y_array);
 
     PyObject *ret = Py_BuildValue("O", grad_array);
 
@@ -218,91 +199,93 @@ static PyObject *_george_predict(_george *self, PyObject *args)
 {
     PyObject *y_obj, *x_obj;
     if (!PyArg_ParseTuple(args, "OO", &y_obj, &x_obj)) return NULL;
+    Py_INCREF(Py_None);
+    return Py_None;
 
-    if (!self->gp->computed()) {
-        PyErr_SetString(PyExc_RuntimeError,
-            "You need to compute the model first");
-        return NULL;
-    }
+    // if (!self->gp->computed()) {
+    //     PyErr_SetString(PyExc_RuntimeError,
+    //         "You need to compute the model first");
+    //     return NULL;
+    // }
 
-    PyArrayObject *y_array = PARSE_ARRAY(y_obj),
-                  *x_array = PARSE_ARRAY(x_obj);
-    if (y_array == NULL || x_array == NULL) {
-        Py_XDECREF(y_array);
-        Py_XDECREF(x_array);
-        PyErr_SetString(PyExc_ValueError,
-            "Failed to parse input objects as numpy arrays");
-        return NULL;
-    }
+    // PyArrayObject *y_array = PARSE_ARRAY(y_obj),
+    //               *x_array = PARSE_ARRAY(x_obj);
+    // if (y_array == NULL || x_array == NULL) {
+    //     Py_XDECREF(y_array);
+    //     Py_XDECREF(x_array);
+    //     PyErr_SetString(PyExc_ValueError,
+    //         "Failed to parse input objects as numpy arrays");
+    //     return NULL;
+    // }
 
-    // Get the dimension.
-    int nsamples = (int)PyArray_DIM(y_array, 0),
-        ntest = (int)PyArray_DIM(x_array, 0),
-        ndim = 1;
+    // // Get the dimension.
+    // int nsamples = (int)PyArray_DIM(y_array, 0),
+    //     ntest = (int)PyArray_DIM(x_array, 0),
+    //     ndim = 1;
 
-    if ((int)PyArray_NDIM(x_array) == 2)
-        ndim = (int)PyArray_DIM(x_array, 1);
+    // if ((int)PyArray_NDIM(x_array) == 2)
+    //     ndim = (int)PyArray_DIM(x_array, 1);
 
-    if (nsamples != self->gp->nsamples()) {
-        PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
-        Py_DECREF(y_array);
-        Py_DECREF(x_array);
-        return NULL;
-    }
+    // if (nsamples != self->gp->nsamples()) {
+    //     PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
+    //     Py_DECREF(y_array);
+    //     Py_DECREF(x_array);
+    //     return NULL;
+    // }
 
-    double *y = (double*)PyArray_DATA(y_array),
-           *x = (double*)PyArray_DATA(x_array);
+    // double *y = (double*)PyArray_DATA(y_array),
+    //        *x = (double*)PyArray_DATA(x_array);
 
-    VectorXd mu_vec(ntest);
-    MatrixXd cov_vec(ntest, ntest);
-    int info = self->gp->predict(VectorXd::Map(y, nsamples),
-                                MatrixXd::Map(x, ntest, ndim),
-                                &mu_vec, &cov_vec);
+    // VectorXd mu_vec(ntest);
+    // MatrixXd cov_vec(ntest, ntest);
+    // int info = self->gp->predict(VectorXd::Map(y, nsamples),
+    //                             MatrixXd::Map(x, ntest, ndim),
+    //                             &mu_vec, &cov_vec);
 
-    // Clean up.
-    Py_DECREF(y_array);
-    Py_DECREF(x_array);
+    // // Clean up.
+    // Py_DECREF(y_array);
+    // Py_DECREF(x_array);
 
-    // Check success.
-    if (info != 0) {
-        PyErr_SetString(PyExc_RuntimeError, "Failed to compute model");
-        return NULL;
-    }
+    // // Check success.
+    // if (info != 0) {
+    //     PyErr_SetString(PyExc_RuntimeError, "Failed to compute model");
+    //     return NULL;
+    // }
 
-    // Allocate the output arrays.
-    npy_intp dim[1] = {ntest}, dim2[2] = {ntest, ntest};
-    PyArrayObject *mu_array = (PyArrayObject*)PyArray_SimpleNew(1, dim,
-                                                                NPY_DOUBLE),
-                  *cov_array = (PyArrayObject*)PyArray_SimpleNew(2, dim2,
-                                                                 NPY_DOUBLE);
-    if (mu_array == NULL || cov_array == NULL) {
-        Py_XDECREF(mu_array);
-        Py_XDECREF(cov_array);
-        return NULL;
-    }
+    // // Allocate the output arrays.
+    // npy_intp dim[1] = {ntest}, dim2[2] = {ntest, ntest};
+    // PyArrayObject *mu_array = (PyArrayObject*)PyArray_SimpleNew(1, dim,
+    //                                                             NPY_DOUBLE),
+    //               *cov_array = (PyArrayObject*)PyArray_SimpleNew(2, dim2,
+    //                                                              NPY_DOUBLE);
+    // if (mu_array == NULL || cov_array == NULL) {
+    //     Py_XDECREF(mu_array);
+    //     Py_XDECREF(cov_array);
+    //     return NULL;
+    // }
 
-    // Copy the data over.
-    double *mu = (double*)PyArray_DATA(mu_array),
-           *cov = (double*)PyArray_DATA(cov_array);
-    int i, j;
-    for (i = 0; i < ntest; ++i) {
-        mu[i] = mu_vec(i);
-        for (j = 0; j < ntest; ++j)
-            cov[i * ntest + j] = cov_vec(i, j);
-    }
+    // // Copy the data over.
+    // double *mu = (double*)PyArray_DATA(mu_array),
+    //        *cov = (double*)PyArray_DATA(cov_array);
+    // int i, j;
+    // for (i = 0; i < ntest; ++i) {
+    //     mu[i] = mu_vec(i);
+    //     for (j = 0; j < ntest; ++j)
+    //         cov[i * ntest + j] = cov_vec(i, j);
+    // }
 
-    PyObject *ret = Py_BuildValue("OO", mu_array, cov_array);
+    // PyObject *ret = Py_BuildValue("OO", mu_array, cov_array);
 
-    Py_DECREF(mu_array);
-    Py_DECREF(cov_array);
+    // Py_DECREF(mu_array);
+    // Py_DECREF(cov_array);
 
-    if (ret == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Couldn't build output tuple");
-        Py_XDECREF(ret);
-        return NULL;
-    }
+    // if (ret == NULL) {
+    //     PyErr_SetString(PyExc_RuntimeError, "Couldn't build output tuple");
+    //     Py_XDECREF(ret);
+    //     return NULL;
+    // }
 
-    return ret;
+    // return ret;
 }
 
 static PyObject *_george_covariance(_george *self, PyObject *args)
@@ -322,7 +305,7 @@ static PyObject *_george_covariance(_george *self, PyObject *args)
         ndim = 1;
     if ((int)PyArray_NDIM(t_array) == 2)
         ndim = (int)PyArray_DIM(t_array, 1);
-    MatrixXd t = MatrixXd::Map((double*)PyArray_DATA(t_array), N, ndim);
+    double *t = PyArray_DATA(t_array);
 
     // Allocate the output arrays.
     npy_intp dim[2] = {N, N};
@@ -334,16 +317,24 @@ static PyObject *_george_covariance(_george *self, PyObject *args)
     }
 
     // Copy the data over.
-    Kernel *k = self->gp->kernel();
     double value,
            *cov = (double*)PyArray_DATA(cov_array);
-    int i, j;
+    int i, j, flag;
     for (i = 0; i < N; ++i) {
-        cov[i*N+i] = k->evaluate(t.row(i), t.row(i));
+        value = (*self->gp->kernel)(t[i], t[i], self->gp->pars, NULL, 0,
+                                         NULL, &flag);
+        if (flag) cov[i*N+i] = value;
+        else cov[i*N+i] = 0.0;
         for (j = i + 1; j < N; ++j) {
-            value = k->evaluate(t.row(i), t.row(j));
-            cov[i*N+j] = value;
-            cov[j*N+i] = value;
+            value = (*self->gp->kernel)(t[i], t[i], self->gp->pars, NULL, 0,
+                                        NULL, &flag);
+            if (flag) {
+                cov[i*N+j] = value;
+                cov[j*N+i] = value;
+            } else {
+                cov[i*N+j] = 0.0;
+                cov[j*N+i] = 0.0;
+            }
         }
     }
 
@@ -361,7 +352,7 @@ static PyObject *_george_covariance(_george *self, PyObject *args)
 
 static PyObject *_george_computed(_george *self, PyObject *args)
 {
-    if (self->gp->computed()) Py_RETURN_TRUE;
+    if (self->gp->computed) Py_RETURN_TRUE;
     Py_RETURN_FALSE;
 }
 
@@ -448,7 +439,7 @@ static PyTypeObject _george_type = {
 
 static char module_doc[] = "GP Module";
 static PyMethodDef module_methods[] = {{NULL}};
-extern "C" void init_george(void)
+void init_george(void)
 {
     PyObject *m;
 
