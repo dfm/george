@@ -46,7 +46,7 @@ This will build and install both static (called `libgeorge`) and shared
 API
 ---
 
-The main public interface to George is the `george_gp` type:
+The public interface to George is exposed through the `george_gp` type:
 
 ```
 typedef struct george_gp_struct {
@@ -96,6 +96,23 @@ typedef struct george_gp_struct {
 } george_gp;
 ```
 
+The following methods for working with this object are also provided.
+
+george_allocate_gp
+******************
+
+To create a new `george_gp` object, call:
+
+```
+george_gp *george_allocate_gp
+(
+    int npars,              // The number of hyperparameters.
+    double *pars,           // The initial setting of the hyperparameters.
+    void *meta,             // The metadata object for the kernel.
+    double (*kernel)        // A function pointer to the kernel function.
+        (double, double, double*, void*, int, double*, int*)
+);
+```
 
 License
 -------
