@@ -98,10 +98,7 @@ typedef struct george_gp_struct {
 
 The following methods for working with this object are also provided.
 
-george_allocate_gp
-******************
-
-To create a new `george_gp` object, call:
+**george_allocate_gp** To create a new `george_gp` object, call:
 
 ```
 george_gp *george_allocate_gp
