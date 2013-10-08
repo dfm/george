@@ -8,8 +8,8 @@
 
 int main ()
 {
-    int i, nin = 10, nout = 10;
-    double pars[] = {1.0, 0.01, 8.0};
+    int i, j, nin = 10, nout = 20;
+    double pars[] = {1.0, 4.0, 8.0};
 
     // Generate some fake data.
     double *x = malloc(nin * sizeof(double)),
@@ -31,10 +31,11 @@ int main ()
     int info = george_compute(nin, x, yerr, gp);
 
     // Compute the prediction.
-    info = george_predict (y, nout, x, mean, 1, cov, gp);
-    for (i = 0; i < nout; ++i) {
-        if (fabs(mean[i] - y[i]) > 2 * yerr[i]) return -1;
-    }
+    info = george_predict (y, nout, t, mean, 1, cov, gp);
+
+    for (i = 0; i < nout; ++i)
+        for (j = 0; j < nout; ++j)
+            printf("%d %d %f\n", i, j, cov[i*nout+j]);
 
     return 0;
 }

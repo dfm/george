@@ -289,7 +289,7 @@ int george_predict (double *y, int nout, double *xout, double *mean,
                     int compute_cov, double *cov, george_gp *gp)
 {
     cholmod_common *c = gp->c;
-    int i, j, n = gp->ndata, flag;
+    int i, j, k, n = gp->ndata, flag;
     double value;
 
     if (!gp->computed) return -1;
@@ -301,6 +301,7 @@ int george_predict (double *y, int nout, double *xout, double *mean,
     // Solve for alpha.
     cholmod_dense *alpha = cholmod_solve (CHOLMOD_A, gp->L, b, c);
     double *alpha_data = (double*)alpha->x;
+    cholmod_free_dense (&b, c);
 
     // Initialize the mean vector as zeros.
     for (i = 0; i < nout; ++i) mean[i] = 0.0;
@@ -318,6 +319,7 @@ int george_predict (double *y, int nout, double *xout, double *mean,
             mean[j] += value * alpha_data[i];
         }
     }
+    cholmod_free_dense (&alpha, c);
 
     if (!compute_cov) return 0;
 
@@ -336,9 +338,17 @@ int george_predict (double *y, int nout, double *xout, double *mean,
         }
     }
 
-    // // Compute the predictive covariance matrix.
-    // *cov -= Kxs.transpose() * L_->solve(Kxs);
-    // if (L_->info() != Success) return -3;
+    // Update the covariance matrix.
+    cholmod_dense *tmp = cholmod_solve (CHOLMOD_A, gp->L, kxs, c);
+    double *tmp_data = (double*)tmp->x;
+    for (i = 0; i < nout; ++i) {
+        for (j = 0; j < nout; ++j) {
+            for (k = 0; k < n; ++k) {
+                cov[i*nout+j] -= kxs_data[k*nout+i] * tmp_data[j*nout+k];
+            }
+        }
+    }
+    cholmod_free_dense (&tmp, c);
 
     return 0;
 }

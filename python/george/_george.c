@@ -199,93 +199,82 @@ static PyObject *_george_predict(_george *self, PyObject *args)
 {
     PyObject *y_obj, *x_obj;
     if (!PyArg_ParseTuple(args, "OO", &y_obj, &x_obj)) return NULL;
-    Py_INCREF(Py_None);
-    return Py_None;
 
-    // if (!self->gp->computed()) {
-    //     PyErr_SetString(PyExc_RuntimeError,
-    //         "You need to compute the model first");
-    //     return NULL;
-    // }
+    if (!self->gp->computed) {
+        PyErr_SetString(PyExc_RuntimeError,
+            "You need to compute the model first");
+        return NULL;
+    }
 
-    // PyArrayObject *y_array = PARSE_ARRAY(y_obj),
-    //               *x_array = PARSE_ARRAY(x_obj);
-    // if (y_array == NULL || x_array == NULL) {
-    //     Py_XDECREF(y_array);
-    //     Py_XDECREF(x_array);
-    //     PyErr_SetString(PyExc_ValueError,
-    //         "Failed to parse input objects as numpy arrays");
-    //     return NULL;
-    // }
+    PyArrayObject *y_array = PARSE_ARRAY(y_obj),
+                  *x_array = PARSE_ARRAY(x_obj);
+    if (y_array == NULL || x_array == NULL) {
+        Py_XDECREF(y_array);
+        Py_XDECREF(x_array);
+        PyErr_SetString(PyExc_ValueError,
+            "Failed to parse input objects as numpy arrays");
+        return NULL;
+    }
 
-    // // Get the dimension.
-    // int nsamples = (int)PyArray_DIM(y_array, 0),
-    //     ntest = (int)PyArray_DIM(x_array, 0),
-    //     ndim = 1;
+    // Get the dimension.
+    int nsamples = (int)PyArray_DIM(y_array, 0),
+        ntest = (int)PyArray_DIM(x_array, 0),
+        ndim = 1;
 
-    // if ((int)PyArray_NDIM(x_array) == 2)
-    //     ndim = (int)PyArray_DIM(x_array, 1);
+    if ((int)PyArray_NDIM(x_array) == 2)
+        ndim = (int)PyArray_DIM(x_array, 1);
 
-    // if (nsamples != self->gp->nsamples()) {
-    //     PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
-    //     Py_DECREF(y_array);
-    //     Py_DECREF(x_array);
-    //     return NULL;
-    // }
+    if (nsamples != self->gp->ndata) {
+        PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
+        Py_DECREF(y_array);
+        Py_DECREF(x_array);
+        return NULL;
+    }
 
-    // double *y = (double*)PyArray_DATA(y_array),
-    //        *x = (double*)PyArray_DATA(x_array);
+    // Allocate the output arrays.
+    npy_intp dim[1] = {ntest}, dim2[2] = {ntest, ntest};
+    PyArrayObject *mu_array = (PyArrayObject*)PyArray_SimpleNew(1, dim,
+                                                                NPY_DOUBLE),
+                  *cov_array = (PyArrayObject*)PyArray_SimpleNew(2, dim2,
+                                                                 NPY_DOUBLE);
+    if (mu_array == NULL || cov_array == NULL) {
+        Py_DECREF(y_array);
+        Py_DECREF(x_array);
+        Py_XDECREF(mu_array);
+        Py_XDECREF(cov_array);
+        return NULL;
+    }
 
-    // VectorXd mu_vec(ntest);
-    // MatrixXd cov_vec(ntest, ntest);
-    // int info = self->gp->predict(VectorXd::Map(y, nsamples),
-    //                             MatrixXd::Map(x, ntest, ndim),
-    //                             &mu_vec, &cov_vec);
+    double *mu = (double*)PyArray_DATA(mu_array),
+           *cov = (double*)PyArray_DATA(cov_array),
+           *y = (double*)PyArray_DATA(y_array),
+           *x = (double*)PyArray_DATA(x_array);
 
-    // // Clean up.
-    // Py_DECREF(y_array);
-    // Py_DECREF(x_array);
+    int info = george_predict(y, ntest, x, mu, 1, cov, self->gp);
 
-    // // Check success.
-    // if (info != 0) {
-    //     PyErr_SetString(PyExc_RuntimeError, "Failed to compute model");
-    //     return NULL;
-    // }
+    // Clean up.
+    Py_DECREF(y_array);
+    Py_DECREF(x_array);
 
-    // // Allocate the output arrays.
-    // npy_intp dim[1] = {ntest}, dim2[2] = {ntest, ntest};
-    // PyArrayObject *mu_array = (PyArrayObject*)PyArray_SimpleNew(1, dim,
-    //                                                             NPY_DOUBLE),
-    //               *cov_array = (PyArrayObject*)PyArray_SimpleNew(2, dim2,
-    //                                                              NPY_DOUBLE);
-    // if (mu_array == NULL || cov_array == NULL) {
-    //     Py_XDECREF(mu_array);
-    //     Py_XDECREF(cov_array);
-    //     return NULL;
-    // }
+    // Check success.
+    if (info != 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to compute model");
+        return NULL;
+    }
 
-    // // Copy the data over.
-    // double *mu = (double*)PyArray_DATA(mu_array),
-    //        *cov = (double*)PyArray_DATA(cov_array);
-    // int i, j;
-    // for (i = 0; i < ntest; ++i) {
-    //     mu[i] = mu_vec(i);
-    //     for (j = 0; j < ntest; ++j)
-    //         cov[i * ntest + j] = cov_vec(i, j);
-    // }
 
-    // PyObject *ret = Py_BuildValue("OO", mu_array, cov_array);
+    PyObject *ret = Py_BuildValue("OO", mu_array, cov_array);
 
-    // Py_DECREF(mu_array);
-    // Py_DECREF(cov_array);
+    Py_DECREF(mu_array);
+    Py_DECREF(cov_array);
 
-    // if (ret == NULL) {
-    //     PyErr_SetString(PyExc_RuntimeError, "Couldn't build output tuple");
-    //     Py_XDECREF(ret);
-    //     return NULL;
-    // }
+    if (ret == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't build output tuple");
+        Py_XDECREF(ret);
+        return NULL;
+    }
 
-    // return ret;
+    return ret;
 }
 
 static PyObject *_george_covariance(_george *self, PyObject *args)
