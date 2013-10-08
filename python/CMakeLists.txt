@@ -27,19 +27,27 @@
 FIND_PROGRAM (PYTHON "python")
 
 if (PYTHON)
-    set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
-    set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
-    set(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/george/*.py")
-    set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
+    MESSAGE("-- Found Python interpreter: ${PYTHON}")
 
-    configure_file(${SETUP_PY_IN} ${SETUP_PY})
+    SET(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
+    SET(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
+    SET(INIT_PY_IN  "${CMAKE_CURRENT_SOURCE_DIR}/george/__init__.py.in")
+    SET(INIT_PY     "${CMAKE_CURRENT_SOURCE_DIR}/george/__init__.py")
+    SET(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/george/*.py")
+    SET(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
 
-    add_custom_command(OUTPUT ${OUTPUT}
+    CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY})
+    CONFIGURE_FILE(${INIT_PY_IN} ${INIT_PY})
+
+    ADD_CUSTOM_COMMAND(OUTPUT ${OUTPUT}
                        COMMAND ${PYTHON} ${SETUP_PY} build
                        COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
                        DEPENDS ${DEPS})
 
-    add_custom_target(python ALL DEPENDS ${OUTPUT})
+    ADD_CUSTOM_TARGET(python ALL DEPENDS ${OUTPUT})
 
-    install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
-endif()
+    INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${PYTHON} ${SETUP_PY} install)")
+
+ELSE (PYTHON)
+    MESSAGE("-- Did not find Python interpreter")
+ENDIF()

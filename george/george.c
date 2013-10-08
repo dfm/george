@@ -285,6 +285,64 @@ int george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
     return 0;
 }
 
+int george_predict (double *y, int nout, double *xout, double *mean,
+                    int compute_cov, double *cov, george_gp *gp)
+{
+    cholmod_common *c = gp->c;
+    int i, j, n = gp->ndata, flag;
+    double value;
+
+    if (!gp->computed) return -1;
+
+    // Copy the column vector over.
+    cholmod_dense *b = cholmod_allocate_dense(n, 1, n, CHOLMOD_REAL, c);
+    for (i = 0; i < n; ++i) ((double*)b->x)[i] = y[i];
+
+    // Solve for alpha.
+    cholmod_dense *alpha = cholmod_solve (CHOLMOD_A, gp->L, b, c);
+    double *alpha_data = (double*)alpha->x;
+
+    // Initialize the mean vector as zeros.
+    for (i = 0; i < nout; ++i) mean[i] = 0.0;
+
+    // Loop over the data points and compute the Kxs matrix.
+    cholmod_dense *kxs = cholmod_allocate_dense (n, nout, nout, CHOLMOD_REAL, c);
+    double *kxs_data = (double*)kxs->x,
+           *x = gp->x;
+    for (i = 0; i < n; ++i) {
+        for (j = 0; j < nout; ++j) {
+            value = (*(gp->kernel)) (x[i], xout[j], gp->pars, gp->meta, 0,
+                                     NULL, &flag);
+            if (!flag) value = 0.0;
+            kxs_data[i*nout + j] = value;
+            mean[j] += value * alpha_data[i];
+        }
+    }
+
+    if (!compute_cov) return 0;
+
+    // Initialize the output covariance.
+    for (i = 0; i < nout; ++i) {
+        value = (*(gp->kernel)) (xout[i], xout[i], gp->pars, gp->meta, 0,
+                                 NULL, &flag);
+        if (flag) cov[i*nout+i] = value;
+        else cov[i*nout+i] = 0.0;
+        for (j = i + 1; j < nout; ++j) {
+            value = (*(gp->kernel)) (xout[i], xout[j], gp->pars, gp->meta, 0,
+                                     NULL, &flag);
+            if (!flag) value = 0.0;
+            cov[i*nout+j] = value;
+            cov[j*nout+i] = value;
+        }
+    }
+
+    // // Compute the predictive covariance matrix.
+    // *cov -= Kxs.transpose() * L_->solve(Kxs);
+    // if (L_->info() != Success) return -3;
+
+    return 0;
+}
+
 //
 // The built in kernel.
 //

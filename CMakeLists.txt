@@ -85,7 +85,6 @@ LIST(APPEND CXSPARSE_SEARCH_HEADERS /usr/include/suitesparse) # Ubuntu
 #   BLAS/LAPACK
 # ===========================================================================
 
-MESSAGE("${LAPACK}")
 IF (APPLE)
     FIND_LIBRARY(LAPACK_LIB NAMES vecLib)
 ELSE (APPLE)
@@ -333,6 +332,7 @@ ENDMACRO (GEORGE_TEST)
 GEORGE_TEST (cholmod_version)
 GEORGE_TEST (kernel_gradient)
 GEORGE_TEST (hyper_gradient)
+GEORGE_TEST (predict)
 
 
 # ===========================================================================
@@ -341,7 +341,7 @@ GEORGE_TEST (hyper_gradient)
 
 OPTION(BUILD_PYTHON
        "Build the Python bindings"
-       OFF)
+       ON)
 
 IF (BUILD_PYTHON)
     ADD_SUBDIRECTORY (python)

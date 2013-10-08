@@ -2,8 +2,6 @@
 *.pyc
 *.o
 *.so
-include/Eigen
-test
 .syntastic_cpp_config
 *.png
 *.gif
@@ -11,3 +9,4 @@ dist
 *.egg-info
 .syntastic_c_config
 build
+python/george/__init__.py
