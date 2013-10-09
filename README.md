@@ -51,6 +51,13 @@ make test
 This will build and install both static (called `libgeorge`) and shared
 (called `libgeorge_shared`) versions of the library.
 
+If you ever want to uninstall George, just run:
+
+```
+cd /path/to/george/build
+xargs rm < install_manifest.txt
+```
+
 
 API
 ---
