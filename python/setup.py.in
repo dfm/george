@@ -38,7 +38,7 @@ library_dirs = filter(lambda p: len(p), map(lambda p: os.path.split(p)[0], [
     "${CXSPARSE_LIB}",
     "${LAPACK_LIB}",
     "${BLAS_LIB}",
-]))
+])) + ["${CMAKE_BINARY_DIR}/lib"]
 
 libraries = [
     "m",

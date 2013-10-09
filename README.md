@@ -27,6 +27,15 @@ with version 2.1.2 (although it *might* work with earlier versions).
 The build process uses [CMake](http://www.cmake.org/) so you'll need to
 install that too.
 
+If you're on a Mac, you should probably be using [Homebrew](http://brew.sh/)
+and if you are, you can install these dependencies by running:
+
+```
+brew install cmake
+brew tap homebrew/science
+brew install suite-sparse
+```
+
 After you have installed these dependencies, you should be able to just run:
 
 ```
