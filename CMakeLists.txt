@@ -86,7 +86,7 @@ LIST(APPEND CXSPARSE_SEARCH_HEADERS /usr/include/suitesparse) # Ubuntu
 # ===========================================================================
 
 IF (APPLE)
-    FIND_LIBRARY(LAPACK_LIB NAMES vecLib)
+    FIND_LIBRARY(LAPACK_LIB NAMES Accelerate)
 ELSE (APPLE)
     FIND_LIBRARY(BLAS_LIB NAMES blas)
     IF (EXISTS ${BLAS_LIB})
