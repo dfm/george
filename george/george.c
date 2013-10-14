@@ -339,16 +339,13 @@ int george_predict (double *y, int nout, double *xout, double *mean,
     }
 
     // Update the covariance matrix.
-    cholmod_dense *tmp = cholmod_solve (CHOLMOD_A, gp->L, kxs, c);
-    double *tmp_data = (double*)tmp->x;
-    for (i = 0; i < nout; ++i) {
-        for (j = 0; j < nout; ++j) {
-            for (k = 0; k < n; ++k) {
-                cov[i*nout+j] -= kxs_data[k*nout+i] * tmp_data[j*nout+k];
-            }
-        }
-    }
-    cholmod_free_dense (&tmp, c);
+    cholmod_dense *v = cholmod_solve (CHOLMOD_A, gp->L, kxs, c);
+    double *v_data = (double*)v->x;
+    for (i = 0; i < nout; ++i)
+        for (j = 0; j < nout; ++j)
+            for (k = 0; k < n; ++k)
+                cov[i*nout+j] -= kxs_data[k+i*n] * v_data[k+j*n];
+    cholmod_free_dense (&v, c);
 
     return 0;
 }
