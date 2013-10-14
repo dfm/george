@@ -1,5 +1,6 @@
 #include "math.h"
 #include "george.h"
+#include <lbfgs.h>
 
 void george_version (int *version)
 {
@@ -186,7 +187,7 @@ double george_log_likelihood (double *y, george_gp *gp)
     return -0.5 * lnlike;
 }
 
-int george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
+double george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
 {
     int i, j, k, flag, n = gp->ndata, npars = gp->npars;
     double value,
@@ -205,6 +206,10 @@ int george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
     cholmod_dense *alpha = cholmod_solve (CHOLMOD_A, gp->L, b, c);
     double *alpha_data = (double*)alpha->x;
     cholmod_free_dense (&b, c);
+
+    // Compute the log-likelihood.
+    double lnlike = gp->logdet;
+    for (i = 0; i < n; ++i) lnlike += y[i] * alpha_data[i];
 
     // Compute alpha.alpha^T.
     cholmod_dense *aat = cholmod_allocate_dense (n, n, n, CHOLMOD_REAL, c);
@@ -280,7 +285,7 @@ int george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
 
     cholmod_free_dense (&aat, c);
 
-    return 0;
+    return -0.5 * lnlike;
 }
 
 int george_predict (double *y, int nout, double *xout, double *mean,
@@ -341,10 +346,17 @@ int george_predict (double *y, int nout, double *xout, double *mean,
     // Update the covariance matrix.
     cholmod_dense *v = cholmod_solve (CHOLMOD_A, gp->L, kxs, c);
     double *v_data = (double*)v->x;
-    for (i = 0; i < nout; ++i)
-        for (j = 0; j < nout; ++j)
-            for (k = 0; k < n; ++k)
-                cov[i*nout+j] -= kxs_data[k+i*n] * v_data[k+j*n];
+    for (i = 0; i < nout; ++i) {
+        for (k = 0; k < n; ++k)
+            cov[i*nout+i] -= kxs_data[k+i*n] * v_data[k+i*n];
+        for (j = i+1; j < nout; ++j) {
+            for (k = 0; k < n; ++k) {
+                value = kxs_data[k+i*n] * v_data[k+j*n];
+                cov[i*nout+j] -= value;
+                cov[j*nout+i] -= value;
+            }
+        }
+    }
     cholmod_free_dense (&v, c);
 
     return 0;
@@ -380,4 +392,76 @@ double george_kernel (double x1, double x2, double *pars, void *meta,
     }
 
     return k;
+}
+
+//
+// Optimization of hyperparameters.
+//
+
+typedef struct _george_op_wrapper_struct {
+    int n;
+    double *x, *yerr, *y;
+    george_gp *gp;
+} _george_op_wrapper;
+
+static
+lbfgsfloatval_t _george_op_evaluate(void *instance, const lbfgsfloatval_t *w,
+                                    lbfgsfloatval_t *grad, const int n,
+                                    const lbfgsfloatval_t step)
+{
+    int i;
+    double nlp;
+    _george_op_wrapper *wrapper = (_george_op_wrapper*)instance;
+    wrapper->gp->pars = (double*)w;
+    george_compute(wrapper->n, wrapper->x, wrapper->yerr, wrapper->gp);
+    nlp = -george_grad_log_likelihood(wrapper->y, (double*)grad, wrapper->gp);
+    for (i = 0; i < n; ++i) grad[i] = -grad[i];
+    return nlp;
+}
+
+static
+int _george_op_progress(void *instance, const lbfgsfloatval_t *x,
+             const lbfgsfloatval_t *g, const lbfgsfloatval_t fx,
+             const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm,
+             const lbfgsfloatval_t step, int n, int k, int ls)
+{
+    printf("Iteration %d: ", k);
+    printf("fx = %f\n", fx);
+    printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
+    printf("\n");
+    return 0;
+}
+
+int george_optimize (int n, double *x, double *yerr, double *y, int maxiter,
+                      george_gp *gp)
+{
+    int i;
+
+    _george_op_wrapper *wrapper = malloc(sizeof(_george_op_wrapper));
+    wrapper->n = n;
+    wrapper->x = x;
+    wrapper->yerr = yerr;
+    wrapper->y = y;
+    wrapper->gp = gp;
+
+    double *initial_pars = gp->pars;
+
+    lbfgsfloatval_t fx;
+    lbfgsfloatval_t *xval = lbfgs_malloc(gp->npars);
+    lbfgs_parameter_t param;
+    for (i = 0; i < gp->npars; ++i) xval[i] = initial_pars[i];
+
+    lbfgs_parameter_init(&param);
+    param.max_iterations = maxiter;
+    int r = lbfgs(gp->npars, xval, &fx, _george_op_evaluate,
+                  _george_op_progress, wrapper, &param);
+    printf("L-BFGS optimization terminated with status code = %d\n", r);
+    printf("  fx = %f\n", fx);
+
+    for (i = 0; i < gp->npars; ++i) initial_pars[i] = xval[i];
+    gp->pars = initial_pars;
+
+    lbfgs_free(xval);
+    free(wrapper);
+    return r;
 }

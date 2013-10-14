@@ -16,7 +16,7 @@ x = 100 * np.sort(np.random.rand(N)) - 50
 yerr = 0.05 * np.ones(len(x))
 y = np.sin(0.5 * x) + yerr * np.random.randn(len(x))
 
-gp = george.GaussianProcess([1.0, 2.0, 4.1])
+gp = george.GaussianProcess([1.0, 2.0, 10.1])
 # prior = gp.sample_prior(x, N=1)
 # pl.plot(x, prior.T, "k", alpha=0.5)
 # pl.savefig("prior.png")

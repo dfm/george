@@ -56,7 +56,7 @@ double george_log_likelihood (
     george_gp *gp
 );
 
-int george_grad_log_likelihood (
+double george_grad_log_likelihood (
     double *y,
     double *grad_out,
     george_gp *gp
@@ -80,6 +80,15 @@ double george_kernel (
     int compute_grad,
     double *grad,
     int *flag
+);
+
+int george_optimize (
+    int n,
+    double *x,
+    double *yerr,
+    double *y,
+    int maxiter,
+    george_gp *gp
 );
 
 #endif
