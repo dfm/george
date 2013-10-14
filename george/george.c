@@ -1,8 +1,6 @@
 #include "math.h"
 #include "george.h"
 
-#define TWOLNPI 1.8378770664093453
-
 void george_version (int *version)
 {
     version[0] = GEORGE_VERSION_MAJOR;
@@ -142,7 +140,7 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
     if (!gp->info) return gp->info;
 
     // Pre-compute the log-determinant.
-    gp->logdet = george_logdet (gp->L, c);
+    gp->logdet = george_logdet (gp->L, c) + n * log(2 * M_PI);
 
     // Save the data.
     gp->ndata = n;
@@ -179,7 +177,7 @@ double george_log_likelihood (double *y, george_gp *gp)
     cholmod_dense *alpha = cholmod_solve (CHOLMOD_A, gp->L, b, c);
 
     // Compute the log-likelihood.
-    double lnlike = gp->logdet + gp->ndata * TWOLNPI, *ax = alpha->x;
+    double lnlike = gp->logdet, *ax = alpha->x;
     for (i = 0; i < n; ++i) lnlike += y[i] * ax[i];
 
     cholmod_free_dense (&b, c);
@@ -307,15 +305,17 @@ int george_predict (double *y, int nout, double *xout, double *mean,
     for (i = 0; i < nout; ++i) mean[i] = 0.0;
 
     // Loop over the data points and compute the Kxs matrix.
-    cholmod_dense *kxs = cholmod_allocate_dense (n, nout, nout, CHOLMOD_REAL, c);
+    cholmod_dense *kxs = cholmod_allocate_dense (n, nout, n, CHOLMOD_REAL, c);
     double *kxs_data = (double*)kxs->x,
            *x = gp->x;
-    for (i = 0; i < n; ++i) {
-        for (j = 0; j < nout; ++j) {
+
+    // Note: column major order.
+    for (j = 0; j < nout; ++j) {
+        for (i = 0; i < n; ++i) {
             value = (*(gp->kernel)) (x[i], xout[j], gp->pars, gp->meta, 0,
                                      NULL, &flag);
             if (!flag) value = 0.0;
-            kxs_data[i*nout + j] = value;
+            kxs_data[i + j*n] = value;
             mean[j] += value * alpha_data[i];
         }
     }
