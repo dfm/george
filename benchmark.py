@@ -32,7 +32,7 @@ print(gp.lnlikelihood(y))
 print("solve: ", time.time() - strt)
 
 print("Optimizing...")
-print(gp.optimize(x, yerr, y))
+print(gp.optimize(x, yerr, y, verbose=0))
 
 ntest = 500
 t = np.linspace(-60, 60, ntest)

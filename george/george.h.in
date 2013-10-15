@@ -88,6 +88,7 @@ int george_optimize (
     double *yerr,
     double *y,
     int maxiter,
+    int verbose,
     george_gp *gp
 );
 

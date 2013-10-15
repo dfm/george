@@ -400,7 +400,7 @@ double george_kernel (double x1, double x2, double *pars, void *meta,
 //
 
 typedef struct _george_op_wrapper_struct {
-    int n;
+    int n, verbose;
     double *x, *yerr, *y;
     george_gp *gp;
 } _george_op_wrapper;
@@ -427,22 +427,25 @@ int _george_op_progress(void *instance, const lbfgsfloatval_t *x,
              const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm,
              const lbfgsfloatval_t step, int n, int k, int ls)
 {
-    printf("Iteration %d: ", k);
-    printf("fx = %f\n", fx);
-    printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
-    printf("  ");
-    for (int i = 0; i < n; ++i) printf("%e ", x[i]);
-    printf("\n\n");
+    if (((_george_op_wrapper*)instance)->verbose) {
+        printf("Iteration %d: ", k);
+        printf("fx = %f\n", fx);
+        printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
+        printf("  ");
+        for (int i = 0; i < n; ++i) printf("%e ", x[i]);
+        printf("\n\n");
+    }
     return 0;
 }
 
 int george_optimize (int n, double *x, double *yerr, double *y, int maxiter,
-                      george_gp *gp)
+                     int verbose, george_gp *gp)
 {
     int i;
 
     _george_op_wrapper *wrapper = malloc(sizeof(_george_op_wrapper));
     wrapper->n = n;
+    wrapper->verbose = verbose;
     wrapper->x = x;
     wrapper->yerr = yerr;
     wrapper->y = y;
@@ -459,8 +462,10 @@ int george_optimize (int n, double *x, double *yerr, double *y, int maxiter,
     param.max_iterations = maxiter;
     int r = lbfgs(gp->npars, xval, &fx, _george_op_evaluate,
                   _george_op_progress, wrapper, &param);
-    printf("L-BFGS optimization terminated with status code = %d\n", r);
-    printf("  fx = %f\n", fx);
+    if (verbose) {
+        printf("L-BFGS optimization terminated with status code = %d\n", r);
+        printf("  fx = %f\n", fx);
+    }
 
     for (i = 0; i < gp->npars; ++i) initial_pars[i] = xval[i];
     gp->pars = initial_pars;

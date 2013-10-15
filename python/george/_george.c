@@ -279,11 +279,12 @@ static PyObject *_george_predict(_george *self, PyObject *args)
 
 static PyObject *_george_optimize(_george *self, PyObject *args)
 {
-    int maxiter;
+    int maxiter, verbose;
     PyObject *x_obj, *yerr_obj, *y_obj;
 
     // Parse the input arguments.
-    if (!PyArg_ParseTuple(args, "OOOi", &x_obj, &yerr_obj, &y_obj, &maxiter))
+    if (!PyArg_ParseTuple(args, "OOOii", &x_obj, &yerr_obj, &y_obj, &maxiter,
+                          &verbose))
         return NULL;
 
     // Decode the numpy arrays.
@@ -317,7 +318,8 @@ static PyObject *_george_optimize(_george *self, PyObject *args)
            *y = (double*)PyArray_DATA(y_array);
 
     // Fit the GP.
-    int info = george_optimize (nsamples, x, yerr, y, maxiter, self->gp);
+    int info = george_optimize (nsamples, x, yerr, y, maxiter, verbose,
+                                self->gp);
 
     // Clean up.
     Py_DECREF(x_array);

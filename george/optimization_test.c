@@ -25,7 +25,7 @@ int main ()
 
     george_gp *gp = george_allocate_gp (3, pars, NULL, *george_kernel);
 
-    george_optimize (ndata, x, yerr, y, 100, gp);
+    george_optimize (ndata, x, yerr, y, 100, 1, gp);
 
     for (i = 0; i < 3; ++i)
         printf("%f ", gp->pars[i]);

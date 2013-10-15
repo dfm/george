@@ -79,8 +79,8 @@ class GaussianProcess(object):
         """
         return self._gp.predict(y, t)
 
-    def optimize(self, x, yerr, y, maxiter=100):
-        return self._gp.optimize(x, yerr, y, maxiter)
+    def optimize(self, x, yerr, y, maxiter=100, verbose=1):
+        return self._gp.optimize(x, yerr, y, maxiter, verbose)
 
     def sample_conditional(self, y, t, N=1):
         """
