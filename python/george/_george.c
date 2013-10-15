@@ -101,7 +101,7 @@ static PyObject *_george_compute (_george *self, PyObject *args)
     Py_DECREF(yerr_array);
 
     // Check success.
-    if (!info) {
+    if (info != 0) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to compute model");
         return NULL;
     }
@@ -277,6 +277,70 @@ static PyObject *_george_predict(_george *self, PyObject *args)
     return ret;
 }
 
+static PyObject *_george_optimize(_george *self, PyObject *args)
+{
+    int maxiter;
+    PyObject *x_obj, *yerr_obj, *y_obj;
+
+    // Parse the input arguments.
+    if (!PyArg_ParseTuple(args, "OOOi", &x_obj, &yerr_obj, &y_obj, &maxiter))
+        return NULL;
+
+    // Decode the numpy arrays.
+    PyArrayObject *x_array = PARSE_ARRAY(x_obj),
+                  *yerr_array = PARSE_ARRAY(yerr_obj),
+                  *y_array = PARSE_ARRAY(y_obj);
+    if (x_array == NULL || yerr_array == NULL || y_array == NULL) {
+        Py_XDECREF(x_array);
+        Py_XDECREF(yerr_array);
+        Py_XDECREF(y_array);
+        PyErr_SetString(PyExc_ValueError,
+            "Failed to parse input objects as numpy arrays");
+        return NULL;
+    }
+
+    // Get the dimensions.
+    int nsamples = (int)PyArray_DIM(x_array, 0);
+
+    if ((int)PyArray_DIM(yerr_array, 0) != nsamples ||
+            (int)PyArray_DIM(y_array, 0) != nsamples) {
+        PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
+        Py_DECREF(x_array);
+        Py_DECREF(yerr_array);
+        Py_DECREF(y_array);
+        return NULL;
+    }
+
+    // Access the data.
+    double *x = (double*)PyArray_DATA(x_array),
+           *yerr = (double*)PyArray_DATA(yerr_array),
+           *y = (double*)PyArray_DATA(y_array);
+
+    // Fit the GP.
+    int info = george_optimize (nsamples, x, yerr, y, maxiter, self->gp);
+
+    // Clean up.
+    Py_DECREF(x_array);
+    Py_DECREF(yerr_array);
+    Py_DECREF(y_array);
+
+    // Build the output.
+    int i, n = self->gp->npars;
+    npy_intp dim[1] = {n};
+    PyArrayObject *ret_array = (PyArrayObject*)PyArray_SimpleNew(1, dim,
+                                                                 NPY_DOUBLE);
+    if (ret_array == NULL) {
+        Py_XDECREF(ret_array);
+        return NULL;
+    }
+    double *ret_data = (double*)PyArray_DATA(ret_array);
+    for (i = 0; i < n; ++i) ret_data[i] = self->gp->pars[i];
+
+    PyObject *ret = Py_BuildValue("iO", info, ret_array);
+    Py_DECREF(ret_array);
+    return ret;
+}
+
 static PyObject *_george_covariance(_george *self, PyObject *args)
 {
     PyObject *t_obj;
@@ -317,13 +381,9 @@ static PyObject *_george_covariance(_george *self, PyObject *args)
         for (j = i + 1; j < N; ++j) {
             value = (*self->gp->kernel)(t[i], t[i], self->gp->pars, NULL, 0,
                                         NULL, &flag);
-            if (flag) {
-                cov[i*N+j] = value;
-                cov[j*N+i] = value;
-            } else {
-                cov[i*N+j] = 0.0;
-                cov[j*N+i] = 0.0;
-            }
+            if (!flag) value = 0.0;
+            cov[i*N+j] = value;
+            cov[j*N+i] = value;
         }
     }
 
@@ -364,6 +424,11 @@ static PyMethodDef _george_methods[] = {
      (PyCFunction)_george_predict,
      METH_VARARGS,
      "Predict."
+    },
+    {"optimize",
+     (PyCFunction)_george_optimize,
+     METH_VARARGS,
+     "Find the maximum likelihood hyperparameters."
     },
     {"covariance",
      (PyCFunction)_george_covariance,

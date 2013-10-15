@@ -11,12 +11,12 @@ import matplotlib.pyplot as pl
 
 np.random.seed(123)
 
-N = 2000
+N = 500
 x = 100 * np.sort(np.random.rand(N)) - 50
 yerr = 0.05 * np.ones(len(x))
 y = np.sin(0.5 * x) + yerr * np.random.randn(len(x))
 
-gp = george.GaussianProcess([1.0, 2.0, 10.1])
+gp = george.GaussianProcess([1.0, 2.0, 30.1])
 # prior = gp.sample_prior(x, N=1)
 # pl.plot(x, prior.T, "k", alpha=0.5)
 # pl.savefig("prior.png")
@@ -30,6 +30,9 @@ print("solve: ", time.time() - strt)
 strt = time.time()
 print(gp.lnlikelihood(y))
 print("solve: ", time.time() - strt)
+
+print("Optimizing...")
+print(gp.optimize(x, yerr, y))
 
 ntest = 500
 t = np.linspace(-60, 60, ntest)

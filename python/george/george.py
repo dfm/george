@@ -79,6 +79,9 @@ class GaussianProcess(object):
         """
         return self._gp.predict(y, t)
 
+    def optimize(self, x, yerr, y, maxiter=100):
+        return self._gp.optimize(x, yerr, y, maxiter)
+
     def sample_conditional(self, y, t, N=1):
         """
         Draw samples from the predictive conditional distribution.

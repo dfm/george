@@ -129,7 +129,8 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
     cholmod_sparse *A = cholmod_triplet_to_sparse (triplet, k, c);
     if (gp->computed) cholmod_free_factor (&(gp->L), c);
     gp->L = cholmod_analyze (A, c);
-    gp->info = cholmod_factorize (A, gp->L, c);
+    cholmod_factorize (A, gp->L, c);
+    gp->info = c->status;
 
     // Clean up.
     cholmod_free_sparse (&A, c);
@@ -138,7 +139,7 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
     free(values);
 
     // Check the flag to make sure that the factorization occurred properly.
-    if (!gp->info) return gp->info;
+    if (gp->info != CHOLMOD_OK) return gp->info;
 
     // Pre-compute the log-determinant.
     gp->logdet = george_logdet (gp->L, c) + n * log(2 * M_PI);
@@ -409,13 +410,14 @@ lbfgsfloatval_t _george_op_evaluate(void *instance, const lbfgsfloatval_t *w,
                                     lbfgsfloatval_t *grad, const int n,
                                     const lbfgsfloatval_t step)
 {
-    int i;
+    int i, info;
     double nlp;
     _george_op_wrapper *wrapper = (_george_op_wrapper*)instance;
     wrapper->gp->pars = (double*)w;
-    george_compute(wrapper->n, wrapper->x, wrapper->yerr, wrapper->gp);
+    info = george_compute(wrapper->n, wrapper->x, wrapper->yerr, wrapper->gp);
     nlp = -george_grad_log_likelihood(wrapper->y, (double*)grad, wrapper->gp);
     for (i = 0; i < n; ++i) grad[i] = -grad[i];
+    if (info != 0) return INFINITY;
     return nlp;
 }
 
@@ -428,7 +430,9 @@ int _george_op_progress(void *instance, const lbfgsfloatval_t *x,
     printf("Iteration %d: ", k);
     printf("fx = %f\n", fx);
     printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
-    printf("\n");
+    printf("  ");
+    for (int i = 0; i < n; ++i) printf("%e ", x[i]);
+    printf("\n\n");
     return 0;
 }
 
