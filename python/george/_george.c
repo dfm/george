@@ -381,7 +381,7 @@ static PyObject *_george_covariance(_george *self, PyObject *args)
         if (flag) cov[i*N+i] = value;
         else cov[i*N+i] = 0.0;
         for (j = i + 1; j < N; ++j) {
-            value = (*self->gp->kernel)(t[i], t[i], self->gp->pars, NULL, 0,
+            value = (*self->gp->kernel)(t[i], t[j], self->gp->pars, NULL, 0,
                                         NULL, &flag);
             if (!flag) value = 0.0;
             cov[i*N+j] = value;
