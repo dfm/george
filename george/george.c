@@ -427,12 +427,13 @@ int _george_op_progress(void *instance, const lbfgsfloatval_t *x,
              const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm,
              const lbfgsfloatval_t step, int n, int k, int ls)
 {
+    int i;
     if (((_george_op_wrapper*)instance)->verbose) {
         printf("Iteration %d: ", k);
         printf("fx = %f\n", fx);
         printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
         printf("  ");
-        for (int i = 0; i < n; ++i) printf("%e ", x[i]);
+        for (i = 0; i < n; ++i) printf("%e ", x[i]);
         printf("\n\n");
     }
     return 0;
