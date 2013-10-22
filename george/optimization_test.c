@@ -12,7 +12,7 @@ int main ()
     double pars[] = {1e-3, 3.0, 8.0};
 
     // Generate time series.
-    int i, j, ndata = 900, count = 0;
+    int i, j, ndata = 200, count = 0;
     double t,
            *x = malloc(ndata * sizeof(double)),
            *y = malloc(ndata * sizeof(double)),

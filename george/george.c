@@ -68,18 +68,27 @@ george_allocate_gp (int npars, double *pars, void *meta,
                                       double*, int*))
 {
     george_gp *gp = malloc (sizeof (george_gp));
+    if (gp == NULL) return NULL;
 
     gp->npars = npars;
     gp->pars = pars;
     gp->meta = meta;
     gp->kernel = kernel;
     gp->computed = 0;
-    gp->info = 0;
+    gp->info = CHOLMOD_OK;
+    gp->c = malloc(sizeof(cholmod_common));
+    if (gp->c == NULL) {
+        free(gp);
+        return NULL;
+    }
 
     // Start up CHOLMOD.
-    gp->c = malloc(sizeof(cholmod_common));
     cholmod_start (gp->c);
-    gp->L = cholmod_allocate_factor (1, gp->c);
+    if (gp->c->status != CHOLMOD_OK || !cholmod_check_common(gp->c)) {
+        free(gp->c);
+        free(gp);
+        return NULL;
+    }
 
     return gp;
 }
@@ -99,10 +108,25 @@ void george_free_gp (george_gp *gp)
 int george_compute (int n, double *x, double *yerr, george_gp *gp)
 {
     cholmod_common *c = gp->c;
-    int i, j, k = 0, maxnnz = (n * n + n) / 2, flag,
-        *rows = malloc (maxnnz * sizeof(int)),
-        *cols = malloc (maxnnz * sizeof(int));
-    double value, *values = malloc (maxnnz * sizeof(double));
+    int i, j, k = 0, maxnnz = (n * n + n) / 2, flag, computed = gp->computed;
+    double value;
+
+    // Initialize the `computed` flag and clean up any existing data.
+    if (gp->computed) {
+        /* cholmod_free_factor (&(gp->L), c); */
+        free(gp->x);
+        free(gp->yerr);
+    }
+    gp->computed = 0;
+
+    // Allocate some memory for a sparse triplet matrix.
+    cholmod_triplet *triplet = cholmod_allocate_triplet (n, n, maxnnz, 1,
+                                                         CHOLMOD_REAL, c);
+    if (triplet == NULL || !cholmod_check_triplet(triplet, c)) {
+        if (triplet != NULL) cholmod_free_triplet(&triplet, c);
+        gp->info = -1;
+        return gp->info;
+    }
 
     // Compute the covariance matrix in triplet form.
     for (i = 0; i < n; ++i) {
@@ -111,45 +135,57 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
                                      &flag);
             if (i == j) value += yerr[i] * yerr[i];
             if (flag && value > 0) {
-                values[k] = value;
-                rows[k] = i;
-                cols[k] = j;
+                ((double*)triplet->x)[k] = value;
+                ((int*)triplet->i)[k] = i;
+                ((int*)triplet->j)[k] = j;
                 ++k;
             }
         }
     }
-    cholmod_triplet *triplet = cholmod_allocate_triplet (n, n, k, 1,
-                                                         CHOLMOD_REAL, c);
-    triplet->i = rows;
-    triplet->j = cols;
-    triplet->x = values;
+
+    // Save the final number of non-zero values.
     triplet->nnz = k;
 
-    // Convert this to a sparse representation and compute the factorization.
+    // Convert this to a sparse representation.
     cholmod_sparse *A = cholmod_triplet_to_sparse (triplet, k, c);
-    if (gp->computed) cholmod_free_factor (&(gp->L), c);
-    gp->L = cholmod_analyze (A, c);
+    cholmod_free_triplet(&triplet, c);
+    if (A == NULL || !cholmod_check_sparse(A, c)) {
+        gp->info = -2;
+        return gp->info;
+    }
+
+    // Analyze the covariance matrix to find the best factorization pattern.
+    if (!computed) {
+        gp->L = cholmod_analyze (A, c);
+        if (gp->L == NULL) {
+            cholmod_free_sparse (&A, c);
+            gp->info = -3;
+            return gp->info;
+        }
+    }
+
+    // Check the success of this analysis.
+    gp->info = c->status;
+    if (gp->info != CHOLMOD_OK || !cholmod_check_factor(gp->L, c)) {
+        cholmod_free_sparse (&A, c);
+        gp->info = -4;
+        return gp->info;
+    }
+
+    // Factorize the matrix.
     cholmod_factorize (A, gp->L, c);
     gp->info = c->status;
-
-    // Clean up.
     cholmod_free_sparse (&A, c);
-    free(rows);
-    free(cols);
-    free(values);
-
-    // Check the flag to make sure that the factorization occurred properly.
-    if (gp->info != CHOLMOD_OK) return gp->info;
+    if (gp->info != CHOLMOD_OK || !cholmod_check_factor(gp->L, c)) {
+        gp->info = -5;
+        return gp->info;
+    }
 
     // Pre-compute the log-determinant.
     gp->logdet = george_logdet (gp->L, c) + n * log(2 * M_PI);
 
-    // Save the data.
+    // Save the data for later use.
     gp->ndata = n;
-    if (gp->computed) {
-        free(gp->x);
-        free(gp->yerr);
-    }
     gp->x = malloc(n * sizeof(double));
     gp->yerr = malloc(n * sizeof(double));
     for (i = 0; i < n; ++i) {
@@ -169,22 +205,30 @@ double george_log_likelihood (double *y, george_gp *gp)
     cholmod_common *c = gp->c;
 
     // Make sure that things have been properly computed.
-    if (!gp->computed) return -INFINITY;
+    if (!gp->computed || gp->info != CHOLMOD_OK) return -INFINITY;
 
     // Copy the column vector over.
     cholmod_dense *b = cholmod_allocate_dense(n, 1, n, CHOLMOD_REAL, c);
+    gp->info = c->status;
+    if (gp->info != CHOLMOD_OK) return -INFINITY;
     for (i = 0; i < n; ++i) ((double*)b->x)[i] = y[i];
 
     // Solve for alpha.
     cholmod_dense *alpha = cholmod_solve (CHOLMOD_A, gp->L, b, c);
+    cholmod_free_dense (&b, c);
+
+    // Check the status of the solve.
+    gp->info = c->status;
+    if (gp->info != CHOLMOD_OK) {
+        cholmod_free_dense (&alpha, c);
+        return -INFINITY;
+    }
 
     // Compute the log-likelihood.
     double lnlike = gp->logdet, *ax = alpha->x;
     for (i = 0; i < n; ++i) lnlike += y[i] * ax[i];
 
-    cholmod_free_dense (&b, c);
     cholmod_free_dense (&alpha, c);
-
     return -0.5 * lnlike;
 }
 
@@ -197,7 +241,7 @@ double george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
     cholmod_common *c = gp->c;
 
     // Make sure that things have been properly computed.
-    if (!gp->computed) return -1;
+    if (!gp->computed || gp->info != CHOLMOD_OK) return -1;
 
     // Copy the column vector over.
     cholmod_dense *b = cholmod_allocate_dense(n, 1, n, CHOLMOD_REAL, c);

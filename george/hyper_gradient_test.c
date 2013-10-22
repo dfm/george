@@ -26,6 +26,7 @@ int main ()
     george_gp *gp = george_allocate_gp (3, pars, NULL, *george_kernel);
 
     int info = george_compute (ndata, x, yerr, gp);
+    printf("info=%d\n", info);
     double ll0 = george_log_likelihood (y, gp), llp, llm, diff,
            grad[3];
 
