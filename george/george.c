@@ -113,7 +113,7 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
 
     // Initialize the `computed` flag and clean up any existing data.
     if (gp->computed) {
-        /* cholmod_free_factor (&(gp->L), c); */
+        cholmod_free_factor (&(gp->L), c);
         free(gp->x);
         free(gp->yerr);
     }
@@ -155,13 +155,11 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
     }
 
     // Analyze the covariance matrix to find the best factorization pattern.
-    if (!computed) {
-        gp->L = cholmod_analyze (A, c);
-        if (gp->L == NULL) {
-            cholmod_free_sparse (&A, c);
-            gp->info = -3;
-            return gp->info;
-        }
+    gp->L = cholmod_analyze (A, c);
+    if (gp->L == NULL) {
+        cholmod_free_sparse (&A, c);
+        gp->info = -3;
+        return gp->info;
     }
 
     // Check the success of this analysis.
@@ -207,17 +205,24 @@ double george_log_likelihood (double *y, george_gp *gp)
     // Make sure that things have been properly computed.
     if (!gp->computed || gp->info != CHOLMOD_OK) return -INFINITY;
 
-    // Copy the column vector over.
+    // Copy the column vector over to a dense matrix.
     cholmod_dense *b = cholmod_allocate_dense(n, 1, n, CHOLMOD_REAL, c);
-    gp->info = c->status;
-    if (gp->info != CHOLMOD_OK) return -INFINITY;
+    if (b == NULL) {
+        gp->info = -1;
+        return -INFINITY;
+    }
+    if (!cholmod_check_dense(b, c)) {
+        cholmod_free_dense(&b, c);
+        gp->info = -2;
+        return -INFINITY;
+    }
     for (i = 0; i < n; ++i) ((double*)b->x)[i] = y[i];
 
     // Solve for alpha.
     cholmod_dense *alpha = cholmod_solve (CHOLMOD_A, gp->L, b, c);
     cholmod_free_dense (&b, c);
 
-    // Check the status of the solve.
+    // Check the success of the solve.
     gp->info = c->status;
     if (gp->info != CHOLMOD_OK) {
         cholmod_free_dense (&alpha, c);
