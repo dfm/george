@@ -197,24 +197,24 @@ int george_compute (int n, double *x, double *yerr, george_gp *gp)
     return gp->info;
 }
 
-double george_log_likelihood (double *y, george_gp *gp)
+cholmod_dense *_george_get_alpha (double *y, george_gp *gp)
 {
     int i, n = gp->ndata;
     cholmod_common *c = gp->c;
 
     // Make sure that things have been properly computed.
-    if (!gp->computed || gp->info != CHOLMOD_OK) return -INFINITY;
+    if (!gp->computed || gp->info != CHOLMOD_OK) return NULL;
 
     // Copy the column vector over to a dense matrix.
     cholmod_dense *b = cholmod_allocate_dense(n, 1, n, CHOLMOD_REAL, c);
     if (b == NULL) {
         gp->info = -1;
-        return -INFINITY;
+        return NULL;
     }
     if (!cholmod_check_dense(b, c)) {
         cholmod_free_dense(&b, c);
         gp->info = -2;
-        return -INFINITY;
+        return NULL;
     }
     for (i = 0; i < n; ++i) ((double*)b->x)[i] = y[i];
 
@@ -226,44 +226,56 @@ double george_log_likelihood (double *y, george_gp *gp)
     gp->info = c->status;
     if (gp->info != CHOLMOD_OK) {
         cholmod_free_dense (&alpha, c);
-        return -INFINITY;
+        return NULL;
     }
 
-    // Compute the log-likelihood.
+    return alpha;
+}
+
+double _george_compute_log_likelihood (double *y, cholmod_dense *alpha,
+                                       george_gp *gp)
+{
+    int i, n = gp->ndata;
     double lnlike = gp->logdet, *ax = alpha->x;
     for (i = 0; i < n; ++i) lnlike += y[i] * ax[i];
+    return -0.5*lnlike;
+}
 
-    cholmod_free_dense (&alpha, c);
-    return -0.5 * lnlike;
+double george_log_likelihood (double *y, george_gp *gp)
+{
+    double lnlike;
+    cholmod_dense *alpha = _george_get_alpha (y, gp);
+    if (alpha == NULL) return -INFINITY;
+    lnlike = _george_compute_log_likelihood (y, alpha, gp);
+    cholmod_free_dense (&alpha, gp->c);
+    return lnlike;
 }
 
 double george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
 {
     int i, j, k, flag, n = gp->ndata, npars = gp->npars;
-    double value,
-           *grad = malloc (npars * sizeof(double)),
-           *x = gp->x;
     cholmod_common *c = gp->c;
-
-    // Make sure that things have been properly computed.
-    if (!gp->computed || gp->info != CHOLMOD_OK) return -1;
-
-    // Copy the column vector over.
-    cholmod_dense *b = cholmod_allocate_dense(n, 1, n, CHOLMOD_REAL, c);
-    for (i = 0; i < n; ++i) ((double*)b->x)[i] = y[i];
+    cholmod_dense *alpha, *aat, **dkdt;
+    double *alpha_data, *aat_data, **dkdt_data,
+           lnlike, value, *grad, *x = gp->x;
 
     // Solve for alpha.
-    cholmod_dense *alpha = cholmod_solve (CHOLMOD_A, gp->L, b, c);
-    double *alpha_data = (double*)alpha->x;
-    cholmod_free_dense (&b, c);
+    alpha = _george_get_alpha (y, gp);
+    if (alpha == NULL) return -INFINITY;
+    alpha_data = (double*)alpha->x;
 
     // Compute the log-likelihood.
-    double lnlike = gp->logdet;
-    for (i = 0; i < n; ++i) lnlike += y[i] * alpha_data[i];
+    lnlike = _george_compute_log_likelihood (y, alpha, gp);
 
     // Compute alpha.alpha^T.
-    cholmod_dense *aat = cholmod_allocate_dense (n, n, n, CHOLMOD_REAL, c);
-    double *aat_data = (double*)aat->x;
+    aat = cholmod_allocate_dense (n, n, n, CHOLMOD_REAL, c);
+    if (aat == NULL || !cholmod_check_dense (alpha, c)) {
+        if (aat != NULL) cholmod_free_dense(&aat, c);
+        cholmod_free_dense (&alpha, c);
+        gp->info = -2;
+        return -INFINITY;
+    }
+    aat_data = (double*)aat->x;
     for (i = 0; i < n; ++i) {
         aat_data[i*n+i] = alpha_data[i] * alpha_data[i];
         for (j = i+1; j < n; ++j) {
@@ -275,15 +287,15 @@ double george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
     cholmod_free_dense (&alpha, c);
 
     // Allocate memory for the kernel matrix gradients.
-    cholmod_dense **dkdt = malloc(npars*sizeof(cholmod_dense*));
-    double **dkdt_data = malloc(npars*sizeof(double*));
-
+    dkdt = malloc(npars*sizeof(cholmod_dense*));
+    dkdt_data = malloc(npars*sizeof(double*));
     for (k = 0; k < npars; ++k) {
         dkdt[k] = cholmod_allocate_dense (n, n, n, CHOLMOD_REAL, c);
         dkdt_data[k] = (double*)dkdt[k]->x;
     }
 
     // Loop over the data points and compute the kernel matrix gradients.
+    grad = malloc (npars * sizeof(double));
     for (i = 0; i < n; ++i) {
         // Compute the diagonal terms.
         (*(gp->kernel)) (x[i], x[i], gp->pars, gp->meta, 1, grad, &flag);
@@ -335,7 +347,7 @@ double george_grad_log_likelihood (double *y, double *grad_out, george_gp *gp)
 
     cholmod_free_dense (&aat, c);
 
-    return -0.5 * lnlike;
+    return lnlike;
 }
 
 int george_predict (double *y, int nout, double *xout, double *mean,

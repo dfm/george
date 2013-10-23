@@ -52,6 +52,12 @@ static int _george_init(_george *self, PyObject *args, PyObject *kwds)
     }
 
     self->gp = george_allocate_gp (npars, pars, NULL, *george_kernel);
+    if (self->gp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError,
+            "Couldn't initialize GaussianProcess object.");
+        return -2;
+    }
+
     return 0;
 }
 
