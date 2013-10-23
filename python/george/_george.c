@@ -13,12 +13,15 @@
 typedef struct {
     PyObject_HEAD
     george_gp *gp;
+    double *pars;
 } _george;
 
 static void _george_dealloc(_george *self)
 {
     if (self->gp != NULL)
         george_free_gp (self->gp);
+    if (self->pars != NULL)
+        free(self->pars);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -27,6 +30,7 @@ static PyObject *_george_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     _george *self;
     self = (_george*)type->tp_alloc(type, 0);
     self->gp = NULL;
+    self->pars = NULL;
     return (PyObject*)self;
 }
 
@@ -48,10 +52,18 @@ static int _george_init(_george *self, PyObject *args, PyObject *kwds)
     if (npars != 3) {
         PyErr_SetString(PyExc_RuntimeError,
             "The isotropic kernel takes exactly 3 parameters.");
+        Py_DECREF(pars_array);
         return -1;
     }
 
-    self->gp = george_allocate_gp (npars, pars, NULL, *george_kernel);
+    // Copy the parameters across locally.
+    int i;
+    self->pars = malloc(npars * sizeof(double));
+    for (i = 0; i < npars; ++i) self->pars[i] = pars[i];
+
+    self->gp = george_allocate_gp (npars, self->pars, NULL, *george_kernel);
+    Py_DECREF(pars_array);
+
     if (self->gp == NULL) {
         PyErr_SetString(PyExc_RuntimeError,
             "Couldn't initialize GaussianProcess object.");
@@ -62,6 +74,49 @@ static int _george_init(_george *self, PyObject *args, PyObject *kwds)
 }
 
 static PyMemberDef _george_members[] = {{NULL}};
+
+static PyObject *_george_set_pars (_george *self, PyObject *args)
+{
+    PyObject *pars_obj = NULL;
+
+    if (!PyArg_ParseTuple(args, "O", &pars_obj))
+        return NULL;
+
+    // Parse the parameter vector.
+    PyArrayObject *pars_array = PARSE_ARRAY(pars_obj);
+    if (pars_array == NULL) return NULL;
+
+    int npars = PyArray_DIM(pars_array, 0);
+    double *pars = (double*)PyArray_DATA(pars_array);
+
+    // Which type of kernel?
+    if (npars != 3) {
+        PyErr_SetString(PyExc_RuntimeError,
+            "The isotropic kernel takes exactly 3 parameters.");
+        Py_DECREF(pars_array);
+        return NULL;
+    }
+
+    // Remind the GP that it has no longer been computed.
+    if (self->gp != NULL) self->gp->computed = 0;
+    if (self->pars != NULL) free(self->pars);
+
+    // Copy the parameter array over.
+    int i;
+    self->pars = malloc(npars * sizeof(double));
+    for (i = 0; i < npars; ++i) self->pars[i] = pars[i];
+
+    Py_DECREF(pars_array);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *_george_get_pars (_george *self, PyObject *args)
+{
+    npy_intp dim[] = {self->gp->npars};
+    PyObject *ret = PyArray_SimpleNewFromData(1, dim, NPY_DOUBLE, self->pars);
+    return ret;
+}
 
 static PyObject *_george_compute (_george *self, PyObject *args)
 {
@@ -414,6 +469,14 @@ static PyObject *_george_computed(_george *self, PyObject *args)
 }
 
 static PyMethodDef _george_methods[] = {
+    {"set_pars",
+     (PyCFunction)_george_set_pars,
+     METH_VARARGS,
+     "Update the hyperparameters."},
+    {"get_pars",
+     (PyCFunction)_george_get_pars,
+     METH_VARARGS,
+     "Get the hyperparameters."},
     {"compute",
      (PyCFunction)_george_compute,
      METH_VARARGS,

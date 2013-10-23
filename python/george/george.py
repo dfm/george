@@ -25,11 +25,19 @@ class GaussianProcess(object):
     }
 
     def __init__(self, pars, kernel_type="truncated_squared_exp"):
-        self._gp = _george(pars)
+        self._gp = _george(np.atleast_1d(pars))
 
     @property
     def computed(self):
         return self._gp.computed()
+
+    @property
+    def hyperpars(self):
+        return self._gp.get_pars()
+
+    @hyperpars.setter
+    def hyperpars(self, v):
+        self._gp.set_pars(np.atleast_1d(v))
 
     def compute(self, x, yerr=None):
         """
