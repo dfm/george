@@ -1,12 +1,14 @@
-# Based on code from:
+# Based on the file with the same name from:
 #
 # Ceres Solver - A fast non-linear least squares minimizer
 # http://code.google.com/p/ceres-solver/
 #
-# With tweaks by: Dan Foreman-Mackey danfm@nyu.edu
+# With tweaks by: Dan Foreman-Mackey - danfm@nyu.edu
+#
+# Original license:
 #
 # Copyright 2013 Google Inc. All rights reserved.
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
@@ -156,6 +158,20 @@ LIST(APPEND SUITESPARSE_CHECK_LIBRARY_DIRS
   /usr/local/homebrew/lib # Mac OS X
   /usr/local/lib
   /usr/local/lib/suitesparse)
+
+# # BLAS.
+# FIND_PACKAGE(BLAS QUIET)
+# IF (NOT BLAS_FOUND)
+#   SUITESPARSE_REPORT_NOT_FOUND(
+#     "Did not find BLAS library (required for SuiteSparse).")
+# ENDIF (NOT BLAS_FOUND)
+#
+# # LAPACK.
+# FIND_PACKAGE(LAPACK QUIET)
+# IF (NOT LAPACK_FOUND)
+#   SUITESPARSE_REPORT_NOT_FOUND(
+#     "Did not find LAPACK library (required for SuiteSparse).")
+# ENDIF (NOT LAPACK_FOUND)
 
 # AMD.
 SET(AMD_FOUND TRUE)
@@ -437,12 +453,7 @@ IF (SUITESPARSE_CONFIG_FOUND)
   # SuiteSparse version >= 4.
   SET(SUITESPARSE_VERSION_FILE
     ${SUITESPARSE_CONFIG_INCLUDE_DIR}/SuiteSparse_config.h)
-  IF (NOT EXISTS ${SUITESPARSE_VERSION_FILE})
-    SUITESPARSE_REPORT_NOT_FOUND(
-      "Could not find file: ${SUITESPARSE_VERSION_FILE} containing version "
-      "information for >= v4 SuiteSparse installs, but SuiteSparse_config was "
-      "found (only present in >= v4 installs).")
-  ELSE (NOT EXISTS ${SUITESPARSE_VERSION_FILE})
+  IF (EXISTS ${SUITESPARSE_VERSION_FILE})
     FILE(READ ${SUITESPARSE_VERSION_FILE} SUITESPARSE_CONFIG_CONTENTS)
 
     STRING(REGEX MATCH "#define SUITESPARSE_MAIN_VERSION [0-9]+"
@@ -464,7 +475,7 @@ IF (SUITESPARSE_CONFIG_FOUND)
     # elements and insert ';' separators which would result in 4.;2.;1 nonsense.
     SET(SUITESPARSE_VERSION
       "${SUITESPARSE_MAIN_VERSION}.${SUITESPARSE_SUB_VERSION}.${SUITESPARSE_SUBSUB_VERSION}")
-  ENDIF (NOT EXISTS ${SUITESPARSE_VERSION_FILE})
+  ENDIF (EXISTS ${SUITESPARSE_VERSION_FILE})
 ENDIF (SUITESPARSE_CONFIG_FOUND)
 
 # METIS (Optional dependency).
@@ -484,8 +495,7 @@ IF (AMD_FOUND AND
     COLAMD_FOUND AND
     CCOLAMD_FOUND AND
     CHOLMOD_FOUND AND
-    SUITESPARSEQR_FOUND AND
-    (SUITESPARSE_CONFIG_FOUND OR UFCONFIG_FOUND))
+    SUITESPARSEQR_FOUND)
   SET(SUITESPARSE_FOUND TRUE)
   LIST(APPEND SUITESPARSE_INCLUDE_DIRS
     ${AMD_INCLUDE_DIR}
