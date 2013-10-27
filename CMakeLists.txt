@@ -95,7 +95,7 @@ IF (SUITESPARSE_FOUND)
             "construction of shared libraries.")
     ENDIF (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
 
-    MESSAGE("-- Found SuiteSparse")
+    MESSAGE("-- Found SuiteSparse ${SUITESPARSE_VERSION}")
 ELSE (SUITESPARSE_FOUND)
     MESSAGE(FATAL_ERROR "-- Did not find SuiteSparse")
 ENDIF (SUITESPARSE_FOUND)
