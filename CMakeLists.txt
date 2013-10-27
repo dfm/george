@@ -332,6 +332,13 @@ INSTALL(TARGETS george_shared
         LIBRARY DESTINATION lib${LIB_SUFFIX}
         ARCHIVE DESTINATION lib${LIB_SUFFIX})
 
+# ===========================================================================
+#   BENCHMARK
+# ===========================================================================
+
+ADD_EXECUTABLE(benchmark george/benchmark.c)
+TARGET_LINK_LIBRARIES(benchmark george)
+
 
 # ===========================================================================
 #   TESTING
