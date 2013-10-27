@@ -22,32 +22,30 @@ include_dirs = filter(lambda p: len(p), [
     numpy.get_include(),
 ])
 
-library_dirs = filter(lambda p: len(p), map(lambda p: os.path.split(p)[0],
-    "${SUITESPARSE_LIBRARIES}".split(";"))) + ["${CMAKE_BINARY_DIR}/lib"]
+library_dirs = filter(lambda p: len(p), map(lambda p: os.path.split(p)[0], [
+    "${CHOLMOD_LIB}",
+    "${CCOLAMD_LIB}",
+    "${CAMD_LIB}",
+    "${COLAMD_LIB}",
+    "${AMD_LIB}",
+    "${SUITESPARSE_CONFIG_LIB}",
+    "${CXSPARSE_LIB}",
+    "${LAPACK_LIB}",
+    "${BLAS_LIB}",
+    "${LBFGS_LIB}",
+])) + ["${CMAKE_BINARY_DIR}/lib"]
 
-libraries = ["m"]
-if "${AMD_FOUND}" == "TRUE":
-    libraries += ["amd"]
-if "${CAMD_FOUND}" == "TRUE":
-    libraries += ["camd"]
-if "${COLAMD_FOUND}" == "TRUE":
-    libraries += ["colamd"]
-if "${CCOLAMD_FOUND}" == "TRUE":
-    libraries += ["ccolamd"]
-if "${CHOLMOD_FOUND}" == "TRUE":
-    libraries += ["cholmod"]
-if "${CHOLMOD_FOUND}" == "TRUE":
-    libraries += ["cholmod"]
-if "${SUITESPARSEQR_FOUND}" == "TRUE":
-    libraries += ["spqr"]
-if "${SUITESPARSE_CONFIG_FOUND}" == "TRUE":
-    libraries += ["suitesparseconfig"]
-if "${METIS_FOUND}" == "TRUE":
-    libraries += ["metis"]
-
-libraries += [
+libraries = [
+    "m",
+    "cholmod",
+    "amd",
+    "camd",
+    "colamd",
+    "ccolamd",
+    "suitesparseconfig",
     "blas",
     "lapack",
+    "cxsparse",
     "lbfgs",
     "george_shared",
 ]
