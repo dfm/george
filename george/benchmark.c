@@ -11,7 +11,7 @@ double benchmark (int ndata)
     double pars[] = {1e-3, 3.0, 8.0};
 
     // Generate time series.
-    int i, j, count = 0;
+    int i;
     double t,
            *x = malloc(ndata * sizeof(double)),
            *y = malloc(ndata * sizeof(double)),

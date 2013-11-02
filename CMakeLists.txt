@@ -19,106 +19,75 @@ ENABLE_TESTING()
 
 find_package (BLAS REQUIRED)
 find_package (LAPACK REQUIRED)
-find_package (SUITESPARSE REQUIRED)
 find_package (LBFGS REQUIRED)
+find_package (SUITESPARSE REQUIRED)
+if (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
+    message (FATAL_ERROR "You are attempting to build on Ubuntu using a "
+             "system package install of SuiteSparse 3.4.0. This package is "
+             "broken and does not support the construction of shared "
+             "libraries.")
+endif (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
+
+# Optimizations.
+if (CMAKE_COMPILER_IS_GNUCC)
+    # Linux
+    if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+        if (NOT GCC_VERSION VERSION_LESS 4.2)
+            set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -mtune=native")
+        endif (NOT GCC_VERSION VERSION_LESS 4.2)
+    endif (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    # Mac OS X
+    if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
+        # Use of -fast only applicable for Apple's GCC
+        # Assume this is being used if GCC version < 4.3 on OSX
+        execute_process (COMMAND ${CMAKE_C_COMPILER}
+                         ARGS ${CMAKE_C_COMPILER_ARG1} -dumpversion
+                         OUTPUT_VARIABLE GCC_VERSION
+                         OUTPUT_STRIP_TRAILING_WHITESPACE)
+        if (GCC_VERSION VERSION_LESS 4.3)
+            set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fast")
+        endif (GCC_VERSION VERSION_LESS 4.3)
+    endif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+endif (CMAKE_COMPILER_IS_GNUCC)
+
+if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    # Use of -O4 requires use of gold linker & LLVM-gold plugin, which might
+    # well not be present / in use and without which files will compile, but
+    # not link ('file not recognized') so explicitly check for support
+    include (CheckCCompilerFlag)
+    check_c_compiler_flag ("-O4" HAVE_LTO_SUPPORT)
+    if (HAVE_LTO_SUPPORT)
+        message (STATUS "Enabling link-time optimization (-O4)")
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O4")
+    else ()
+        message (STATUS
+                 "Compiler/linker does not support link-time optimization (-O4), disabling.")
+    endif (HAVE_LTO_SUPPORT)
+endif ()
 
 # GCC is not strict enough by default, so enable most of the warnings.
 if (UNIX)
     set (CMAKE_C_FLAGS
-        "${CMAKE_C_FLAGS} -Werror -Wall -Wextra -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
+         "${CMAKE_C_FLAGS} -Werror -Wall -Wextra -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
 endif (UNIX)
-
-# Heuristic for determining LIB_SUFFIX. FHS recommends that 64-bit systems
-# install native libraries to lib64 rather than lib. Most distros seem to
-# follow this convention with a couple notable exceptions (Debian-based and
-# Arch-based distros) which we try to detect here.
-if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND
-        NOT DEFINED LIB_SUFFIX AND
-        NOT CMAKE_CROSSCOMPILING AND
-        CMAKE_SIZEOF_VOID_P EQUAL "8" AND
-        NOT EXISTS "/etc/debian_version" AND
-        NOT EXISTS "/etc/arch-release")
-    set (LIB_SUFFIX "64")
-endif ()
 
 # Includes.
 include_directories ("${CMAKE_BINARY_DIR}/george"
                      ${SUITESPARSE_INCLUDE_DIRS}
                      ${LBFGS_INCLUDE_DIR})
 
-# Deps.
-SET(GEORGE_LIBRARY_DEPENDENCIES)
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${CHOLMOD_LIB})
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${CCOLAMD_LIB})
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${CAMD_LIB})
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${COLAMD_LIB})
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${AMD_LIB})
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${SUITESPARSE_CONFIG_LIB})
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${CXSPARSE_LIB})
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${LAPACK_LIB})
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${BLAS_LIB})
-LIST(APPEND GEORGE_LIBRARY_DEPENDENCIES ${LBFGS_LIB})
-
-# The source file.
-SET(GEORGE_SRC george/george.c)
-
-# Install the header.
-INSTALL(FILES "${CMAKE_BINARY_DIR}/george/george.h" DESTINATION include)
-
-# Static library.
-ADD_LIBRARY(george STATIC ${GEORGE_SRC})
-TARGET_LINK_LIBRARIES(george ${GEORGE_LIBRARY_DEPENDENCIES})
-INSTALL(TARGETS george
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib${LIB_SUFFIX}
-        ARCHIVE DESTINATION lib${LIB_SUFFIX})
-
-# Shared library.
-ADD_LIBRARY(george_shared SHARED ${GEORGE_SRC})
-TARGET_LINK_LIBRARIES(george_shared ${GEORGE_LIBRARY_DEPENDENCIES})
-SET_TARGET_PROPERTIES(george_shared PROPERTIES
-                      VERSION ${GEORGE_VERSION}
-                      SOVERSION ${GEORGE_ABI_VERSION})
-
-INSTALL(TARGETS george_shared
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib${LIB_SUFFIX}
-        ARCHIVE DESTINATION lib${LIB_SUFFIX})
-
-# ===========================================================================
-#   BENCHMARK
-# ===========================================================================
-
-ADD_EXECUTABLE(benchmark george/benchmark.c)
-TARGET_LINK_LIBRARIES(benchmark george)
-
-
-# ===========================================================================
-#   TESTING
-# ===========================================================================
-
-MACRO (GEORGE_TEST NAME)
-    ADD_EXECUTABLE(${NAME}_test george/${NAME}_test.c)
-    TARGET_LINK_LIBRARIES(${NAME}_test george)
-    ADD_TEST(NAME ${NAME}_test
-             COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${NAME}_test)
-ENDMACRO (GEORGE_TEST)
-
-GEORGE_TEST (cholmod_version)
-GEORGE_TEST (kernel_gradient)
-GEORGE_TEST (hyper_gradient)
-GEORGE_TEST (predict)
-GEORGE_TEST (optimization)
-
+# Add the source directory.
+add_subdirectory (george)
 
 # ===========================================================================
 #   PYTHON
 # ===========================================================================
 
-OPTION(BUILD_PYTHON
-       "Build the Python bindings"
-       ON)
+option (BUILD_PYTHON
+        "Build the Python bindings"
+        ON)
 
-IF (BUILD_PYTHON)
-    ADD_SUBDIRECTORY (python)
-ENDIF ()
+if (BUILD_PYTHON)
+    add_subdirectory (python)
+endif ()
