@@ -1,6 +1,10 @@
-#include "math.h"
 #include "george.h"
+#include <math.h>
 #include <lbfgs.h>
+
+#ifndef INFINITY
+#define INFINITY (1.0 / 0.0)
+#endif
 
 void george_version (int *version)
 {

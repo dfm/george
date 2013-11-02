@@ -20,7 +20,7 @@ ENABLE_TESTING()
 find_package (BLAS REQUIRED)
 find_package (LAPACK REQUIRED)
 find_package (LBFGS REQUIRED)
-find_package (SUITESPARSE REQUIRED)
+find_package (SuiteSparse REQUIRED)
 if (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
     message (FATAL_ERROR "You are attempting to build on Ubuntu using a "
              "system package install of SuiteSparse 3.4.0. This package is "
