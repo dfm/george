@@ -19,6 +19,8 @@ ENABLE_TESTING()
 
 find_package (BLAS REQUIRED)
 find_package (LAPACK REQUIRED)
+message ("-- Found BLAS library: ${BLAS_LIBRARIES}")
+message ("-- Found LAPACK library: ${LAPACK_LIBRARIES}")
 find_package (LBFGS REQUIRED)
 find_package (SuiteSparse REQUIRED)
 if (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
