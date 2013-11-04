@@ -4,7 +4,7 @@
 #include <time.h>
 #include "george.h"
 
-#define NBENCH 100
+#define NBENCH 500
 
 double benchmark (int ndata)
 {
@@ -16,7 +16,7 @@ double benchmark (int ndata)
            *x = malloc(ndata * sizeof(double)),
            *y = malloc(ndata * sizeof(double)),
            *yerr = malloc(ndata * sizeof(double));
-    for (i = 0, t = 0.0; i < ndata; ++i, t += 0.5 / 60.) {
+    for (i = 0, t = 0.0; i < ndata; ++i, t += 0.5 / 24.) {
         x[i] = t + 0.01 * sin(t);
         y[i] = sin(t);
         yerr[i] = 0.1;
@@ -41,7 +41,9 @@ double benchmark (int ndata)
 
 int main ()
 {
-    printf("%d %f\n", 1000, benchmark(1000));
+    int i, N[] = {50, 100, 200, 500, 1000, 2000};
+    for (i = 0; i < 6; ++i)
+        printf("%d %e\n", N[i], benchmark(N[i]));
 
     return 0;
 }
