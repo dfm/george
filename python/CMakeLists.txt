@@ -24,30 +24,32 @@
 # This CMakeLists.txt file is based on:
 # http://bloerg.net/2012/11/10/cmake-and-distutils.html
 
-FIND_PROGRAM (PYTHON "python")
+find_program (PYTHON "python")
 
 if (PYTHON)
-    MESSAGE("-- Found Python interpreter: ${PYTHON}")
+    message ("-- Found Python interpreter: ${PYTHON}")
 
-    SET(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
-    SET(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
-    SET(INIT_PY_IN  "${CMAKE_CURRENT_SOURCE_DIR}/george/__init__.py.in")
-    SET(INIT_PY     "${CMAKE_CURRENT_SOURCE_DIR}/george/__init__.py")
-    SET(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/george/*.py")
-    SET(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
+    set (SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
+    set (SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
+    set (INIT_PY_IN  "${CMAKE_CURRENT_SOURCE_DIR}/george/__init__.py.in")
+    set (INIT_PY     "${CMAKE_CURRENT_SOURCE_DIR}/george/__init__.py")
+    set (DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/george/*.py")
+    set (OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
 
-    CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY})
-    CONFIGURE_FILE(${INIT_PY_IN} ${INIT_PY})
+    configure_file (${SETUP_PY_IN} ${SETUP_PY})
+    configure_file (${INIT_PY_IN} ${INIT_PY})
 
-    ADD_CUSTOM_COMMAND(OUTPUT ${OUTPUT}
-                       COMMAND ${PYTHON} ${SETUP_PY} build
-                       COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
-                       DEPENDS ${DEPS})
+    add_custom_command (OUTPUT ${OUTPUT}
+                        COMMAND ${PYTHON} ${SETUP_PY} build
+                        COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
+                        DEPENDS ${DEPS})
 
-    ADD_CUSTOM_TARGET(python ALL DEPENDS ${OUTPUT})
+    add_custom_target (python ALL DEPENDS ${OUTPUT})
 
-    INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${PYTHON} ${SETUP_PY} install)")
+    install (CODE
+             "EXECUTE_PROCESS(COMMAND ${PYTHON} ${SETUP_PY} install "
+             "${PYTHON_INSTALL_OPTIONS})")
 
-ELSE (PYTHON)
-    MESSAGE("-- Did not find Python interpreter")
-ENDIF()
+else (PYTHON)
+    message ("-- Did not find Python interpreter")
+endif ()

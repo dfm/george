@@ -1,6 +1,10 @@
-#include "math.h"
 #include "george.h"
+#include <math.h>
 #include <lbfgs.h>
+
+#ifndef INFINITY
+#define INFINITY (1.0 / 0.0)
+#endif
 
 void george_version (int *version)
 {
@@ -108,7 +112,7 @@ void george_free_gp (george_gp *gp)
 int george_compute (int n, double *x, double *yerr, george_gp *gp)
 {
     cholmod_common *c = gp->c;
-    int i, j, k = 0, maxnnz = (n * n + n) / 2, flag, computed = gp->computed;
+    int i, j, k = 0, maxnnz = (n * n + n) / 2, flag;
     double value;
 
     // Initialize the `computed` flag and clean up any existing data.

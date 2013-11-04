@@ -12,7 +12,7 @@ int main ()
     double pars[] = {1e-3, 3.0, 8.0};
 
     // Generate time series.
-    int i, j, ndata = 500, count = 0;
+    int i, ndata = 500, count = 0;
     double t,
            *x = malloc(ndata * sizeof(double)),
            *y = malloc(ndata * sizeof(double)),
@@ -27,9 +27,9 @@ int main ()
 
     int info = george_compute (ndata, x, yerr, gp);
     printf("info=%d\n", info);
-    double ll0 = george_log_likelihood (y, gp), llp, llm, diff,
-           grad[3];
+    double llp, llm, diff, grad[3];
 
+    george_log_likelihood (y, gp);
     george_grad_log_likelihood (y, grad, gp);
 
     for (i = 0; i < 3; ++i) {
