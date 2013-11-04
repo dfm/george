@@ -21,35 +21,8 @@ include_dirs = filter(lambda p: len(p), [
     "${CMAKE_BINARY_DIR}/george",
     numpy.get_include(),
 ])
-
-library_dirs = filter(lambda p: len(p), map(lambda p: os.path.split(p)[0], [
-    "${CHOLMOD_LIB}",
-    "${CCOLAMD_LIB}",
-    "${CAMD_LIB}",
-    "${COLAMD_LIB}",
-    "${AMD_LIB}",
-    "${SUITESPARSE_CONFIG_LIB}",
-    "${CXSPARSE_LIB}",
-    "${LAPACK_LIB}",
-    "${BLAS_LIB}",
-    "${LBFGS_LIB}",
-])) + ["${CMAKE_BINARY_DIR}/lib"]
-
-libraries = [
-    "m",
-    "cholmod",
-    "amd",
-    "camd",
-    "colamd",
-    "ccolamd",
-    "suitesparseconfig",
-    "blas",
-    "lapack",
-    "cxsparse",
-    "lbfgs",
-    "george_shared",
-]
-
+library_dirs = ["${CMAKE_BINARY_DIR}/lib"]
+libraries = ["george_shared"]
 sources = [
     "${CMAKE_CURRENT_SOURCE_DIR}/george/_george.c",
 ]
