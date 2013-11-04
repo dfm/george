@@ -47,8 +47,7 @@ if (PYTHON)
     add_custom_target (python ALL DEPENDS ${OUTPUT})
 
     install (CODE
-             "EXECUTE_PROCESS(COMMAND ${PYTHON} ${SETUP_PY} install "
-             "${PYTHON_INSTALL_OPTIONS})")
+             "EXECUTE_PROCESS(COMMAND ${PYTHON} ${SETUP_PY} install ${PYTHON_INSTALL_OPTIONS})")
 
 else (PYTHON)
     message ("-- Did not find Python interpreter")
