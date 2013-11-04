@@ -19,8 +19,9 @@ import numpy
 
 include_dirs = filter(lambda p: len(p), [
     "${CMAKE_BINARY_DIR}/george",
+    "${LBFGS_INCLUDE_DIR}",
     numpy.get_include(),
-])
+] + "${SUITESPARSE_INCLUDE_DIRS}".split(";"))
 library_dirs = ["${CMAKE_BINARY_DIR}/lib"]
 libraries = ["george_shared"]
 sources = [
