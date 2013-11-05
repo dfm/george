@@ -28,10 +28,10 @@ int main ()
 
     // Set up the Gaussian process.
     george_gp *gp = george_allocate_gp (3, pars, NULL, *george_kernel);
-    int info = george_compute(nin, x, yerr, gp);
+    george_compute(nin, x, yerr, gp);
 
     // Compute the prediction.
-    info = george_predict (y, nout, t, mean, 1, cov, gp);
+    george_predict (y, nout, t, mean, 1, cov, gp);
 
     for (i = 0; i < nout; ++i)
         for (j = 0; j < nout; ++j)

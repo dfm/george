@@ -44,11 +44,11 @@ install (TARGETS george_shared
 # ===========================================================================
 
 add_executable (benchmark benchmark.c)
-target_link_libraries (benchmark george)
+target_link_libraries (benchmark george_shared m)
 
 macro (GEORGE_TEST NAME)
     add_executable (${NAME}_test ${NAME}_test.c)
-    target_link_libraries (${NAME}_test george)
+    target_link_libraries (${NAME}_test george_shared m)
     add_test (NAME ${NAME}_test
               COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${NAME}_test)
 endmacro (GEORGE_TEST)

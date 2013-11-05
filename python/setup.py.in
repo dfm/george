@@ -23,7 +23,7 @@ include_dirs = filter(lambda p: len(p), [
     numpy.get_include(),
 ] + "${SUITESPARSE_INCLUDE_DIRS}".split(";"))
 library_dirs = ["${CMAKE_BINARY_DIR}/lib"]
-libraries = ["george_shared"]
+libraries = ["george_shared", "m", "lapack", "blas", ]
 sources = [
     "${CMAKE_CURRENT_SOURCE_DIR}/george/_george.c",
 ]

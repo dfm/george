@@ -12,10 +12,10 @@ int test_kernel_grad (double x1, double x2, int npars, double *pars,
                                         double*, int*))
 {
     int i, count = 0, flag;
-    double k0, kp, km, diff,
+    double kp, km, diff,
            *grad = malloc(npars * sizeof(double));
 
-    k0 = (*kernel) (x1, x2, pars, meta, 1, grad, &flag);
+    (*kernel) (x1, x2, pars, meta, 1, grad, &flag);
     if (!flag) return 0;
 
     for (i = 0; i < npars; ++i) {
