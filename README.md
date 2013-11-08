@@ -7,7 +7,7 @@ George is a C library (with Python bindings) that computes a [Gaussian
 process](http://www.gaussianprocess.org/gpml/chapters/) regression model
 taking full advantage of sparsity in the problem.
 Right now, George is specifically optimized for the problem of fitting stellar
-light curves produced by the Kepler satellite so it isn't yet generally
+light curves produced by the Kepler satellite so it (probably) isn't yet generally
 applicable.
 
 
@@ -42,7 +42,7 @@ After you have installed these dependencies, you should be able to just run:
 cd /path/to/george/
 mkdir build
 cd build
-cmake ..
+cmake .. [options, see below]
 make
 make test
 [sudo] make install
@@ -50,6 +50,28 @@ make test
 
 This will build and install both static (called `libgeorge`) and shared
 (called `libgeorge_shared`) versions of the library.
+
+**Options** — There are a few build options that might be useful:
+
+* Non-standard BLAS/LAPACK install location:
+  - `-DBLAS_LIBRARIES=/path/to/libblas.a` and
+  - `-DLAPACK_LIBRARIES=/path/to/liblapack.a`
+* Non-standard SuiteSparse install location:
+  - `-DSUITESPARSE_INCLUDE_DIR_HINTS=/path/to/suitesparse/include` and
+  - `-DSUITESPARSE_LIBRARY_DIR_HINTS=/path/to/suitesparse/lib`
+
+Build with functions for hyperparameter optimization
+----------------------------------------------------
+
+George can optionally use [libLBFGS](http://www.chokkan.org/software/liblbfgs/)
+to find the maximum marginalized likelihood settings of the hyperparameters.
+To build with this functionality, install libLBFGS and use the `-DLBFGS=ON`
+argument when you call `cmake`. If your install is in a non-standard location,
+use the `-DLBFGS_INCLUDE_DIR_HINTS=...` and `-DLBFGS_LIBRARY_DIR_HINTS=...`
+options.
+
+Uninstall
+---------
 
 If you ever want to uninstall George, just run:
 
