@@ -1,6 +1,9 @@
 #include "george.h"
 #include <math.h>
+
+#ifdef GEORGE_LBFGS
 #include <lbfgs.h>
+#endif
 
 #ifndef INFINITY
 #define INFINITY (1.0 / 0.0)
@@ -464,6 +467,7 @@ double george_kernel (double x1, double x2, double *pars, void *meta,
 // Optimization of hyperparameters.
 //
 
+#ifdef GEORGE_LBFGS
 typedef struct _george_op_wrapper_struct {
     int n, verbose;
     double *x, *yerr, *y;
@@ -540,3 +544,4 @@ int george_optimize (int n, double *x, double *yerr, double *y, int maxiter,
     free(wrapper);
     return r;
 }
+#endif

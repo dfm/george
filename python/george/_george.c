@@ -338,6 +338,7 @@ static PyObject *_george_predict(_george *self, PyObject *args)
     return ret;
 }
 
+#ifdef GEORGE_LBFGS
 static PyObject *_george_optimize(_george *self, PyObject *args)
 {
     int maxiter, verbose;
@@ -403,6 +404,7 @@ static PyObject *_george_optimize(_george *self, PyObject *args)
     Py_DECREF(ret_array);
     return ret;
 }
+#endif
 
 static PyObject *_george_covariance(_george *self, PyObject *args)
 {
@@ -496,11 +498,13 @@ static PyMethodDef _george_methods[] = {
      METH_VARARGS,
      "Predict."
     },
+#ifdef GEORGE_LBFGS
     {"optimize",
      (PyCFunction)_george_optimize,
      METH_VARARGS,
      "Find the maximum likelihood hyperparameters."
     },
+#endif
     {"covariance",
      (PyCFunction)_george_covariance,
      METH_VARARGS,

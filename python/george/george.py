@@ -88,7 +88,10 @@ class GaussianProcess(object):
         return self._gp.predict(y, t)
 
     def optimize(self, x, yerr, y, maxiter=100, verbose=1):
-        return self._gp.optimize(x, yerr, y, maxiter, verbose)
+        try:
+            return self._gp.optimize(x, yerr, y, maxiter, verbose)
+        except AttributeError:
+            raise RuntimeError("You must build with L-BFGS support")
 
     def sample_conditional(self, y, t, N=1):
         """

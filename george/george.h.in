@@ -82,6 +82,7 @@ double george_kernel (
     int *flag
 );
 
+#ifdef GEORGE_LBFGS
 int george_optimize (
     int n,
     double *x,
@@ -91,6 +92,7 @@ int george_optimize (
     int verbose,
     george_gp *gp
 );
+#endif
 
 #endif
 // /_GEORGE_H_

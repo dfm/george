@@ -17,11 +17,18 @@ set (GEORGE_ABI_VERSION 0.1.0)
 
 ENABLE_TESTING()
 
+option (LBFGS "Enable optimization using L-BFGS." OFF)
+
 find_package (BLAS REQUIRED)
 find_package (LAPACK REQUIRED)
 message ("-- Found BLAS library: ${BLAS_LIBRARIES}")
 message ("-- Found LAPACK library: ${LAPACK_LIBRARIES}")
-find_package (LBFGS REQUIRED)
+if (LBFGS)
+    find_package (LBFGS REQUIRED)
+    add_definitions (-DGEORGE_LBFGS)
+else (LBFGS)
+    message ("-- Building without L-BFGS")
+endif (LBFGS)
 find_package (SuiteSparse REQUIRED)
 if (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
     message (FATAL_ERROR "You are attempting to build on Ubuntu using a "
