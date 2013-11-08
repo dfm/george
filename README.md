@@ -158,6 +158,60 @@ double george_log_likelihood (
 );
 ```
 
+**george_grad_log_likelihood** — Compute the log-likelihood and
+gradient of the log-likelihood for a set of observations `y` (after
+calling `george_compute`) using:
+
+```
+double george_grad_log_likelihood (
+    double *y,              // The observations (length: n).
+    double *grad_out,       // An output array giving the gradient of
+                            // the log-likelihood for each parameter
+                            // (length: npars).
+    george_gp *gp           // The Gaussian process workspace.
+);
+```
+**george_predict** — Evaluate the predictive distribution for a set of
+independent coordinates `xout`:
+
+```
+int george_predict (
+    double *y,              // The observations (length: n).
+    int nout,               // The number of output points.
+    double *xout,           // The input array of independent coordinates
+                            // (length: nout).
+    double *mean,           // The output predictive mean (length: nout).
+    int compute_cov,        // Compute the output covariance matrix?
+                            //   0: don't compute the covariance,
+                            //   1: compute the covariance and store it
+                            //      in cov.
+    double *cov,            // The output covariance matrix
+                            // (length: nout*nout).
+    george_gp *gp           // The Gaussian process workspace.
+);
+```
+
+**george_kernel** — An example sparse kernel function with 3 parameters.
+It is the product of a squared exponential (with amplitude given by
+`pars[0]*pars[0]` and variance `pars[1]*pars[1]`) and a polynomial with
+support out to `pars[2]`.
+
+```
+double george_kernel (
+    double x1, double x2,   // The coordinates.
+    double *pars,           // The parameter vector (length: 3).
+    void *meta,             // An arbitrary metadata object (unused).
+    int compute_grad,       // Compute the gradient?
+                            //   0: don't compute the gradient,
+                            //   1: compute and store it in grad.
+    double *grad,           // The output gradient vector (length: 3).
+    int *flag               // Is there support at this distance?
+                            //   0: the returned value is exactly zero,
+                            //   1: a value was computed and it will be
+                            //      >= 0.0.
+);
+```
+
 License
 -------
 
