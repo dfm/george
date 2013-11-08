@@ -60,8 +60,15 @@ This will build and install both static (called `libgeorge`) and shared
   - `-DSUITESPARSE_INCLUDE_DIR_HINTS=/path/to/suitesparse/include` and
   - `-DSUITESPARSE_LIBRARY_DIR_HINTS=/path/to/suitesparse/lib`
 
-Build with functions for hyperparameter optimization
-----------------------------------------------------
+Python Bindings
+---------------
+
+By default, the Python bindings are built along with the library. To disable this,
+use the `-DBUILD_PYTHON=OFF` argument when you call `cmake`. For documentation of
+the Python bindings, look at the README in the `python` directory.
+
+Hyperparameter Optimization
+---------------------------
 
 George can optionally use [libLBFGS](http://www.chokkan.org/software/liblbfgs/)
 to find the maximum marginalized likelihood settings of the hyperparameters.
