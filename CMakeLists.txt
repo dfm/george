@@ -31,10 +31,10 @@ if (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
 endif (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
 
 set (CMAKE_CXX_FLAGS
-     "${CMAKE_CXX_FLAGS} -ffast-math -O4 -Werror -Wall -Wextra -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
+     "${CMAKE_CXX_FLAGS} -march=native -mtune=native -msse3 -O4 -Werror -Wall -Wextra -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
 
 # Includes.
-include_directories ("${CMAKE_SOURCE_DIR}/cpp"
+include_directories ("${CMAKE_SOURCE_DIR}/include"
                      "${CMAKE_SOURCE_DIR}/hodlr/header"
                      ${EIGEN_INCLUDE_DIRS}
                      ${SUITESPARSE_INCLUDE_DIRS})
@@ -43,5 +43,6 @@ set (GEORGE_LIBRARY_DEPENDENCIES ${LAPACK_LIBRARIES})
 list (APPEND GEORGE_LIBRARY_DEPENDENCIES ${BLAS_LIBRARIES})
 list (APPEND GEORGE_LIBRARY_DEPENDENCIES ${SUITESPARSE_LIBRARIES})
 
-add_executable (demo cpp/demo.cc)
+add_definitions (-DGEORGE_BUILD_WITH_SUITESPARSE)
+add_executable (demo src/demo.cc)
 target_link_libraries (demo ${GEORGE_LIBRARY_DEPENDENCIES})

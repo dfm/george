@@ -22,7 +22,7 @@ public:
     void set_values (VectorXd v) { t_ = v; };
     double get_Matrix_Entry (const unsigned i, const unsigned j) {
         int flag = 0;
-        double v = kernel_->evaluate (t_[i], t_[j], 0, NULL, &flag);
+        double v = kernel_->evaluate (t_[i], t_[j], &flag);
         if (flag) return v;
         return 0.0;
     };
@@ -78,7 +78,7 @@ public:
         // Compute the diagonal elements.
         VectorXd diag(n);
         for (int i = 0; i < n; ++i)
-            diag[i] = yerr[i]*yerr[i] + kernel_->evaluate(x[i], x[i], 0, NULL, &flag);
+            diag[i] = yerr[i]*yerr[i] + kernel_->evaluate(x[i], x[i], &flag);
 
         // Set the time points for the kernel.
         matrix_->set_values (x);

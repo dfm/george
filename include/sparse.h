@@ -78,7 +78,7 @@ public:
         // Compute the covariance matrix in triplet form.
         for (i = 0; i < n; ++i) {
             for (j = i; j < n; ++j) {
-                value = kernel_->evaluate(x[i], x[j], 0, NULL, &flag);
+                value = kernel_->evaluate(x[i], x[j], &flag);
                 if (i == j) value += yerr[i] * yerr[i];
                 if (flag && value > 0) {
                     ((double*)triplet->x)[k] = value;
@@ -155,7 +155,10 @@ private:
     VectorXd x_, yerr_;
 
     //
-    // Extract the log determinant from the CHOLMOD factor.
+    // An extremely brittle function that take the internal representation of
+    // a CHOLMOD factorization and extracts the log-determinant.
+    //
+    // Based on code from CVXOPT and scikits-sparse.
     //
     double extract_logdet () const {
         int is_ll = L_->is_ll, n = L_->n, i, k;

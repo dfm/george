@@ -5,7 +5,19 @@
 
 namespace george {
 
-class ExpSquaredKernel {
+class Kernel {
+
+public:
+
+    virtual ~Kernel () {};
+    virtual double evaluate (double x1, double x2, int *flag) const {
+        *flag = 1;
+        return 0.0;
+    };
+
+};
+
+class ExpSquaredKernel : public Kernel {
 
 public:
 
@@ -28,18 +40,9 @@ public:
     //
     // Evaluate the kernel and optionally the gradient.
     //
-    double evaluate (double x1, double x2, int compute_grad, double *grad,
-                     int *flag) const {
+    double evaluate (double x1, double x2, int *flag) const {
         double d = x1 - x2, k;
         k = a2_ * exp(-0.5 * d * d / s2_);
-
-        // Compute the gradient.
-        if (compute_grad) {
-            /* grad[0] = 2 * k / a_; */
-            /* grad[1] = k * chi2 / (s_ * s2_); */
-            /* grad[2] = 6 * k0 * omr * r * r / fw_; */
-        }
-
         *flag = 1;
         return k;
     };
@@ -50,7 +53,7 @@ private:
 
 };
 
-class SparseKernel {
+class SparseKernel : public Kernel {
 
 public:
 
@@ -76,8 +79,7 @@ public:
     //
     // Evaluate the kernel and optionally the gradient.
     //
-    double evaluate (double x1, double x2, int compute_grad, double *grad,
-                     int *flag) const {
+    double evaluate (double x1, double x2, int *flag) const {
         double d = x1 - x2, chi2 = d * d, r, omr, k0, k;
 
         // If the distance is greater than the support, bail.
@@ -90,13 +92,6 @@ public:
         omr = 1.0 - r;
         k0 = a2_ * exp(-0.5 * chi2 / s2_);
         k = k0 * omr * omr * (2*r + 1);
-
-        // Compute the gradient.
-        if (compute_grad) {
-            grad[0] = 2 * k / a_;
-            grad[1] = k * chi2 / (s_ * s2_);
-            grad[2] = 6 * k0 * omr * r * r / fw_;
-        }
 
         return k;
     };

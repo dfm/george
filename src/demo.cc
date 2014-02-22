@@ -5,6 +5,7 @@
 #include "george.h"
 
 using Eigen::VectorXd;
+using george::Kernel;
 using george::SparseKernel;
 using george::SparseSolver;
 using george::HODLRSolver;
@@ -16,17 +17,17 @@ int main ()
     srand (123);
 
     // Generate some fake data.
-    int N = 100;
+    int N = 1000;
     VectorXd t(N), yerr(N), y(N);
     for (int i = 0; i < N; ++i) {
-        t[i] = i * 0.5 / 24.;
+        t[i] = i * 1.0 / 60.0 / 24.;
         yerr[i] = 1e-2;
         y[i] = 1e-12 * (rand() - 0.5);
     }
 
     // Test the sparse solver.
     SparseKernel* kernel = new SparseKernel (1e-4, 1.0, 3.0);
-    SparseSolver<SparseKernel> sparse_solver (kernel);
+    SparseSolver<Kernel> sparse_solver (kernel);
     if (sparse_solver.get_status()) {
         std::cerr << "Solver setup failed\n";
         delete kernel;
@@ -53,7 +54,7 @@ int main ()
     std::cout << sparse_solver.get_status() << std::endl;
 
     // Test the HODLR solver.
-    HODLRSolver<SparseKernel> hodlr_solver (kernel);
+    HODLRSolver<Kernel> hodlr_solver (kernel);
 
     start = clock();
     hodlr_solver.compute(t, yerr);
