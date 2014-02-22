@@ -9,6 +9,7 @@
 #include "constants.h"
 
 using Eigen::VectorXd;
+using Eigen::MatrixXd;
 
 namespace george {
 
@@ -41,7 +42,7 @@ public:
     //
     // Allocation and deallocation.
     //
-    HODLRSolver (K* kernel, unsigned nLeaf = 50, double tol = 1e-12)
+    HODLRSolver (K* kernel, unsigned nLeaf = 50, double tol = 1e-10)
         : tol_(tol), nleaf_(nLeaf), kernel_(kernel)
     {
         matrix_ = new HODLRSolverMatrix<K> (kernel_);
@@ -71,6 +72,9 @@ public:
             return status_;
         }
 
+        // It's not computed until it's computed...
+        computed_ = 0;
+
         // Compute the diagonal elements.
         VectorXd diag(n);
         for (int i = 0; i < n; ++i)
@@ -86,7 +90,39 @@ public:
         // Factorize the matrix.
         solver_->compute_Factor();
 
-        return 0;
+        // Extract the log-determinant.
+        solver_->compute_Determinant(logdet_);
+        logdet_ += n * log(2 * M_PI);
+
+        // Save the data for later use.
+        x_ = x;
+        yerr_ = yerr;
+
+        // Update the bookkeeping flags.
+        computed_ = 1;
+        status_ = SOLVER_OK;
+        return status_;
+    };
+
+    //
+    // Compute the log-likelihood
+    //
+    double log_likelihood (VectorXd y)
+    {
+        // Make sure that things have been properly computed.
+        if (!computed_ || status_ != SOLVER_OK) {
+            status_ = USAGE_ERROR;
+            return -INFINITY;
+        }
+
+        // Check the dimensions.
+        if (y.rows() != x_.rows()) {
+            status_ = DIMENSION_MISMATCH;
+            return -INFINITY;
+        }
+
+        // Compute the log-likelihood.
+        return -0.5 * (logdet_ + y.dot(compute_alpha(y)));
     };
 
 private:
@@ -96,7 +132,17 @@ private:
     int status_, computed_;
     K* kernel_;
     HODLRSolverMatrix<K>* matrix_;
-    HODLR_Tree<HODLRSolverMatrix<K> > solver_;
+    HODLR_Tree<HODLRSolverMatrix<K> >* solver_;
+    VectorXd x_, yerr_;
+
+    //
+    // Compute the ``alpha`` vector for a given RHS.
+    //
+    VectorXd compute_alpha (MatrixXd y) {
+        MatrixXd alpha(y.rows(), 1);
+        solver_->solve(y, alpha);
+        return alpha;
+    };
 
 };
 

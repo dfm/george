@@ -31,7 +31,7 @@ if (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
 endif (SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
 
 set (CMAKE_CXX_FLAGS
-     "${CMAKE_CXX_FLAGS} -O4 -Werror -Wall -Wextra -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
+     "${CMAKE_CXX_FLAGS} -ffast-math -O4 -Werror -Wall -Wextra -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
 
 # Includes.
 include_directories ("${CMAKE_SOURCE_DIR}/cpp"

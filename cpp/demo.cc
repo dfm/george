@@ -1,4 +1,6 @@
+#include <iomanip>
 #include <iostream>
+#include <ctime>
 
 #include "george.h"
 
@@ -9,12 +11,16 @@ using george::HODLRSolver;
 
 int main ()
 {
+    clock_t start, end;
+    std::cout << std::setprecision(16);
+    srand (123);
+
     // Generate some fake data.
-    int N = 500;
+    int N = 100;
     VectorXd t(N), yerr(N), y(N);
     for (int i = 0; i < N; ++i) {
         t[i] = i * 0.5 / 24.;
-        yerr[i] = 1e-4;
+        yerr[i] = 1e-2;
         y[i] = 1e-12 * (rand() - 0.5);
     }
 
@@ -27,18 +33,41 @@ int main ()
         return sparse_solver.get_status();
     }
 
+    start = clock();
     sparse_solver.compute(t, yerr);
+    end = clock();
+    std::cout << "Sparse compute takes: " << double(end-start) / double(CLOCKS_PER_SEC) << std::endl;
+
     if (sparse_solver.get_status()) {
         std::cerr << "Compute failed\n";
         delete kernel;
         return sparse_solver.get_status();
     }
 
-    std::cout << sparse_solver.log_likelihood (y) << std::endl;
+    start = clock();
+    double ll = sparse_solver.log_likelihood (y);
+    end = clock();
+    std::cout << "Sparse log-like takes: " << double(end-start) / double(CLOCKS_PER_SEC) << std::endl;
+
+    std::cout << ll << std::endl;
     std::cout << sparse_solver.get_status() << std::endl;
 
     // Test the HODLR solver.
     HODLRSolver<SparseKernel> hodlr_solver (kernel);
+
+    start = clock();
+    hodlr_solver.compute(t, yerr);
+    end = clock();
+    std::cout << "HODLR compute takes: " << double(end-start) / double(CLOCKS_PER_SEC) << std::endl;
+
+    // Compute the log likelihood.
+    start = clock();
+    ll = hodlr_solver.log_likelihood (y);
+    end = clock();
+    std::cout << "HODLR log-like takes: " << double(end-start) / double(CLOCKS_PER_SEC) << std::endl;
+
+    std::cout << ll << std::endl;
+    std::cout << hodlr_solver.get_status() << std::endl;
 
     delete kernel;
     return 0;

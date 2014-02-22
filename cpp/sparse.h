@@ -152,7 +152,6 @@ private:
     cholmod_common* common_;
     cholmod_factor* L_;
     K* kernel_;
-
     VectorXd x_, yerr_;
 
     //
