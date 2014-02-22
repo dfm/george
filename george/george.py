@@ -20,12 +20,8 @@ class GaussianProcess(object):
 
     """
 
-    kernels = {
-        "truncated_squared_exp": 0,
-    }
-
-    def __init__(self, pars, kernel_type="truncated_squared_exp"):
-        self._gp = _george(np.atleast_1d(pars))
+    def __init__(self, pars):
+        self.hyperpars = pars
 
     @property
     def computed(self):
@@ -33,26 +29,26 @@ class GaussianProcess(object):
 
     @property
     def hyperpars(self):
-        return self._gp.get_pars()
+        return self._pars
 
     @hyperpars.setter
     def hyperpars(self, v):
-        self._gp.set_pars(np.atleast_1d(v))
+        p = np.array(np.atleast_1d(v))
+        self._gp = _george(p)
+        self._pars = p
 
-    def compute(self, x, yerr=None):
+    def compute(self, x, yerr):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
 
-        :params x: ``(nsamples, )`` or ``(nsamples, ndim)``
+        :params x: ``(nsamples, )``
             The independent coordinates of the data points.
 
-        :params yerr: (optional) ``(nsamples, )``
+        :params yerr: ``(nsamples, )``
             The uncertainties on the data points at coordinates ``x``.
 
         """
-        if yerr is None:
-            yerr = np.zeros(len(x))
         return self._gp.compute(x, yerr)
 
     def lnlikelihood(self, y):
@@ -85,13 +81,8 @@ class GaussianProcess(object):
             The full covariance matrix of the predictive distribution.
 
         """
-        return self._gp.predict(y, t)
-
-    def optimize(self, x, yerr, y, maxiter=100, verbose=1):
-        try:
-            return self._gp.optimize(x, yerr, y, maxiter, verbose)
-        except AttributeError:
-            raise RuntimeError("You must build with L-BFGS support")
+        raise NotImplementedError()
+        # return self._gp.predict(y, t)
 
     def sample_conditional(self, y, t, N=1):
         """

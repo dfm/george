@@ -134,7 +134,9 @@ if __name__ == "__main__":
         ext_modules=[ext],
         description="Blazingly fast Gaussian Processes for regression.",
         long_description=open("README.rst").read(),
-        package_dir={"": ""},
+        package_data={"": ["README.rst", "LICENSE",
+                           "include/*.h", "hodlr/header/*.hpp", ]},
+        include_package_data=True,
         classifiers=[
             # "Development Status :: 5 - Production/Stable",
             "Intended Audience :: Developers",
