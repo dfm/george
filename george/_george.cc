@@ -31,6 +31,7 @@ static int _george_init (_george_object* self, PyObject* args, PyObject* kwds);
 static PyObject* _george_compute (_george_object* self, PyObject* args);
 static PyObject* _george_lnlikelihood (_george_object* self, PyObject* args);
 static PyObject* _george_computed (_george_object* self, PyObject* args);
+static PyObject* _george_predict (_george_object* self, PyObject* args);
 
 // Module interactions.
 void init_george (void);
@@ -54,8 +55,10 @@ static PyObject *_george_new (PyTypeObject* type, PyObject* args, PyObject* kwds
 
 static int _george_init(_george_object* self, PyObject* args, PyObject* kwds)
 {
+    int nleaf;
+    double tol;
     PyObject* pars_obj = NULL;
-    if (!PyArg_ParseTuple(args, "O", &pars_obj))
+    if (!PyArg_ParseTuple(args, "Oid", &pars_obj, &nleaf, &tol))
         return -1;
 
     // Parse the parameter vector.
@@ -77,7 +80,7 @@ static int _george_init(_george_object* self, PyObject* args, PyObject* kwds)
     Py_DECREF(pars_array);
 
     // Set up the solver.
-    self->solver = new HODLRSolver<Kernel> (self->kernel);
+    self->solver = new HODLRSolver<Kernel> (self->kernel, nleaf, tol);
 
     return 0;
 }
@@ -109,7 +112,6 @@ static PyObject* _george_compute (_george_object* self, PyObject* args)
         PyErr_SetString(PyExc_ValueError, "George only works in 1D for now.");
         return NULL;
     }
-
     if ((int)PyArray_DIM(yerr_array, 0) != nsamples) {
         Py_DECREF(x_array);
         Py_DECREF(yerr_array);
@@ -179,6 +181,96 @@ static PyObject* _george_lnlikelihood (_george_object* self, PyObject* args)
     return Py_BuildValue("d", lnlike);
 }
 
+static PyObject* _george_predict (_george_object* self, PyObject* args)
+{
+    PyObject* y_obj, * x_obj;
+    if (!PyArg_ParseTuple(args, "OO", &y_obj, &x_obj)) return NULL;
+
+    if (!self->solver->get_computed()) {
+        PyErr_SetString(PyExc_RuntimeError,
+            "You need to compute the model first");
+        return NULL;
+    }
+
+    PyArrayObject *y_array = PARSE_ARRAY(y_obj),
+                  *x_array = PARSE_ARRAY(x_obj);
+    if (y_array == NULL || x_array == NULL) {
+        Py_XDECREF(y_array);
+        Py_XDECREF(x_array);
+        PyErr_SetString(PyExc_ValueError,
+            "Failed to parse input objects as numpy arrays");
+        return NULL;
+    }
+
+    // Get the dimensions.
+    int nsamples = (int)PyArray_DIM(y_array, 0),
+        ntest = (int)PyArray_DIM(x_array, 0);
+    if ((int)PyArray_NDIM(x_array) >= 2) {
+        Py_DECREF(x_array);
+        Py_DECREF(y_array);
+        PyErr_SetString(PyExc_ValueError, "George only works in 1D for now.");
+        return NULL;
+    }
+    if (self->solver->get_dimension() != nsamples) {
+        Py_DECREF(x_array);
+        Py_DECREF(y_array);
+        PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
+        return NULL;
+    }
+
+    // Access the data.
+    double* y = (double*) PyArray_DATA(y_array),
+          * x = (double*) PyArray_DATA(x_array);
+
+    // Compute the mean.
+    VectorXd y_vec = VectorXd::Map(y, nsamples),
+             x_vec = VectorXd::Map(x, ntest),
+             mu_vec;
+    MatrixXd cov_mat;
+    self->solver->predict(y_vec, x_vec, mu_vec, cov_mat);
+
+    // Clean up.
+    Py_DECREF(y_array);
+    Py_DECREF(x_array);
+
+    // Check success.
+    if (self->solver->get_status() != george::SOLVER_OK) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to compute model");
+        return NULL;
+    }
+
+    // Allocate the output arrays.
+    npy_intp dim[] = {ntest}, dim2[] = {ntest, ntest};
+    PyArrayObject* mu_array = (PyArrayObject*)PyArray_SimpleNew(1, dim, NPY_DOUBLE),
+                 * cov_array = (PyArrayObject*)PyArray_SimpleNew(2, dim2, NPY_DOUBLE);
+    if (mu_array == NULL || cov_array == NULL) {
+        Py_XDECREF(mu_array);
+        Py_XDECREF(cov_array);
+        return NULL;
+    }
+
+    // Copy over the result.
+    double *mu = (double*)PyArray_DATA(mu_array),
+           *cov = (double*)PyArray_DATA(cov_array);
+    for (int i = 0; i < ntest; ++i) {
+        mu[i] = mu_vec[i];
+        for (int j = 0; j < ntest; ++j) cov[i*ntest+j] = cov_mat(i, j);
+    }
+
+    // Build the result.
+    PyObject *ret = Py_BuildValue("OO", mu_array, cov_array);
+    Py_DECREF(mu_array);
+    Py_DECREF(cov_array);
+
+    if (ret == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Couldn't build output tuple");
+        Py_XDECREF(ret);
+        return NULL;
+    }
+
+    return ret;
+}
+
 static PyObject* _george_computed(_george_object* self, PyObject* args)
 {
     if (self->solver->get_computed()) Py_RETURN_TRUE;
@@ -194,6 +286,11 @@ static PyMethodDef _george_methods[] = {
      (PyCFunction)_george_lnlikelihood,
      METH_VARARGS,
      "Get the marginalized ln likelihood of some values."
+    },
+    {"predict",
+     (PyCFunction)_george_predict,
+     METH_VARARGS,
+     "Predict the mean function"
     },
     {"computed",
      (PyCFunction)_george_computed,

@@ -42,7 +42,7 @@ public:
     //
     // Allocation and deallocation.
     //
-    HODLRSolver (K* kernel, unsigned nLeaf = 50, double tol = 1e-10)
+    HODLRSolver (K* kernel, unsigned nLeaf = 10, double tol = 1e-10)
         : tol_(tol), nleaf_(nLeaf), kernel_(kernel)
     {
         matrix_ = new HODLRSolverMatrix<K> (kernel_);
@@ -58,6 +58,14 @@ public:
     //
     int get_status () const { return status_; };
     int get_computed () const { return computed_; };
+
+    //
+    // Get the dimensions.
+    //
+    int get_dimension () const {
+        if (computed_) return x_.rows();
+        return -1;
+    };
 
     //
     // Pre-compute and factorize the kernel matrix.
@@ -125,6 +133,45 @@ public:
         return -0.5 * (logdet_ + y.dot(compute_alpha(y)));
     };
 
+    //
+    // Compute the ``alpha`` vector for a given RHS.
+    //
+    VectorXd compute_alpha (MatrixXd y) {
+        MatrixXd alpha(y.rows(), 1);
+        solver_->solve(y, alpha);
+        return alpha;
+    };
+
+    //
+    // Get the mean conditional prediction.
+    //
+    void predict (VectorXd y, VectorXd t, VectorXd& mu, MatrixXd& cov) {
+        int n = y.rows(), nt = t.rows(), flag;
+        if (n != x_.rows()) {
+            status_ = DIMENSION_MISMATCH;
+            return;
+        }
+
+        // Compute the cross kernel matrix.
+        MatrixXd k (nt, n);
+        for (int i = 0; i < nt; ++i)
+            for (int j = 0; j < n; ++j)
+                k(i, j) = kernel_->evaluate (t[i], x_[j], &flag);
+
+        // Compute the mean prediction.
+        mu = k * compute_alpha(y);
+
+        // Compute the predictive covariance.
+        cov = MatrixXd (nt, nt);
+        for (int i = 0; i < nt; ++i)
+            for (int j = 0; j < nt; ++j)
+                cov(i, j) = kernel_->evaluate (t[i], t[j], &flag);
+        MatrixXd v(nt, nt),
+                 kt = k.transpose();
+        solver_->solve(kt, v);
+        cov += k * v;
+    };
+
 private:
 
     double logdet_, tol_;
@@ -134,15 +181,6 @@ private:
     HODLRSolverMatrix<K>* matrix_;
     HODLR_Tree<HODLRSolverMatrix<K> >* solver_;
     VectorXd x_, yerr_;
-
-    //
-    // Compute the ``alpha`` vector for a given RHS.
-    //
-    VectorXd compute_alpha (MatrixXd y) {
-        MatrixXd alpha(y.rows(), 1);
-        solver_->solve(y, alpha);
-        return alpha;
-    };
 
 };
 

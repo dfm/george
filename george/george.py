@@ -20,7 +20,9 @@ class GaussianProcess(object):
 
     """
 
-    def __init__(self, pars):
+    def __init__(self, pars, nleaf=20, tol=1e-10):
+        self.nleaf = nleaf
+        self.tol = tol
         self.hyperpars = pars
 
     @property
@@ -34,7 +36,7 @@ class GaussianProcess(object):
     @hyperpars.setter
     def hyperpars(self, v):
         p = np.array(np.atleast_1d(v))
-        self._gp = _george(p)
+        self._gp = _george(p, self.nleaf, self.tol)
         self._pars = p
 
     def compute(self, x, yerr):
@@ -70,7 +72,7 @@ class GaussianProcess(object):
         :param y: ``(nsamples, )``
             The observations to condition the model on.
 
-        :param t: ``(ntest, )`` or ``(ntest, ndim)``
+        :param t: ``(ntest, )``
             The coordinates where the predictive distribution should be
             computed.
 
@@ -78,11 +80,10 @@ class GaussianProcess(object):
             The mean of the predictive distribution.
 
         :returns cov: ``(ntest, ntest)``
-            The full covariance matrix of the predictive distribution.
+            The predictive covariance.
 
         """
-        raise NotImplementedError()
-        # return self._gp.predict(y, t)
+        return self._gp.predict(y, t)
 
     def sample_conditional(self, y, t, N=1):
         """
@@ -119,5 +120,6 @@ class GaussianProcess(object):
             A list of predictions at coordinates given by ``t``.
 
         """
+        raise NotImplementedError()
         cov = self._gp.covariance(t)
         return np.random.multivariate_normal(np.zeros(len(t)), cov, size=N)
