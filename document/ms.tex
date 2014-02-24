@@ -1,0 +1,260 @@
+\documentclass[12pt,preprint]{aastex}
+
+\usepackage{color,hyperref}
+\definecolor{linkcolor}{rgb}{0,0,0.5}
+\hypersetup{colorlinks=true,linkcolor=linkcolor,citecolor=linkcolor,
+            filecolor=linkcolor,urlcolor=linkcolor}
+\usepackage{url}
+\usepackage{amssymb,amsmath}
+
+\newcommand{\project}[1]{{\sffamily #1}}
+\newcommand{\emcee}{\project{emcee}}
+\newcommand{\kepler}{\project{Kepler}}
+\newcommand{\license}{MIT License}
+
+\newcommand{\paper}{\emph{Article}}
+
+\newcommand{\foreign}[1]{\emph{#1}}
+\newcommand{\etal}{\foreign{et\,al.}}
+\newcommand{\etc}{\foreign{etc.}}
+
+\newcommand{\Fig}[1]{Figure~\ref{fig:#1}}
+\newcommand{\fig}[1]{\Fig{#1}}
+\newcommand{\figlabel}[1]{\label{fig:#1}}
+\newcommand{\Tab}[1]{Table~\ref{tab:#1}}
+\newcommand{\tab}[1]{\Tab{#1}}
+\newcommand{\tablabel}[1]{\label{tab:#1}}
+\newcommand{\Eq}[1]{Equation~(\ref{eq:#1})}
+\newcommand{\eq}[1]{\Eq{#1}}
+\newcommand{\eqlabel}[1]{\label{eq:#1}}
+\newcommand{\Sect}[1]{Section~\ref{sect:#1}}
+\newcommand{\sect}[1]{\Sect{#1}}
+\newcommand{\App}[1]{Appendix~\ref{sect:#1}}
+\newcommand{\app}[1]{\App{#1}}
+\newcommand{\sectlabel}[1]{\label{sect:#1}}
+
+\newcommand{\dd}{\ensuremath{\,\mathrm{d}}}
+\newcommand{\bvec}[1]{\ensuremath{\boldsymbol{#1}}}
+
+\begin{document}
+
+\title{%
+    An effective noise model for Kepler light curves
+}
+
+\newcommand{\nyu}{2}
+\newcommand{\mpia}{3}
+\author{%
+    Daniel~Foreman-Mackey\altaffilmark{1,\nyu},
+    David~W.~Hogg\altaffilmark{\nyu,\mpia},
+    \etal
+}
+\altaffiltext{1}{To whom correspondence should be addressed:
+                 \url{danfm@nyu.edu}}
+\altaffiltext{\nyu}{Center for Cosmology and Particle Physics,
+                        Department of Physics, New York University,
+                        4 Washington Place, New York, NY, 10003, USA}
+\altaffiltext{\mpia}{Max-Planck-Institut f\"ur Astronomie,
+                        K\"onigstuhl 17, D-69117 Heidelberg, Germany}
+
+\begin{abstract}
+
+An open source implementation of the model described here is available at
+\url{https://dan.iel.fm/george} licensed under the liberal MIT License.
+
+\end{abstract}
+
+\keywords{%
+exoplanets: sickness
+---
+code: open-source
+---
+keywords: made-up-by-Hogg
+}
+
+\section{Introduction}
+
+In this \paper, we consider the problem of estimating the parameters of a
+physical signal in noisy time-series data.
+In particular, we are interested in the case where the amplitude of the
+``noise''---this can refer to astrophysical noise (stellar variability),
+systematic sensitivity variations in the detector, and the other effects
+commonly considered (read noise, etc.)---in the data has an amplitude equal to
+or even greater than the signal of interest.
+This is a timely problem in the context of the impressive advances in
+exoplanet astrophysics due to the \kepler\ mission (CITE).
+
+Anyone who works with \kepler\ light curves is familiar with the substantial
+``systematics'' in the data (CITE: PDC, Aigrain, Petigura, others).
+This systematics can be due to instrumental effects (variations in
+temperature, pointing, etc.) or intrinsic stellar variability.
+It is common practice in the field---and astronomy in general---to build a
+robust data-driven point estimate of these effects and then use the residuals
+of the data away from this model as the data for the final analysis.
+For example, the Presearch (sic.) Data Conditioning (PDC; and the
+generalizations CITE) use the light curves of ``similar'' stars to build a
+small basis of systematic light curves.
+The target light curve is then fit as a linear combination of these basis
+light curves and the PDC photometry are the residuals away from this fit.
+There is a hope that this procedure can remove instrumental effects common
+across targets while retaining astrophysical signals.
+For studies of transiting exoplanets, PDC generally doesn't provide
+sufficiently de-trended data (CITE) because it is specifically designed to not
+substantially remove stellar variability.
+This means that a second de-trending step is required before searching for
+transits (CITE) or characterizing candidates (CITE).
+The most common technique for this second de-trending step is a running
+windowed median filter directly on the light curve (CITE).
+Another procedure---commonly used when a candidate is already known---involves
+masking out the candidate transits and fitting a polynomial or spline and
+interpolating into the transit window.
+
+The de-trending methods described above involve making a point estimate of the
+systematic signals using the data themselves and then performing an arithmetic
+operation on the data.
+These operations will always introduce non-trivially correlated noise into the
+data and it is very hard (impossible) to develop a procedure that will be
+robust against removing the tiny signals of interest.
+There is also rarely an attempt made to propagate the uncertainties introduced
+by errors in the systematics model to the corrected data.
+At a theoretical level, it is appealing to consider a simultaneous model of
+the noise and the physical signal.
+\citet{carter} studied this in the context of light curves with ``red
+noise''---a very specific form of correlated noise--- by working in a wavelet
+basis.
+These authors found that their parameter estimates were more accurate than
+estimates that ignored correlations in the noise.
+\citet{gibson-gp}---and subsequently CITE Evans---have applied a more
+flexible non-parametric Gaussian process (GP) model---similar to the one
+described here---to the problem of modeling systematics in spectroscopic
+light curves.
+The wavelet method has been successfully used with \kepler\ light
+curves because it scales well [$\mathcal{O}(N)$] to the large datasets by
+sacrificing flexibility.
+Conversely, the GP model na\"ively scales very poorly [$\mathcal{O}(N^3)$] to
+larger datasets making this model largely intractable for the analysis of
+ \kepler\ light curves.
+
+In this \paper, we demonstrate a practical technique for applying a GP model
+to real \kepler\ data by taking advantage of the sparsity of the problem and
+recent advances in computational linear algebra (Ambikasaran \etal, in prep).
+In \sect{gps}, we describe the details of the GP model and its relation to
+commonly used likelihood functions.
+Then, in \sect{practical}, we discuss the practical considerations involved in
+applying this model and advocate for specific algorithmic choices.
+We compare the performance of our model to other industry standard techniques
+when applied to signals injected into \emph{real \kepler\ light curves} in
+\sect{parameters}.
+
+\section{Gaussian processes for regression}\sectlabel{gps}
+
+Gaussian processes (GPs) are a general class of generative probabilistic
+models that are used extensively in machine learning (CITE), cosmology (CITE)
+and, recently, in the study of exoplanets.
+The model is \emph{very simple} and should seem familiar.
+The most commonly used likelihood function assumes that the error bars on the
+data are known, independent, and Gaussian.
+In this case, the log-likelihood of the data is
+\begin{eqnarray}\eqlabel{chi2}
+\ln p(\bvec{f}\,|\,\bvec{t},\bvec{\sigma},\bvec{\theta}) &=&
+-\frac{1}{2} \sum_n \left [ \frac{[f_n - m(t_n;\,\bvec{\theta})]^2}{\sigma_n^2}
++ \log (2\pi\sigma_n^2) \right ] \\
+&=& -\frac{\chi^2}{2} + C
+\end{eqnarray}
+where
+\begin{eqnarray}
+\bvec{f} &=& \left ( \begin{array}{cccc}
+f_1 & f_2 & \cdots & f_N
+\end{array} \right )^\mathrm{T}
+\end{eqnarray}
+are the data observed at ``times''
+\begin{eqnarray}
+\bvec{t} &=& \left ( \begin{array}{cccc}
+t_1 & t_2 & \cdots & t_N
+\end{array} \right )^\mathrm{T}
+\end{eqnarray}
+with observational uncertainties
+\begin{eqnarray}
+\bvec{\sigma} &=& \left ( \begin{array}{cccc}
+\sigma_1 & \sigma_2 & \cdots & \sigma_N
+\end{array} \right )^\mathrm{T} \quad.
+\end{eqnarray}
+In \eq{chi2}, $m(t_n;\,\bvec{\theta})$ is your generative model for the
+data---parameterized by $\bvec{\theta}$---evaluated at time $t_n$.
+If we define the vector of model predictions
+\begin{eqnarray}
+\bvec{m} &=& \left ( \begin{array}{cccc}
+m(t_1;\,\bvec{\theta}) & m(t_2;\,\bvec{\theta}) & \cdots & m(t_N;\,\bvec{\theta})
+\end{array} \right )^\mathrm{T}
+\end{eqnarray}
+then we can rewrite \eq{chi2} as a matrix equation
+\begin{eqnarray}
+\ln p(\bvec{f}\,|\,\bvec{t},\bvec{\sigma},\bvec{\theta}) &=&
+-\frac{1}{2}\left [
+    (\bvec{f}-\bvec{m})^T\,\bvec{\Sigma}^{-1}\,(\bvec{f}-\bvec{m})
+        + N\,\log (2\pi) + \log |\bvec{\Sigma}|
+\right ]
+\end{eqnarray}
+where
+\begin{eqnarray}
+\bvec{\Sigma} &=& \left (\begin{array}{cccc}
+\sigma_1^2 & 0 & & 0 \\
+0 & \sigma_2^2 & & 0 \\
+& & \cdots & \\
+0 & 0 & 0 & \sigma_N^2
+\end{array}\right )
+\end{eqnarray}
+and $|\bvec{\Sigma}|$ is the determinant of $\bvec{\Sigma}$.
+
+The fact that $\bvec{\Sigma}$ is diagonal is a result of the assumption of
+independent uncertainties.
+Instead, we can introduce non-zero off-diagonal elements in $\bvec{\Sigma}$ to
+capture the effects of correlated noise.
+This is a very general model---normally too general, in fact---if we let the
+elements of $\bvec{\Sigma}$ vary completely freely.
+Instead, it is common practice to choose a parametric \emph{kernel function}
+that defines the elements of the covariance matrix as a function of the
+relative independent coordinates (times) between the data points
+\begin{eqnarray}
+\Sigma_{mn} &=& \delta_{mn}\,\sigma_n^2 + k(|t_n-t_m|;\,\bvec{\alpha})\quad.
+\end{eqnarray}
+
+A commonly used kernel is
+\begin{eqnarray}
+k(|t_n-t_m|;\,\bvec{\alpha}) &=&
+\beta^2 \, \exp \left ( -\frac{1}{2}\,\frac{|t_n-t_m|^2}{\tau^2} \right )
+\quad.
+\end{eqnarray}
+
+\section{Practical considerations}\sectlabel{practical}
+
+\section{Parameter estimation}\sectlabel{parameters}
+
+\section{Discussion}\sectlabel{discussion}
+
+\acknowledgments
+SAMSI. %
+It is a pleasure to thank
+    Ruth Angus (Oxford),
+    Tom Barclay (Ames),
+    Fengji Hou (NYU),
+for helpful contributions to the ideas and code presented here.
+This project was partially supported by the NSF (grant AST-0908357), and NASA
+(grant NNX08AJ48G).
+
+\newcommand{\arxiv}[1]{\href{http://arxiv.org/abs/#1}{arXiv:#1}}
+\begin{thebibliography}{}\raggedright
+
+\bibitem[Bishop(2003)]{bishop-book}
+Bishop, C.~M., \emph{Pattern Recognition and Machine Learning}, Springer, 2009
+
+\bibitem[Carter \& Winn(2009)]{carter}
+Carter,~J.~A. \& Winn,~J.~N.\ 2009, \apj, 704, 51
+\arxiv{0909.0747}
+
+\bibitem[Gibson \etal(2012)]{gibson-gp}
+Gibson, N.~P., Aigrain, S., Roberts, S., \etal\ 2012, \mnras, 419, 2683
+
+\end{thebibliography}
+
+\end{document}
