@@ -24,9 +24,16 @@ double benchmark (int ndata)
 
     george_gp *gp = george_allocate_gp (3, pars, NULL, *george_kernel);
 
+    // clock_t ticks = clock();
+    // for (i = 0; i < NBENCH; ++i) {
+    //     george_compute (ndata, x, yerr, gp);
+    //     george_log_likelihood (y, gp);
+    // }
+    // ticks = clock() - ticks;
+
+    george_compute (ndata, x, yerr, gp);
     clock_t ticks = clock();
     for (i = 0; i < NBENCH; ++i) {
-        george_compute (ndata, x, yerr, gp);
         george_log_likelihood (y, gp);
     }
     ticks = clock() - ticks;
