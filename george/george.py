@@ -15,12 +15,11 @@ class GaussianProcess(object):
 
     :params pars:
         The hyperparameters of the covariance function. For now, this must be
-        a list or vector of length 3: amplitude, standard deviation, and
-        truncation radius.
+        a list or vector of length 2: amplitude and standard deviation.
 
     """
 
-    def __init__(self, pars, nleaf=20, tol=1e-10):
+    def __init__(self, pars, nleaf=40, tol=1e-10):
         self.nleaf = nleaf
         self.tol = tol
         self.hyperpars = pars
