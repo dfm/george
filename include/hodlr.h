@@ -46,10 +46,12 @@ public:
         : tol_(tol), nleaf_(nLeaf), kernel_(kernel)
     {
         matrix_ = new HODLRSolverMatrix<K> (kernel_);
+        solver_ = NULL;
         status_ = SOLVER_OK;
         computed_ = 0;
     };
     ~HODLRSolver () {
+        if (solver_ != NULL) delete solver_;
         delete matrix_;
     };
 
@@ -92,6 +94,7 @@ public:
         matrix_->set_values (x);
 
         // Set up the solver object.
+        if (solver_ != NULL) delete solver_;
         solver_ = new HODLR_Tree<HODLRSolverMatrix<K> > (matrix_, n, nleaf_);
         solver_->assemble_Matrix(diag, tol_);
 

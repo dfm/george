@@ -23,8 +23,10 @@ view.run("init_node.py", block=True)
 ndim, nwalkers = len(p0), 32
 pos = [p0 + 1e-10 * np.random.randn(ndim) for i in xrange(nwalkers)]
 sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=view)
-for i, (p, lp, state) in enumerate(sampler.sample(pos, iterations=10)):
+for i, (p, lp, state) in enumerate(sampler.sample(pos, iterations=1000)):
     print(i)
 
 # Save the results.
-pickle.dump(sampler.chain, open("results.pkl", "wb"), -1)
+pickle.dump((p0, sampler.chain, sampler.lnprobability,
+             sampler.acceptance_fraction),
+            open("results.pkl", "wb"), -1)
