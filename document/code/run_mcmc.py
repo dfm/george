@@ -23,7 +23,7 @@ view.run("init_node.py", block=True)
 ndim, nwalkers = len(p0), 32
 pos = [p0 + 1e-10 * np.random.randn(ndim) for i in xrange(nwalkers)]
 sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=view)
-for i, (p, lp, state) in enumerate(sampler.sample(pos, iterations=1000)):
+for i, (p, lp, state) in enumerate(sampler.sample(pos, iterations=10000)):
     print(i)
 
 # Save the results.

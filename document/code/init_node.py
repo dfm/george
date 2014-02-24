@@ -46,7 +46,7 @@ f, fe = f / mu, fe / mu
 t -= np.min(t)
 
 # Inject a transit.
-p0 = np.array([-10.0, 0.2, -10., np.median(f), q1, q2, t0, tau, ror, b])
+p0 = np.array([-9.0, 0.2, -10.5, np.median(f), q1, q2, t0, tau, ror, b])
 f *= model(t, 1, *(p0[4:]))
 
 
