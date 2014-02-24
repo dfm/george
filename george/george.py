@@ -15,17 +15,14 @@ class GaussianProcess(object):
 
     :params pars:
         The hyperparameters of the covariance function. For now, this must be
-        a list or vector of length 3: amplitude, standard deviation, and
-        truncation radius.
+        a list or vector of length 2: amplitude and standard deviation.
 
     """
 
-    kernels = {
-        "truncated_squared_exp": 0,
-    }
-
-    def __init__(self, pars, kernel_type="truncated_squared_exp"):
-        self._gp = _george(np.atleast_1d(pars))
+    def __init__(self, pars, nleaf=40, tol=1e-10):
+        self.nleaf = nleaf
+        self.tol = tol
+        self.hyperpars = pars
 
     @property
     def computed(self):
@@ -33,26 +30,26 @@ class GaussianProcess(object):
 
     @property
     def hyperpars(self):
-        return self._gp.get_pars()
+        return self._pars
 
     @hyperpars.setter
     def hyperpars(self, v):
-        self._gp.set_pars(np.atleast_1d(v))
+        p = np.array(np.atleast_1d(v))
+        self._gp = _george(p, self.nleaf, self.tol)
+        self._pars = p
 
-    def compute(self, x, yerr=None):
+    def compute(self, x, yerr):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
 
-        :params x: ``(nsamples, )`` or ``(nsamples, ndim)``
+        :params x: ``(nsamples, )``
             The independent coordinates of the data points.
 
-        :params yerr: (optional) ``(nsamples, )``
+        :params yerr: ``(nsamples, )``
             The uncertainties on the data points at coordinates ``x``.
 
         """
-        if yerr is None:
-            yerr = np.zeros(len(x))
         return self._gp.compute(x, yerr)
 
     def lnlikelihood(self, y):
@@ -74,7 +71,7 @@ class GaussianProcess(object):
         :param y: ``(nsamples, )``
             The observations to condition the model on.
 
-        :param t: ``(ntest, )`` or ``(ntest, ndim)``
+        :param t: ``(ntest, )``
             The coordinates where the predictive distribution should be
             computed.
 
@@ -82,16 +79,10 @@ class GaussianProcess(object):
             The mean of the predictive distribution.
 
         :returns cov: ``(ntest, ntest)``
-            The full covariance matrix of the predictive distribution.
+            The predictive covariance.
 
         """
         return self._gp.predict(y, t)
-
-    def optimize(self, x, yerr, y, maxiter=100, verbose=1):
-        try:
-            return self._gp.optimize(x, yerr, y, maxiter, verbose)
-        except AttributeError:
-            raise RuntimeError("You must build with L-BFGS support")
 
     def sample_conditional(self, y, t, N=1):
         """
@@ -128,5 +119,5 @@ class GaussianProcess(object):
             A list of predictions at coordinates given by ``t``.
 
         """
-        cov = self._gp.covariance(t)
+        cov = self._gp.get_matrix(t)
         return np.random.multivariate_normal(np.zeros(len(t)), cov, size=N)
