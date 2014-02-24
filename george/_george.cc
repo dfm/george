@@ -32,6 +32,7 @@ static PyObject* _george_compute (_george_object* self, PyObject* args);
 static PyObject* _george_lnlikelihood (_george_object* self, PyObject* args);
 static PyObject* _george_computed (_george_object* self, PyObject* args);
 static PyObject* _george_predict (_george_object* self, PyObject* args);
+static PyObject* _george_get_matrix (_george_object* self, PyObject* args);
 
 // Module interactions.
 void init_george (void);
@@ -271,6 +272,56 @@ static PyObject* _george_predict (_george_object* self, PyObject* args)
     return ret;
 }
 
+static PyObject* _george_get_matrix (_george_object* self, PyObject* args)
+{
+    PyObject* t_obj;
+    if (!PyArg_ParseTuple(args, "O", &t_obj)) return NULL;
+
+    PyArrayObject* t_array = PARSE_ARRAY(t_obj);
+    if (t_array == NULL) {
+        Py_XDECREF(t_array);
+        PyErr_SetString(PyExc_ValueError,
+            "Failed to parse input object as numpy array");
+        return NULL;
+    }
+
+    // Get the dimensions.
+    int n = (int)PyArray_DIM(t_array, 0);
+    if ((int)PyArray_NDIM(t_array) >= 2) {
+        Py_DECREF(t_array);
+        PyErr_SetString(PyExc_ValueError, "George only works in 1D for now.");
+        return NULL;
+    }
+
+    // Access the data.
+    double* t = (double*) PyArray_DATA(t_array);
+
+    // Allocate the output arrays.
+    npy_intp dim[] = {n, n};
+    PyArrayObject* out_array = (PyArrayObject*)PyArray_SimpleNew(2, dim, NPY_DOUBLE);
+    if (out_array == NULL) {
+        Py_DECREF(t_array);
+        Py_XDECREF(out_array);
+        return NULL;
+    }
+
+    // Copy over the result.
+    int flag;
+    double value, *matrix = (double*)PyArray_DATA(out_array);
+    Kernel* kernel = self->kernel;
+    for (int i = 0; i < n; ++i) {
+        matrix[i*n+i] = kernel->evaluate(t[i], t[i], &flag);
+        for (int j = i+1; j < n; ++j) {
+            value = kernel->evaluate(t[i], t[j], &flag);
+            matrix[i*n+j] = value;
+            matrix[j*n+i] = value;
+        }
+    }
+
+    Py_DECREF(t_array);
+    return (PyObject*)out_array;
+}
+
 static PyObject* _george_computed(_george_object* self, PyObject* args)
 {
     if (self->solver->get_computed()) Py_RETURN_TRUE;
@@ -291,6 +342,11 @@ static PyMethodDef _george_methods[] = {
      (PyCFunction)_george_predict,
      METH_VARARGS,
      "Predict the mean function"
+    },
+    {"get_matrix",
+     (PyCFunction)_george_get_matrix,
+     METH_VARARGS,
+     "Get the covariance matrix for a set of times."
     },
     {"computed",
      (PyCFunction)_george_computed,

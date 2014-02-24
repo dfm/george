@@ -119,6 +119,5 @@ class GaussianProcess(object):
             A list of predictions at coordinates given by ``t``.
 
         """
-        raise NotImplementedError()
-        cov = self._gp.covariance(t)
+        cov = self._gp.get_matrix(t)
         return np.random.multivariate_normal(np.zeros(len(t)), cov, size=N)
