@@ -172,7 +172,7 @@ public:
         MatrixXd v(nt, nt),
                  kt = k.transpose();
         solver_->solve(kt, v);
-        cov += k * v;
+        cov -= k * v;
     };
 
 private:

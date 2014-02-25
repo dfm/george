@@ -83,7 +83,7 @@ class GaussianProcess(object):
         """
         return self._gp.predict(y, t)
 
-    def sample_conditional(self, y, t, N=1):
+    def sample_conditional(self, y, t, N=1, size=None):
         """
         Draw samples from the predictive conditional distribution.
 
@@ -101,10 +101,15 @@ class GaussianProcess(object):
             A list of predictions at coordinates given by ``t``.
 
         """
+        if size is not None:
+            N = size
         mu, cov = self.predict(y, t)
-        return np.random.multivariate_normal(mu, cov, size=N)
+        samples = np.random.multivariate_normal(mu, cov, size=N)
+        if N == 1:
+            return samples[0]
+        return samples
 
-    def sample_prior(self, t, N=1):
+    def sample_prior(self, t, N=1, size=None):
         """
         Draw samples from the prior distribution.
 
@@ -118,5 +123,10 @@ class GaussianProcess(object):
             A list of predictions at coordinates given by ``t``.
 
         """
+        if size is not None:
+            N = size
         cov = self._gp.get_matrix(t)
-        return np.random.multivariate_normal(np.zeros(len(t)), cov, size=N)
+        samples = np.random.multivariate_normal(np.zeros(len(t)), cov, size=N)
+        if N == 1:
+            return samples[0]
+        return samples
