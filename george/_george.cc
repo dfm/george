@@ -6,7 +6,13 @@
 
 using george::HODLRSolver;
 using george::Kernel;
-using george::MixtureKernel;
+
+using george::SumKernel;
+using george::ProductKernel;
+
+using george::ExpKernel;
+using george::SparseKernel;
+using george::CosineKernel;
 using george::ExpSquaredKernel;
 
 #define PARSE_ARRAY(o) (PyArrayObject*) PyArray_FROM_OTF(o, NPY_DOUBLE, \
@@ -55,52 +61,207 @@ static PyObject *_george_new (PyTypeObject* type, PyObject* args, PyObject* kwds
     return (PyObject*)self;
 }
 
-static int _george_init(_george_object* self, PyObject* args, PyObject* kwds)
+Kernel* parse_kernel (PyObject* kernel)
 {
-    double tol;
-    int nleaf, ktype;
-    PyObject* pars_obj = NULL;
-    if (!PyArg_ParseTuple(args, "Oiid", &pars_obj, &ktype, &nleaf, &tol))
-        return -1;
+    // Check the kernel.
+    if (!PyObject_HasAttrString(kernel, "is_kernel")) {
+        PyErr_SetString(PyExc_TypeError, "Invalid kernel");
+        return NULL;
+    }
 
-    // Parse the parameter vector.
+    // Deal with operators.
+    PyObject* is_kernel_obj = PyObject_GetAttrString(kernel, "is_kernel");
+    if (is_kernel_obj == Py_False) {
+        Py_DECREF(is_kernel_obj);
+
+        // Get the Python kernel objects and the type of operator.
+        PyObject* k1 = PyObject_GetAttrString(kernel, "k1"),
+                * k2 = PyObject_GetAttrString(kernel, "k2"),
+                * otype_obj = PyObject_GetAttrString(kernel, "operator_type");
+        long otype = PyInt_AsLong(otype_obj);
+        Py_XDECREF(otype_obj);
+
+        // Validate the kernels.
+        if (k1 == NULL || k2 == NULL || PyErr_Occurred() != NULL) {
+            PyErr_SetString(PyExc_TypeError, "Invalid operator");
+            Py_XDECREF(k1);
+            Py_XDECREF(k2);
+            return NULL;
+        }
+
+        // Parse the combined kernels.
+        Kernel* kernel1 = parse_kernel(k1);
+        Kernel* kernel2 = parse_kernel(k2);
+        Py_DECREF(k1);
+        Py_DECREF(k2);
+
+        // Check that these were successfully parsed.
+        if (kernel1 == NULL || kernel2 == NULL) {
+            if (kernel1 != NULL) delete kernel1;
+            if (kernel2 != NULL) delete kernel2;
+            return NULL;
+        }
+
+        // Combine the kernels.
+        if (otype == 0)
+            return new SumKernel (kernel1, kernel2);
+        else if (otype == 1)
+            return new ProductKernel (kernel1, kernel2);
+
+        // If we get here then the operator type was unknown.
+        if (kernel1 != NULL) delete kernel1;
+        if (kernel2 != NULL) delete kernel2;
+        PyErr_SetString(PyExc_TypeError, "Unknown operator");
+        return NULL;
+    }
+
+    // If we get here then the object claims to be a kernel.
+    Py_DECREF(is_kernel_obj);
+
+    // Get the kernel type.
+    PyObject* ktype_obj = PyObject_GetAttrString(kernel, "kernel_type");
+    long ktype = PyInt_AsLong(ktype_obj);
+    Py_XDECREF(ktype_obj);
+    if (ktype_obj == NULL || PyErr_Occurred() != NULL) {
+        PyErr_SetString(PyExc_TypeError, "Invalid kernel type");
+        return NULL;
+    }
+
+    // Get the parameter vector.
+    PyObject* pars_obj = PyObject_GetAttrString(kernel, "pars");
     PyArrayObject* pars_array = PARSE_ARRAY(pars_obj);
-    if (pars_array == NULL) return -1;
+    Py_XDECREF(pars_obj);
+    if (pars_array == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Invalid parameter vector");
+        Py_XDECREF(pars_array);
+        return NULL;
+    }
 
-    // Get and check the number of parameters.
+    // Get the number of parameters and a pointer to the parameter data.
     int npars = PyArray_DIM(pars_array, 0);
+    double* pars = (double*)PyArray_DATA(pars_array);
 
+    // Build the kernel.
+    Kernel* k = NULL;
     if (ktype == 0) {
         if (npars != 2) {
-            PyErr_SetString(PyExc_RuntimeError,
-                "The kernel takes exactly 2 parameters.");
+            PyErr_SetString(PyExc_ValueError,
+                    "The ExpSquaredKernel requires 2 parameters.");
             Py_DECREF(pars_array);
-            return -2;
+            return NULL;
         }
-
-        // Set up the kernel.
-        double* pars = (double*)PyArray_DATA(pars_array);
-        self->kernel = new ExpSquaredKernel (pars);
+        k = new ExpSquaredKernel(pars[0], pars[1]);
     } else if (ktype == 1) {
-        if (npars != 4) {
-            PyErr_SetString(PyExc_RuntimeError,
-                "The kernel takes exactly 4 parameters.");
+        if (npars != 2) {
+            PyErr_SetString(PyExc_ValueError,
+                    "The ExpKernel requires 2 parameters.");
             Py_DECREF(pars_array);
-            return -2;
+            return NULL;
         }
+        k = new ExpKernel(pars[0], pars[1]);
+    } else if (ktype == 2) {
+        if (npars != 1) {
+            PyErr_SetString(PyExc_ValueError,
+                    "The CosineKernel requires 1 parameter.");
+            Py_DECREF(pars_array);
+            return NULL;
+        }
+        k = new CosineKernel(pars[0]);
+    } else if (ktype == 3) {
+        if (npars != 1) {
+            PyErr_SetString(PyExc_ValueError,
+                    "The SparseKernel requires 1 parameter.");
+            Py_DECREF(pars_array);
+            return NULL;
+        }
+        k = new SparseKernel(pars[0]);
+    } else PyErr_SetString(PyExc_TypeError, "Unknown kernel");
 
-        // Set up the kernel.
-        double* pars = (double*)PyArray_DATA(pars_array);
-        ExpSquaredKernel* k1 = new ExpSquaredKernel (pars);
-        ExpSquaredKernel* k2 = new ExpSquaredKernel (&(pars[2]));
-        self->kernel = new MixtureKernel<ExpSquaredKernel, ExpSquaredKernel> (k1, k2);
-
-    } else {
-        PyErr_SetString(PyExc_RuntimeError, "Unknown kernel type");
-        Py_DECREF(pars_array);
-        return -3;
-    }
     Py_DECREF(pars_array);
+    return k;
+}
+
+static int _george_init(_george_object* self, PyObject* args, PyObject* kwds)
+{
+    int nleaf;
+    double tol;
+    PyObject* kernel = NULL;
+    if (!PyArg_ParseTuple(args, "Oid", &kernel, &nleaf, &tol))
+        return -1;
+
+    // Parse the kernel.
+    self->kernel = parse_kernel (kernel);
+    if (self->kernel == NULL) return -2;
+
+    // // Parse the parameter vector.
+    // PyArrayObject* pars_array = PARSE_ARRAY(pars_obj);
+    // if (pars_array == NULL) return -1;
+
+    // // Get and check the number of parameters.
+    // int npars = PyArray_DIM(pars_array, 0);
+
+    // if (ktype == 0) {
+    //     if (npars != 2) {
+    //         PyErr_SetString(PyExc_RuntimeError,
+    //             "The kernel takes exactly 2 parameters.");
+    //         Py_DECREF(pars_array);
+    //         return -2;
+    //     }
+
+    //     // Set up the kernel.
+    //     double* pars = (double*)PyArray_DATA(pars_array);
+    //     self->kernel = new ExpSquaredKernel (pars);
+    // } else if (ktype == 1) {
+    //     if (npars != 4) {
+    //         PyErr_SetString(PyExc_RuntimeError,
+    //             "The kernel takes exactly 4 parameters.");
+    //         Py_DECREF(pars_array);
+    //         return -2;
+    //     }
+
+    //     // Set up the kernel.
+    //     double* pars = (double*)PyArray_DATA(pars_array);
+    //     ExpSquaredKernel* k1 = new ExpSquaredKernel (pars);
+    //     ExpSquaredKernel* k2 = new ExpSquaredKernel (&(pars[2]));
+    //     self->kernel = new MixtureKernel<ExpSquaredKernel, ExpSquaredKernel> (k1, k2);
+
+    // } else if (ktype == 2) {
+    //     if (npars != 3) {
+    //         PyErr_SetString(PyExc_RuntimeError,
+    //             "The kernel takes exactly 3 parameters.");
+    //         Py_DECREF(pars_array);
+    //         return -2;
+    //     }
+
+    //     // Set up the kernel.
+    //     double* pars = (double*)PyArray_DATA(pars_array);
+    //     ExpKernel* k1 = new ExpKernel (pars);
+    //     CosineKernel* k2 = new CosineKernel (&(pars[2]));
+    //     self->kernel = new ProductKernel<ExpKernel, CosineKernel> (k1, k2);
+
+    // } else if (ktype == 3) {
+    //     if (npars != 5) {
+    //         PyErr_SetString(PyExc_RuntimeError,
+    //             "The kernel takes exactly 5 parameters.");
+    //         Py_DECREF(pars_array);
+    //         return -2;
+    //     }
+
+    //     // Set up the kernel.
+    //     double* pars = (double*)PyArray_DATA(pars_array);
+    //     ExpSquaredKernel* k1 = new ExpSquaredKernel (pars);
+    //     ExpKernel* k2 = new ExpKernel (&(pars[2]));
+    //     CosineKernel* k3 = new CosineKernel (&(pars[4]));
+    //     self->kernel =
+    //         new MixtureKernel<ExpSquaredKernel,
+    //                           ProductKernel<ExpKernel, CosineKernel> >
+    //             (k1, new ProductKernel<ExpKernel, CosineKernel> (k2, k3));
+    // } else {
+    //     PyErr_SetString(PyExc_RuntimeError, "Unknown kernel type");
+    //     Py_DECREF(pars_array);
+    //     return -3;
+    // }
+    // Py_DECREF(pars_array);
 
     // Set up the solver.
     self->solver = new HODLRSolver<Kernel> (self->kernel, nleaf, tol);

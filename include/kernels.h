@@ -17,18 +17,17 @@ public:
 
 };
 
-template <typename K1, typename K2>
-class MixtureKernel : public Kernel {
+class SumKernel : public Kernel {
 
 public:
 
-    MixtureKernel (K1* k1, K2* k2) : kernel1_(k1), kernel2_(k2) {};
-    ~MixtureKernel () {
+    SumKernel (Kernel* k1, Kernel* k2) : kernel1_(k1), kernel2_(k2) {};
+    ~SumKernel () {
         delete kernel1_;
         delete kernel2_;
     };
-    K1* get_kernel1 () const { return kernel1_; };
-    K2* get_kernel2 () const { return kernel2_; };
+    Kernel* get_kernel1 () const { return kernel1_; };
+    Kernel* get_kernel2 () const { return kernel2_; };
 
     double evaluate (double x1, double x2, int *flag) const {
         double k = kernel1_->evaluate(x1, x2, flag);
@@ -38,24 +37,22 @@ public:
 
 private:
 
-    K1* kernel1_;
-    K2* kernel2_;
+    Kernel* kernel1_, * kernel2_;
 
 };
 
 
-template <typename K1, typename K2>
 class ProductKernel : public Kernel {
 
 public:
 
-    ProductKernel (K1* k1, K2* k2) : kernel1_(k1), kernel2_(k2) {};
+    ProductKernel (Kernel* k1, Kernel* k2) : kernel1_(k1), kernel2_(k2) {};
     ~ProductKernel () {
         delete kernel1_;
         delete kernel2_;
     };
-    K1* get_kernel1 () const { return kernel1_; };
-    K2* get_kernel2 () const { return kernel2_; };
+    Kernel* get_kernel1 () const { return kernel1_; };
+    Kernel* get_kernel2 () const { return kernel2_; };
 
     double evaluate (double x1, double x2, int *flag) const {
         double k = kernel1_->evaluate(x1, x2, flag);
@@ -65,8 +62,42 @@ public:
 
 private:
 
-    K1* kernel1_;
-    K2* kernel2_;
+    Kernel* kernel1_, * kernel2_;
+
+};
+
+class ExpKernel : public Kernel {
+
+public:
+
+    ExpKernel (double alpha, double scale) {
+        set_alpha (alpha);
+        set_scale (scale);
+    };
+    ExpKernel (const double* params) { set_params (params); };
+
+    //
+    // Setters for the hyperparameters.
+    //
+    void set_alpha (double v) { a2_ = v*v; a_ = sqrt(a2_); };
+    void set_scale (double v) { s_ = fabs(v); };
+    void set_params (const double* p) {
+        set_alpha (p[0]);
+        set_scale (p[1]);
+    };
+
+    //
+    // Evaluate the kernel and optionally the gradient.
+    //
+    double evaluate (double x1, double x2, int *flag) const {
+        double d = x1 - x2;
+        *flag = 1;
+        return a2_ * exp(-fabs(d) / s_);
+    };
+
+private:
+
+    double a_, a2_, s_;
 
 };
 
@@ -138,6 +169,35 @@ public:
 private:
 
     double fw_, fw2_;
+
+};
+
+class CosineKernel : public Kernel {
+
+public:
+
+    CosineKernel (const double period) {
+        set_period (period);
+    };
+    CosineKernel (const double* params) { set_period (params[0]); };
+
+    //
+    // Setters for the hyperparameters.
+    //
+    void set_period (double v) { omega_ = 2 * M_PI / fabs(v); };
+
+    //
+    // Evaluate the kernel and optionally the gradient.
+    //
+    double evaluate (double x1, double x2, int *flag) const {
+        double d = x1 - x2;
+        *flag = 1;
+        return cos(omega_ * d);
+    };
+
+private:
+
+    double omega_;
 
 };
 

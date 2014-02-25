@@ -11,3 +11,4 @@ except NameError:
 if not __GEORGE_SETUP__:
     __all__ = ["GaussianProcess"]
     from .george import GaussianProcess
+    from . import kernels

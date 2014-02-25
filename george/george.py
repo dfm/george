@@ -19,30 +19,23 @@ class GaussianProcess(object):
 
     """
 
-    kernel_types = {
-        "exp2": 0,
-        "dbl_exp2": 1,
-    }
-
-    def __init__(self, pars, nleaf=40, tol=1e-10, kernel_type="exp2"):
+    def __init__(self, kernel, nleaf=40, tol=1e-10):
         self.nleaf = nleaf
         self.tol = tol
-        self.kernel_type = self.kernel_types[kernel_type]
-        self.hyperpars = pars
+        self.kernel = kernel
 
     @property
     def computed(self):
         return self._gp.computed()
 
     @property
-    def hyperpars(self):
-        return self._pars
+    def kernel(self):
+        return self._kernel
 
-    @hyperpars.setter
-    def hyperpars(self, v):
-        p = np.array(np.atleast_1d(v))
-        self._gp = _george(p, self.kernel_type, self.nleaf, self.tol)
-        self._pars = p
+    @kernel.setter
+    def kernel(self, v):
+        self._gp = _george(v, self.nleaf, self.tol)
+        self._kernel = v
 
     def compute(self, x, yerr):
         """
