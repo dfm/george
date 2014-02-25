@@ -19,9 +19,10 @@ class GaussianProcess(object):
 
     """
 
-    def __init__(self, pars, nleaf=40, tol=1e-10):
+    def __init__(self, pars, nleaf=40, tol=1e-10, ktype=0):
         self.nleaf = nleaf
         self.tol = tol
+        self.ktype = ktype
         self.hyperpars = pars
 
     @property
@@ -35,7 +36,7 @@ class GaussianProcess(object):
     @hyperpars.setter
     def hyperpars(self, v):
         p = np.array(np.atleast_1d(v))
-        self._gp = _george(p, self.nleaf, self.tol)
+        self._gp = _george(p, self.ktype, self.nleaf, self.tol)
         self._pars = p
 
     def compute(self, x, yerr):

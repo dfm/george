@@ -6,6 +6,7 @@
 
 using george::HODLRSolver;
 using george::Kernel;
+using george::MixtureKernel;
 using george::ExpSquaredKernel;
 
 #define PARSE_ARRAY(o) (PyArrayObject*) PyArray_FROM_OTF(o, NPY_DOUBLE, \
@@ -56,10 +57,10 @@ static PyObject *_george_new (PyTypeObject* type, PyObject* args, PyObject* kwds
 
 static int _george_init(_george_object* self, PyObject* args, PyObject* kwds)
 {
-    int nleaf;
     double tol;
+    int nleaf, ktype;
     PyObject* pars_obj = NULL;
-    if (!PyArg_ParseTuple(args, "Oid", &pars_obj, &nleaf, &tol))
+    if (!PyArg_ParseTuple(args, "Oiid", &pars_obj, &ktype, &nleaf, &tol))
         return -1;
 
     // Parse the parameter vector.
@@ -68,16 +69,37 @@ static int _george_init(_george_object* self, PyObject* args, PyObject* kwds)
 
     // Get and check the number of parameters.
     int npars = PyArray_DIM(pars_array, 0);
-    if (npars != 2) {
-        PyErr_SetString(PyExc_RuntimeError,
-            "The kernel takes exactly 2 parameters.");
-        Py_DECREF(pars_array);
-        return -1;
-    }
 
-    // Set up the kernel.
-    double* pars = (double*)PyArray_DATA(pars_array);
-    self->kernel = new ExpSquaredKernel (pars);
+    if (ktype == 0) {
+        if (npars != 2) {
+            PyErr_SetString(PyExc_RuntimeError,
+                "The kernel takes exactly 2 parameters.");
+            Py_DECREF(pars_array);
+            return -2;
+        }
+
+        // Set up the kernel.
+        double* pars = (double*)PyArray_DATA(pars_array);
+        self->kernel = new ExpSquaredKernel (pars);
+    } else if (ktype == 1) {
+        if (npars != 4) {
+            PyErr_SetString(PyExc_RuntimeError,
+                "The kernel takes exactly 4 parameters.");
+            Py_DECREF(pars_array);
+            return -2;
+        }
+
+        // Set up the kernel.
+        double* pars = (double*)PyArray_DATA(pars_array);
+        ExpSquaredKernel* k1 = new ExpSquaredKernel (pars);
+        ExpSquaredKernel* k2 = new ExpSquaredKernel (&(pars[2]));
+        self->kernel = new MixtureKernel<ExpSquaredKernel, ExpSquaredKernel> (k1, k2);
+
+    } else {
+        PyErr_SetString(PyExc_RuntimeError, "Unknown kernel type");
+        Py_DECREF(pars_array);
+        return -3;
+    }
     Py_DECREF(pars_array);
 
     // Set up the solver.

@@ -17,6 +17,59 @@ public:
 
 };
 
+template <typename K1, typename K2>
+class MixtureKernel : public Kernel {
+
+public:
+
+    MixtureKernel (K1* k1, K2* k2) : kernel1_(k1), kernel2_(k2) {};
+    ~MixtureKernel () {
+        delete kernel1_;
+        delete kernel2_;
+    };
+    K1* get_kernel1 () const { return kernel1_; };
+    K2* get_kernel2 () const { return kernel2_; };
+
+    double evaluate (double x1, double x2, int *flag) const {
+        double k = kernel1_->evaluate(x1, x2, flag);
+        if (!flag) return 0.0;
+        return k + kernel2_->evaluate(x1, x2, flag);
+    };
+
+private:
+
+    K1* kernel1_;
+    K2* kernel2_;
+
+};
+
+
+template <typename K1, typename K2>
+class ProductKernel : public Kernel {
+
+public:
+
+    ProductKernel (K1* k1, K2* k2) : kernel1_(k1), kernel2_(k2) {};
+    ~ProductKernel () {
+        delete kernel1_;
+        delete kernel2_;
+    };
+    K1* get_kernel1 () const { return kernel1_; };
+    K2* get_kernel2 () const { return kernel2_; };
+
+    double evaluate (double x1, double x2, int *flag) const {
+        double k = kernel1_->evaluate(x1, x2, flag);
+        if (!flag) return 0.0;
+        return k * kernel2_->evaluate(x1, x2, flag);
+    };
+
+private:
+
+    K1* kernel1_;
+    K2* kernel2_;
+
+};
+
 class ExpSquaredKernel : public Kernel {
 
 public:
