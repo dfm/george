@@ -70,6 +70,10 @@ Here's the simplest possible example of how you might want to use George::
   # Draw 100 samples from the predictive conditional distribution.
   t = np.linspace(0, 10, 500)
   samples = gp.sample_conditional(y, t, size=100)
+  
+This should result in a distribution like the following:
+
+.. image:: https://raw.github.com/dfm/george/master/demo.png
 
 License
 -------
