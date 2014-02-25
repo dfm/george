@@ -110,48 +110,34 @@ class SparseKernel : public Kernel {
 
 public:
 
-    SparseKernel (double alpha, double scale, double full_width) {
-        set_alpha (alpha);
+    SparseKernel (const double scale) {
         set_scale (scale);
-        set_full_width (full_width);
     };
-    SparseKernel (const double* params) { set_params (params); };
+    SparseKernel (const double* params) { set_scale (params[0]); };
 
     //
     // Setters for the hyperparameters.
     //
-    void set_alpha (double v) { a2_ = v*v; a_ = sqrt(a2_); };
-    void set_scale (double v) { s2_ = v*v; s_ = sqrt(s2_); };
-    void set_full_width (double v) { fw2_ = v*v; fw_ = sqrt(fw2_); };
-    void set_params (const double* p) {
-        set_alpha (p[0]);
-        set_scale (p[1]);
-        set_full_width (p[2]);
-    };
+    void set_scale (double v) { fw2_ = v*v; fw_ = sqrt(fw2_); };
 
     //
     // Evaluate the kernel and optionally the gradient.
     //
     double evaluate (double x1, double x2, int *flag) const {
-        double d = x1 - x2, chi2 = d * d, r, omr, k0, k;
+        double d = x1 - x2, chi2 = d * d, r, omr;
 
-        // If the distance is greater than the support, bail.
         *flag = 0;
         if (chi2 >= fw2_) return 0.0;
 
-        // Compute the kernel value.
         *flag = 1;
         r = sqrt(chi2 / fw2_);
         omr = 1.0 - r;
-        k0 = a2_ * exp(-0.5 * chi2 / s2_);
-        k = k0 * omr * omr * (2*r + 1);
-
-        return k;
+        return omr * omr * (2*r + 1);
     };
 
 private:
 
-    double a_, a2_, s_, s2_, fw_, fw2_;
+    double fw_, fw2_;
 
 };
 
