@@ -16,8 +16,9 @@ Installation
 
 **Latest stable release**
 
-You'll first need to install `Eigen 3 <http://eigen.tuxfamily.org/>`_. Then,
-just run::
+You'll first need to install `Eigen 3 <http://eigen.tuxfamily.org/>`_ and
+(obviously) `NumPy <http://www.numpy.org/>`_. Then, for the default
+installation, just run::
 
   pip install george
 
@@ -41,3 +42,15 @@ Then, install the package using::
 If you've installed Eigen in a strange place, you can specify this by running::
 
   python setup.py install --eigen-include=/path/to/eigen
+
+Usage
+-----
+
+License
+-------
+
+George is being developed by `Dan Foreman-Mackey <http://dfm.io>`_ and the source
+is available under the terms of the `MIT license
+<https://github.com/dfm/george/blob/master/LICENSE>`_.
+
+Copyright 2012-2014 Dan Foreman-Mackey
