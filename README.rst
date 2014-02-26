@@ -51,29 +51,29 @@ Here's the simplest possible example of how you might want to use George::
   import numpy as np
   import george
   from george.kernels import ExpSquaredKernel
-  
+
   # Generate some fake noisy data.
   x = 10 * np.sort(np.random.rand(10))
   yerr = 0.2 * np.ones_like(x)
   y = np.sin(x) + yerr * np.random.randn(len(x))
-  
+
   # Set up the Gaussian process.
   kernel = ExpSquaredKernel(1.0, 1.0)
   gp = george.GaussianProcess(kernel)
-  
+
   # Pre-compute the factorization of the matrix.
   gp.compute(x, yerr)
-  
+
   # Compute the log likelihood.
   print(gp.lnlikelihood(y))
-  
+
   # Draw 100 samples from the predictive conditional distribution.
   t = np.linspace(0, 10, 500)
   samples = gp.sample_conditional(y, t, size=100)
-  
+
 This should result in a distribution like the following:
 
-.. image:: https://raw.github.com/dfm/george/master/demo.png
+.. image:: https://raw.github.com/dfm/george/master/images/demo.png
 
 **More sophisticated kernel models**
 
@@ -83,12 +83,18 @@ frequency noise, you could model it as a mixture of kernels::
 
   from george.kernels import Sum, ExpSquaredKernel
   kernel = Sum(ExpSquaredKernel(1.0, 3.0), ExpSquaredKernel(0.5, 0.1))
-  
+
 If the noise is periodic or quasi-periodic, you might try something like a damped
 harmonic oscillator::
 
   from george.kernels import Product, ExpKernel, CosineKernel
   kernel = Product(ExpKernel(1.0, 1.0), CosineKernel(0.5))
+
+To be specific, the following kernels are defined:
+
+* ``ExpSquaredKernel(a, s)``:
+
+.. image:: https://raw.github.com/dfm/george/master/images/expsquared.png
 
 License
 -------
