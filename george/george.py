@@ -61,7 +61,10 @@ class GaussianProcess(object):
             step.
 
         """
-        return self._gp.lnlikelihood(y)
+        ll = self._gp.lnlikelihood(y)
+        if np.isfinite(ll):
+            return ll
+        return -np.inf
 
     def predict(self, y, t):
         """
