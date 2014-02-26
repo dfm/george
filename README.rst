@@ -92,9 +92,9 @@ harmonic oscillator::
 
 To be specific, the following kernels are defined:
 
-* ``ExpSquaredKernel(a, s)``:
-
-.. image:: https://raw.github.com/dfm/george/master/images/expsquared.png
+* ``ExpKernel(a, s) = a**2 * exp(-fabs(x/s))``
+* ``ExpSquaredKernel(a, s) = a**2 * exp(-0.5*(x/s)**2)``
+* ``CosineKernel(P) = cos(2*pi*x/P)``
 
 License
 -------
