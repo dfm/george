@@ -4,8 +4,6 @@
 from __future__ import (division, print_function, absolute_import,
                         unicode_literals)
 
-__all__ = []
-
 import george
 import triangle
 import numpy as np
