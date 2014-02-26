@@ -75,6 +75,21 @@ This should result in a distribution like the following:
 
 .. image:: https://raw.github.com/dfm/george/master/demo.png
 
+**More sophisticated kernel models**
+
+The kernels in George need to be written in C++ but it comes with a bunch pre-loaded
+and an expressive model building syntax. For example, if you have both high and low
+frequency noise, you could model it as a mixture of kernels::
+
+  from george.kernels import Sum, ExpSquaredKernel
+  kernel = Sum(ExpSquaredKernel(1.0, 3.0), ExpSquaredKernel(0.5, 0.1))
+  
+If the noise is periodic or quasi-periodic, you might try something like a damped
+harmonic oscillator::
+
+  from george.kernels import Product, ExpKernel, CosineKernel
+  kernel = Product(ExpKernel(1.0, 1.0), CosineKernel(0.5))
+
 License
 -------
 
