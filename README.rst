@@ -84,8 +84,8 @@ in your code that looks something like::
   x, y, yerr = ...
 
   def lnlike(params):
-    m = compute_model(params, x)
-    return -0.5 * np.sum((y - m) ** 2 / yerr**2)
+      m = compute_model(params, x)
+      return -0.5 * np.sum((y - m) ** 2 / yerr**2)
 
 To use George as a replacement for this likelihood function, you would just
 do::
@@ -95,22 +95,34 @@ do::
   gp.compute(x, yerr)
 
   def lnlike(params):
-    m = compute_model(params, x)
-    return gp.lnlikelihood(y - m)
+      m = compute_model(params, x)
+      return gp.lnlikelihood(y - m)
 
 If you also want to model or marginalize over the (hyper-)parameters of the
 GP, this would be replaced by::
 
   def lnlike(lna, lns, params):
-    kernel = ExpSquaredKernel(np.exp(lna), np.exp(lns))
-    gp = george.GaussianProcess(kernel)
-    gp.compute(x, yerr)
+      kernel = ExpSquaredKernel(np.exp(lna), np.exp(lns))
+      gp = george.GaussianProcess(kernel)
+      gp.compute(x, yerr)
 
-    m = compute_model(params, x)
-    return gp.lnlikelihood(y - m)
+      m = compute_model(params, x)
+      return gp.lnlikelihood(y - m)
 
 This model will (of course) be much slower because the covariance matrix
 will need to be recomputed and factorized at every step.
+
+Finally, if you want to include a *jitter* parameter (a factor that accounts
+for underestimated error bars), it is as simple as::
+
+  def lnlike(lna, lns, lnjitter, params):
+      kernel = ExpSquaredKernel(np.exp(lna), np.exp(lns))
+      gp = george.GaussianProcess(kernel)
+      j2 = np.exp(2*lnjitter)
+      gp.compute(x, np.sqrt(yerr**2 + j2))
+
+      m = compute_model(params, x)
+      return gp.lnlikelihood(y - m)
 
 **More sophisticated kernel models**
 
