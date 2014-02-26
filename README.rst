@@ -75,6 +75,43 @@ This should result in a distribution like the following:
 
 .. image:: https://raw.github.com/dfm/george/master/images/demo.png
 
+**A drop-in replacement for your likelihood function**
+
+Let's imagine that you're currently fitting your data assuming uncorrelated
+Gaussian uncertainties. In this case, you probably have a likelihood function
+in your code that looks something like::
+
+  x, y, yerr = ...
+
+  def lnlike(params):
+    m = compute_model(params, x)
+    return -0.5 * np.sum((y - m) ** 2 / yerr**2)
+
+To use George as a replacement for this likelihood function, you would just
+do::
+
+  kernel = ExpSquaredKernel(a, s)
+  gp = george.GaussianProcess(kernel)
+  gp.compute(x, yerr)
+
+  def lnlike(params):
+    m = compute_model(params, x)
+    return gp.lnlikelihood(y - m)
+
+If you also want to model or marginalize over the (hyper-)parameters of the
+GP, this would be replaced by::
+
+  def lnlike(lna, lns, params):
+    kernel = ExpSquaredKernel(np.exp(lna), np.exp(lns))
+    gp = george.GaussianProcess(kernel)
+    gp.compute(x, yerr)
+
+    m = compute_model(params, x)
+    return gp.lnlikelihood(y - m)
+
+This model will (of course) be much slower because the covariance matrix
+will need to be recomputed and factorized at every step.
+
 **More sophisticated kernel models**
 
 The kernels in George need to be written in C++ but it comes with a bunch pre-loaded
