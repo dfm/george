@@ -4,12 +4,13 @@ George
 Fast Gaussian processes for regression
 --------------------------------------
 
-This is a GP code built on top of Sivaram Ambikasaran's `HODLR
-solver <https://github.com/sivaramambikasaran/HODLR_Solver>`_ designed to
-be fast on **huge** problems. So far it's only being used to model the noise
-in *Kepler* light curves but it should be more generally useful.
+This is a GP code built on top of Sivaram Ambikasaran's `HODLR solver
+<https://github.com/sivaramambikasaran/HODLR_Solver>`_ designed to be fast on
+**huge** problems. So far it's only being used to model the noise in *Kepler*
+light curves but it should be more generally useful.
 
-The code is mainly written in (undocumented) C++ with Python bindings.
+The code is mainly written in (undocumented) C++ with Python bindings. You
+should probably stick with the Python for now.
 
 Installation
 ------------
@@ -126,15 +127,15 @@ for underestimated error bars), it is as simple as::
 
 **More sophisticated kernel models**
 
-The kernels in George need to be written in C++ but it comes with a bunch pre-loaded
-and an expressive model building syntax. For example, if you have both high and low
-frequency noise, you could model it as a mixture of kernels::
+The kernels in George need to be written in C++ but it comes with a few
+pre-loaded and an expressive model building syntax. For example, if you have
+both high and low frequency noise, you could model it as a mixture of kernels::
 
   from george.kernels import Sum, ExpSquaredKernel
   kernel = Sum(ExpSquaredKernel(1.0, 3.0), ExpSquaredKernel(0.5, 0.1))
 
-If the noise is periodic or quasi-periodic, you might try something like a damped
-harmonic oscillator::
+If the noise is periodic or quasi-periodic, you might try something like a
+damped harmonic oscillator::
 
   from george.kernels import Product, ExpKernel, CosineKernel
   kernel = Product(ExpKernel(1.0, 1.0), CosineKernel(0.5))
@@ -148,8 +149,8 @@ To be specific, the following kernels are defined:
 License
 -------
 
-George is being developed by `Dan Foreman-Mackey <http://dfm.io>`_ and the source
-is available under the terms of the `MIT license
+George is being developed by `Dan Foreman-Mackey <http://dfm.io>`_ and the
+source is available under the terms of the `MIT license
 <https://github.com/dfm/george/blob/master/LICENSE>`_.
 
 Copyright 2012-2014 Dan Foreman-Mackey
