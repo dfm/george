@@ -4,13 +4,13 @@
 from __future__ import (division, print_function, absolute_import,
                         unicode_literals)
 
-__all__ = ["Sum", "Product",
+__all__ = ["Sum", "Product", "Kernel",
            "ExpSquaredKernel", "ExpKernel", "CosineKernel", "SparseKernel"]
 
 import numpy as np
 
 
-class _kernel(object):
+class Kernel(object):
 
     is_kernel = True
     kernel_type = -1
@@ -32,7 +32,7 @@ class _kernel(object):
         return Product(self, b)
 
 
-class _operator(_kernel):
+class _operator(Kernel):
 
     is_kernel = False
     operator_type = -1
@@ -54,7 +54,7 @@ class Product(_operator):
     operator_type = 1
 
 
-class ExpSquaredKernel(_kernel):
+class ExpSquaredKernel(Kernel):
 
     kernel_type = 0
 
@@ -62,7 +62,7 @@ class ExpSquaredKernel(_kernel):
         super(ExpSquaredKernel, self).__init__(amplitude, scale)
 
 
-class ExpKernel(_kernel):
+class ExpKernel(Kernel):
 
     kernel_type = 1
 
@@ -70,7 +70,7 @@ class ExpKernel(_kernel):
         super(ExpKernel, self).__init__(amplitude, scale)
 
 
-class CosineKernel(_kernel):
+class CosineKernel(Kernel):
 
     kernel_type = 2
 
@@ -78,7 +78,7 @@ class CosineKernel(_kernel):
         super(CosineKernel, self).__init__(period)
 
 
-class SparseKernel(_kernel):
+class SparseKernel(Kernel):
 
     kernel_type = 3
 
