@@ -4,27 +4,34 @@
 from __future__ import (division, print_function, absolute_import,
                         unicode_literals)
 
+import sys
 import george
 import triangle
 import numpy as np
 import cPickle as pickle
 import matplotlib.pyplot as pl
 
-from init_node import t, f, fe, model
+from init_node import t, f, fe, model, lnprob
 
-p0, chain, lp, accept = pickle.load(open("results.pkl", "r"))
+p0, chain, lp, accept = pickle.load(open(sys.argv[1], "r"))
 
-flat = chain[:, 5000::13, :]
-flat = flat.reshape((-1, flat.shape[-1]))
-m = flat[:, 2] > -6.5
-flat = flat[m]
-labels = map(r"${0}$".format, [
-    r"\ln \alpha", r"\ln l", r"\ln s", r"f_\star", r"q_1", r"q_2",
-    r"t_0", r"\tau", r"r/R_\star", "b",
-])
-fig = triangle.corner(flat, bins=30, truths=p0, labels=labels,
-                      quantiles=[0.16, 0.5, 0.84])
-fig.savefig("corner.png")
+# flat = chain[:, 2000::13, :]
+# flat = flat.reshape((-1, flat.shape[-1]))
+# labels = map(r"${0}$".format, [
+#     r"\ln \alpha", r"\ln l", r"\ln s", r"f_\star", r"q_1", r"q_2",
+#     r"t_0", r"\tau", r"r/R_\star", "b",
+# ])[-len(p0):]
+# fig = triangle.corner(flat, bins=30, truths=p0, labels=labels,
+#                       quantiles=[0.16, 0.5, 0.84])
+# fig.savefig("corner.png")
+
+k = np.argmax(lp[:, -1])
+print(lp[k, -1])
+print(max([lnprob(chain[k, -1]) for i in range(100)]))
+
+pl.figure()
+pl.plot(lp.T)
+pl.savefig("time.png")
 
 assert 0
 

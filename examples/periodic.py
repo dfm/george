@@ -12,7 +12,7 @@ sys.path.insert(0, d(d(os.path.abspath(__file__))))
 import numpy as np
 import matplotlib.pyplot as pl
 from george import GaussianProcess
-from george.kernels import Sum, Product, ExpSquaredKernel, CosineKernel
+from george.kernels import ExpSquaredKernel, CosineKernel
 
 np.random.seed(123)
 
@@ -28,8 +28,8 @@ y += 0.8 * np.cos(2 * np.pi * x / period)
 y += yerr * np.random.randn(len(yerr))
 
 # Set up a periodic kernel.
-pk = Product(ExpSquaredKernel(np.sqrt(0.8), 1000.0), CosineKernel(period))
-kernel2 = Sum(kernel, pk)
+pk = ExpSquaredKernel(np.sqrt(0.8), 1000.0) * CosineKernel(period)
+kernel2 = kernel + pk
 gp2 = GaussianProcess(kernel2)
 
 # Condition on this data.

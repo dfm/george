@@ -21,8 +21,18 @@ class _kernel(object):
     def __len__(self):
         return len(self.pars)
 
+    def __add__(self, b):
+        if not hasattr(b, "is_kernel"):
+            raise TypeError("Invalid kernel")
+        return Sum(self, b)
 
-class _operator(object):
+    def __mul__(self, b):
+        if not hasattr(b, "is_kernel"):
+            raise TypeError("Invalid kernel")
+        return Product(self, b)
+
+
+class _operator(_kernel):
 
     is_kernel = False
     operator_type = -1
