@@ -59,7 +59,7 @@ Here's the simplest possible example of how you might want to use George::
   y = np.sin(x) + yerr * np.random.randn(len(x))
 
   # Set up the Gaussian process.
-  kernel = ExpSquaredKernel(1.0, 1.0)
+  kernel = ExpSquaredKernel(1.0)
   gp = george.GaussianProcess(kernel)
 
   # Pre-compute the factorization of the matrix.
@@ -91,7 +91,7 @@ in your code that looks something like::
 To use George as a replacement for this likelihood function, you would just
 do::
 
-  kernel = ExpSquaredKernel(a, s)
+  kernel = a * ExpSquaredKernel(s)
   gp = george.GaussianProcess(kernel)
   gp.compute(x, yerr)
 
@@ -103,7 +103,7 @@ If you also want to model or marginalize over the (hyper-)parameters of the
 GP, this would be replaced by::
 
   def lnlike(lna, lns, params):
-      kernel = ExpSquaredKernel(np.exp(lna), np.exp(lns))
+      kernel = np.exp(lna) * ExpSquaredKernel(np.exp(lns))
       gp = george.GaussianProcess(kernel)
       gp.compute(x, yerr)
 
@@ -117,7 +117,7 @@ Finally, if you want to include a *jitter* parameter (a factor that accounts
 for underestimated error bars), it is as simple as::
 
   def lnlike(lna, lns, lnjitter, params):
-      kernel = ExpSquaredKernel(np.exp(lna), np.exp(lns))
+      kernel = np.exp(lna) * ExpSquaredKernel(np.exp(lns))
       gp = george.GaussianProcess(kernel)
       j2 = np.exp(2*lnjitter)
       gp.compute(x, np.sqrt(yerr**2 + j2))
@@ -131,20 +131,21 @@ The kernels in George need to be written in C++ but it comes with a few
 pre-loaded and an expressive model building syntax. For example, if you have
 both high and low frequency noise, you could model it as a mixture of kernels::
 
-  from george.kernels import Sum, ExpSquaredKernel
-  kernel = Sum(ExpSquaredKernel(1.0, 3.0), ExpSquaredKernel(0.5, 0.1))
+  from george.kernels import ExpSquaredKernel
+  kernel = ExpSquaredKernel(3.0) + 0.5 * ExpSquaredKernel(0.1)
 
 If the noise is periodic or quasi-periodic, you might try something like a
 damped harmonic oscillator::
 
-  from george.kernels import Product, ExpKernel, CosineKernel
-  kernel = Product(ExpKernel(1.0, 1.0), CosineKernel(0.5))
+  from george.kernels import Matern32Kernel, CosineKernel
+  kernel = 1e-3 * Matern32Kernel(1.0) * CosineKernel(0.5)
 
 To be specific, the following kernels are defined:
 
-* ``ExpKernel(a, s) = a**2 * exp(-fabs(x/s))``
-* ``ExpSquaredKernel(a, s) = a**2 * exp(-0.5*(x/s)**2)``
-* ``CosineKernel(P) = cos(2*pi*x/P)``
+* ``ExpKernel(s) = exp(-fabs(r/s))``
+* ``ExpSquaredKernel(s) = exp(-0.5*(r/s)**2)``
+* ``CosineKernel(P) = cos(2*pi*r/P)``
+* ``Matern32Kernel(s) = (1+sqrt(3)*r/s) * exp(sqrt(3)*r/s)``
 
 License
 -------
