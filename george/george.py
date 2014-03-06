@@ -19,7 +19,7 @@ class GaussianProcess(object):
 
     """
 
-    def __init__(self, kernel, nleaf=40, tol=1e-10):
+    def __init__(self, kernel, nleaf=100, tol=1e-12):
         self.nleaf = nleaf
         self.tol = tol
         self.kernel = kernel

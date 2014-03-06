@@ -5,7 +5,9 @@ from __future__ import (division, print_function, absolute_import,
                         unicode_literals)
 
 __all__ = ["Sum", "Product", "Kernel",
-           "ExpSquaredKernel", "ExpKernel", "CosineKernel", "SparseKernel"]
+           "ConstantKernel", "DotProductKernel", "ExpKernel",
+           "ExpSquaredKernel", "CosineKernel", "Matern32Kernel",
+           "Matern52Kernel"]
 
 import numpy as np
 
@@ -23,17 +25,22 @@ class Kernel(object):
 
     def __add__(self, b):
         if not hasattr(b, "is_kernel"):
-            raise TypeError("Invalid kernel")
+            return Sum(ConstantKernel(float(b)), self)
         return Sum(self, b)
+
+    def __radd__(self, b):
+        return self.__add__(b)
 
     def __mul__(self, b):
         if not hasattr(b, "is_kernel"):
-            raise TypeError("Invalid kernel")
+            return Product(ConstantKernel(float(b)), self)
         return Product(self, b)
+
+    def __rmul__(self, b):
+        return self.__mul__(b)
 
 
 class _operator(Kernel):
-
     is_kernel = False
     operator_type = -1
 
@@ -43,44 +50,59 @@ class _operator(Kernel):
 
 
 class Sum(_operator):
-
     is_kernel = False
     operator_type = 0
 
 
 class Product(_operator):
-
     is_kernel = False
     operator_type = 1
 
 
-class ExpSquaredKernel(Kernel):
-
+class ConstantKernel(Kernel):
     kernel_type = 0
 
-    def __init__(self, amplitude, scale):
-        super(ExpSquaredKernel, self).__init__(amplitude, scale)
+    def __init__(self, value):
+        super(ConstantKernel, self).__init__(value)
+
+
+class DotProductKernel(Kernel):
+    kernel_type = 1
+
+    def __init__(self):
+        super(DotProductKernel, self).__init__()
 
 
 class ExpKernel(Kernel):
+    kernel_type = 2
 
-    kernel_type = 1
+    def __init__(self, scale):
+        super(ExpKernel, self).__init__(scale)
 
-    def __init__(self, amplitude, scale):
-        super(ExpKernel, self).__init__(amplitude, scale)
+
+class ExpSquaredKernel(Kernel):
+    kernel_type = 3
+
+    def __init__(self, scale):
+        super(ExpSquaredKernel, self).__init__(scale)
 
 
 class CosineKernel(Kernel):
-
-    kernel_type = 2
+    kernel_type = 4
 
     def __init__(self, period):
         super(CosineKernel, self).__init__(period)
 
 
-class SparseKernel(Kernel):
+class Matern32Kernel(Kernel):
+    kernel_type = 5
 
-    kernel_type = 3
+    def __init__(self, scale):
+        super(Matern32Kernel, self).__init__(scale)
 
-    def __init__(self, full_width):
-        super(SparseKernel, self).__init__(full_width)
+
+class Matern52Kernel(Kernel):
+    kernel_type = 6
+
+    def __init__(self, scale):
+        super(Matern52Kernel, self).__init__(scale)
