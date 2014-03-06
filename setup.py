@@ -130,6 +130,7 @@ if __name__ == "__main__":
         author="Daniel Foreman-Mackey",
         author_email="danfm@nyu.edu",
         url="https://github.com/dfm/george",
+        license="MIT",
         packages=["george"],
         ext_modules=[ext],
         description="Blazingly fast Gaussian Processes for regression.",
@@ -138,7 +139,7 @@ if __name__ == "__main__":
                            "include/*.h", "hodlr/header/*.hpp", ]},
         include_package_data=True,
         classifiers=[
-            # "Development Status :: 5 - Production/Stable",
+            "Development Status :: 5 - Production/Stable",
             "Intended Audience :: Developers",
             "Intended Audience :: Science/Research",
             "License :: OSI Approved :: MIT License",
