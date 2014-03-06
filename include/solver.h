@@ -1,5 +1,5 @@
-#ifndef _GEORGE_HODLR_SOLVER_H_
-#define _GEORGE_HODLR_SOLVER_H_
+#ifndef _GEORGE_SOLVER_H_
+#define _GEORGE_SOLVER_H_
 
 #include <cmath>
 #include <Eigen/Dense>
