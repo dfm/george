@@ -43,4 +43,18 @@ for ax, (name, runs) in zip(axes, experiments):
     ax.annotate(name, xy=(0, 1), xycoords="axes fraction", xytext=(5, -5),
                 textcoords="offset points", ha="left", va="top")
 axes[-1].set_xlabel("$t$")
-pl.savefig("simple.png".format(name))
+fig.savefig("simple.png")
+fig.savefig("simple.pdf")
+
+# Plot the covariance matrix images.
+fig = pl.figure(figsize=(8, 8))
+for i, (name, runs) in enumerate(experiments):
+    fig.clf()
+    gp = george.GaussianProcess(runs[0][2])
+    img = gp._gp.get_matrix(t)
+    ax = fig.add_subplot(111)
+    ax.set_title(name)
+    ax.imshow(img, cmap="gray", interpolation="nearest")
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    fig.savefig("simple-cov-{0}.pdf".format(i+1))
