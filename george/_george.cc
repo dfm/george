@@ -151,8 +151,9 @@ kernels::Kernel* parse_kernel (PyObject* kernel)
     else if (ktype == 2) GEORGE_DEFINE_KERNEL (1, ExpKernel)
     else if (ktype == 3) GEORGE_DEFINE_KERNEL (1, ExpSquaredKernel)
     else if (ktype == 4) GEORGE_DEFINE_KERNEL (1, CosineKernel)
-    else if (ktype == 5) GEORGE_DEFINE_KERNEL (1, Matern32Kernel)
-    else if (ktype == 6) GEORGE_DEFINE_KERNEL (1, Matern52Kernel)
+    else if (ktype == 5) GEORGE_DEFINE_KERNEL (2, ExpSine2Kernel)
+    else if (ktype == 6) GEORGE_DEFINE_KERNEL (1, Matern32Kernel)
+    else if (ktype == 7) GEORGE_DEFINE_KERNEL (1, Matern52Kernel)
     else PyErr_SetString(PyExc_TypeError, "Unknown kernel");
 
 #undef GEORGE_DEFINE_KERNEL

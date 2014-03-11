@@ -137,6 +137,26 @@ private:
     double omega_;
 };
 
+class ExpSine2Kernel : public Kernel {
+public:
+    ExpSine2Kernel (const double* params) {
+        set_gamma (params[0]);
+        set_period (params[1]);
+    };
+    void set_gamma (const double v) { gamma_ = fabs(v); };
+    void set_period (const double v) { omega_ = M_PI / fabs(v); };
+
+    double evaluate (const double& x1, const double& x2, int *flag) const {
+        double d = x1 - x2, s = sin(omega_ * d);
+        *flag = 1;
+        return exp(-gamma_*s*s);
+    };
+
+private:
+    double gamma_, omega_;
+};
+
+
 class Matern32Kernel : public Kernel {
 public:
     Matern32Kernel (const double* scale) { set_scale (scale[0]); };

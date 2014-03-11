@@ -6,8 +6,8 @@ from __future__ import (division, print_function, absolute_import,
 
 __all__ = ["Sum", "Product", "Kernel",
            "ConstantKernel", "DotProductKernel", "ExpKernel",
-           "ExpSquaredKernel", "RBFKernel", "CosineKernel", "Matern32Kernel",
-           "Matern52Kernel"]
+           "ExpSquaredKernel", "RBFKernel", "CosineKernel", "ExpSine2Kernel",
+           "Matern32Kernel", "Matern52Kernel"]
 
 import numpy as np
 
@@ -101,15 +101,22 @@ class CosineKernel(Kernel):
         super(CosineKernel, self).__init__(period)
 
 
-class Matern32Kernel(Kernel):
+class ExpSine2Kernel(Kernel):
     kernel_type = 5
+
+    def __init__(self, gamma, period):
+        super(ExpSine2Kernel, self).__init__(gamma, period)
+
+
+class Matern32Kernel(Kernel):
+    kernel_type = 6
 
     def __init__(self, scale):
         super(Matern32Kernel, self).__init__(scale)
 
 
 class Matern52Kernel(Kernel):
-    kernel_type = 6
+    kernel_type = 7
 
     def __init__(self, scale):
         super(Matern52Kernel, self).__init__(scale)
