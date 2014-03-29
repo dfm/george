@@ -18,6 +18,7 @@ def find_eigen(hint=None):
         "/opt/local/var/macports/software/eigen3",
         "/opt/local/include/eigen3",
         "/usr/include/eigen3",
+        "/usr/include/local",
     ]
 
     # Loop over search paths and check for the existence of the Eigen/Dense
@@ -52,6 +53,7 @@ def find_hodlr(hint=None):
     search_dirs += [
         "./hodlr/header",
         "/usr/local/include",
+        "/usr/include/local",
     ]
 
     # Loop over search paths and check for the existence of the Eigen/Dense
