@@ -91,8 +91,8 @@ class GaussianProcess(object):
             The uncertainties on the data points at coordinates ``x``.
 
         """
-        x, inds = self._parse_samples(x, sort)
-        return self._gp.compute(x, yerr[inds])
+        x0, self.inds = self._parse_samples(np.array(x), sort)
+        return self._gp.compute(x0, yerr[self.inds])
 
     def lnlikelihood(self, y):
         """
@@ -104,7 +104,9 @@ class GaussianProcess(object):
             step.
 
         """
-        ll = self._gp.lnlikelihood(y)
+        if not self.computed:
+            raise RuntimeError("You need to compute the model first")
+        ll = self._gp.lnlikelihood(y[self.inds])
         if np.isfinite(ll):
             return ll
         return -np.inf
