@@ -19,10 +19,10 @@ class HODLRSolverMatrix : public HODLR_Matrix {
 public:
 
     HODLRSolverMatrix (K* kernel) : kernel_(kernel) {};
-    void set_values (VectorXd v) { t_ = v; };
+    void set_values (MatrixXd v) { t_ = v; };
     double get_Matrix_Entry (const unsigned i, const unsigned j) {
         int flag = 0;
-        double v = kernel_->evaluate (t_[i], t_[j], &flag);
+        double v = kernel_->evaluate (t_.row(i), t_.row(j), &flag);
         if (flag) return v;
         return 0.0;
     };
@@ -30,7 +30,7 @@ public:
 private:
 
     K* kernel_;
-    VectorXd t_;
+    MatrixXd t_;
 
 };
 
@@ -72,7 +72,7 @@ public:
     //
     // Pre-compute and factorize the kernel matrix.
     //
-    int compute (VectorXd x, VectorXd yerr) {
+    int compute (const MatrixXd x, const VectorXd& yerr) {
         int flag;
 
         // Check the dimensions.
@@ -88,7 +88,8 @@ public:
         // Compute the diagonal elements.
         VectorXd diag(n);
         for (int i = 0; i < n; ++i)
-            diag[i] = yerr[i]*yerr[i] + kernel_->evaluate(x[i], x[i], &flag);
+            diag[i] = yerr[i]*yerr[i] +
+                      kernel_->evaluate(x.row(i), x.row(i), &flag);
 
         // Set the time points for the kernel.
         matrix_->set_values (x);
@@ -107,7 +108,6 @@ public:
 
         // Save the data for later use.
         x_ = x;
-        yerr_ = yerr;
 
         // Update the bookkeeping flags.
         computed_ = 1;
@@ -148,9 +148,9 @@ public:
     //
     // Get the mean conditional prediction.
     //
-    void predict (VectorXd y, VectorXd t, VectorXd& mu, MatrixXd& cov) {
-        int n = y.rows(), nt = t.rows(), flag;
-        if (n != x_.rows()) {
+    void predict (const VectorXd& y, const MatrixXd& t, VectorXd& mu, MatrixXd& cov) {
+        int n = y.rows(), nt = t.rows(), ndim = t.cols(), flag;
+        if (n != x_.rows() || ndim != x_.cols()) {
             status_ = DIMENSION_MISMATCH;
             return;
         }
@@ -159,7 +159,7 @@ public:
         MatrixXd k (nt, n);
         for (int i = 0; i < nt; ++i)
             for (int j = 0; j < n; ++j)
-                k(i, j) = kernel_->evaluate (t[i], x_[j], &flag);
+                k(i, j) = kernel_->evaluate (t.row(i), x_.row(j), &flag);
 
         // Compute the mean prediction.
         mu = k * compute_alpha(y);
@@ -168,7 +168,7 @@ public:
         cov = MatrixXd (nt, nt);
         for (int i = 0; i < nt; ++i)
             for (int j = 0; j < nt; ++j)
-                cov(i, j) = kernel_->evaluate (t[i], t[j], &flag);
+                cov(i, j) = kernel_->evaluate (t.row(i), t.row(j), &flag);
         MatrixXd v(nt, nt),
                  kt = k.transpose();
         solver_->solve(kt, v);
@@ -183,7 +183,7 @@ private:
     K* kernel_;
     HODLRSolverMatrix<K>* matrix_;
     HODLR_Tree<HODLRSolverMatrix<K> >* solver_;
-    VectorXd x_, yerr_;
+    MatrixXd x_;
 
 };
 

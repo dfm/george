@@ -8,6 +8,26 @@ __all__ = ["GaussianProcess"]
 import numpy as np
 from ._george import _george
 
+try:
+    from scipy.spatial import cKDTree
+except ImportError:
+    cKDTree = None
+
+
+def nd_sort_samples(samples):
+    if cKDTree is None:
+        raise ImportError("scipy.spatial.cKDTree is required for N-D sorting")
+
+    # Check the shape of the sample list.
+    assert len(samples.shape) == 2
+
+    # Build a KD-tree on the samples.
+    tree = cKDTree(samples)
+
+    # Compute the distances.
+    d, i = tree.query(samples[0], k=len(samples))
+    return i
+
 
 class GaussianProcess(object):
     """
@@ -37,7 +57,29 @@ class GaussianProcess(object):
         self._gp = _george(v, self.nleaf, self.tol)
         self._kernel = v
 
-    def compute(self, x, yerr):
+    def _parse_samples(self, t, sort):
+        t = np.atleast_1d(t)
+        if len(t.shape) == 1:
+            # Deal with one-dimensional data.
+            if sort:
+                inds = np.argsort(t)
+            else:
+                inds = np.arange(len(t), dtype=int)
+            t = np.atleast_2d(t).T
+        elif sort:
+            # Sort the data using a KD-tree.
+            inds = nd_sort_samples(t)
+        else:
+            # Otherwise, assume that the samples are sorted.
+            inds = np.arange(t.shape[0], dtype=int)
+
+        # Double check the dimensions against the kernel.
+        if len(t.shape) != 2 or t.shape[1] != self.kernel.ndim:
+            raise ValueError("Dimension mismatch")
+
+        return t[inds].T, inds
+
+    def compute(self, x, yerr, sort=True):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
@@ -49,7 +91,8 @@ class GaussianProcess(object):
             The uncertainties on the data points at coordinates ``x``.
 
         """
-        return self._gp.compute(x, yerr)
+        x, inds = self._parse_samples(x, sort)
+        return self._gp.compute(x, yerr[inds])
 
     def lnlikelihood(self, y):
         """
@@ -84,9 +127,10 @@ class GaussianProcess(object):
             The predictive covariance.
 
         """
+        t, i = self._parse_samples(t, False)
         return self._gp.predict(y, t)
 
-    def sample_conditional(self, y, t, N=1, size=None):
+    def sample_conditional(self, y, t, N=1, size=None, sort=True):
         """
         Draw samples from the predictive conditional distribution.
 
@@ -128,8 +172,12 @@ class GaussianProcess(object):
         """
         if size is not None:
             N = size
-        cov = self._gp.get_matrix(t)
+        cov = self.get_matrix(t)
         samples = np.random.multivariate_normal(np.zeros(len(t)), cov, size=N)
         if N == 1:
             return samples[0]
         return samples
+
+    def get_matrix(self, t):
+        t, i = self._parse_samples(t, False)
+        return self._gp.get_matrix(t)

@@ -2,6 +2,15 @@
 #define _GEORGE_KERNELS_H_
 
 #include <cmath>
+#include <Eigen/Dense>
+
+using Eigen::VectorXd;
+using Eigen::MatrixXd;
+
+using Eigen::Map;
+using Eigen::Stride;
+using Eigen::Dynamic;
+using Eigen::Unaligned;
 
 namespace george {
 namespace kernels {
@@ -12,8 +21,8 @@ namespace kernels {
 class Kernel {
 public:
     virtual ~Kernel () {};
-
-    virtual double evaluate (const double& x1, const double& x2, int *flag) const {
+    virtual double evaluate (const VectorXd& x1, const VectorXd& x2,
+                             int *flag) const {
         *flag = 0;
         return 0.0;
     };
@@ -33,7 +42,7 @@ public:
     Kernel* get_kernel1 () const { return kernel1_; };
     Kernel* get_kernel2 () const { return kernel2_; };
 
-    double evaluate (const double& x1, const double& x2, int *flag) const {
+    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
         int f1, f2;
         double k1 = kernel1_->evaluate(x1, x2, &f1),
           k2 = kernel2_->evaluate(x1, x2, &f2);
@@ -55,7 +64,7 @@ public:
     Kernel* get_kernel1 () const { return kernel1_; };
     Kernel* get_kernel2 () const { return kernel2_; };
 
-    double evaluate (const double& x1, const double& x2, int *flag) const {
+    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
         double k = kernel1_->evaluate(x1, x2, flag);
         if (!flag) return 0.0;
         return k * kernel2_->evaluate(x1, x2, flag);
@@ -71,9 +80,8 @@ private:
 //
 class ConstantKernel : public Kernel {
 public:
-    ConstantKernel (const double* value) : value_(value[0]) {};
-
-    double evaluate (const double& x1, const double& x2, int *flag) const {
+    ConstantKernel (const long ndim, const double* value) : value_(value[0]) {};
+    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
         *flag = 1;
         return value_*value_;
     };
@@ -84,53 +92,70 @@ private:
 
 class DotProductKernel : public Kernel {
 public:
-    DotProductKernel (const double* noop) {};
-
-    double evaluate (const double& x1, const double& x2, int *flag) const {
+    DotProductKernel (const long ndim, const double* noop) {};
+    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
         *flag = 1;
-        return x1 * x2;
+        return x1.dot(x2);
     };
 };
 
-class ExpKernel : public Kernel {
+// The array `cov` here must have the form `(a, b, c, ...)` when you want a
+// covariance function of the form:
+//
+//      a b d ...
+//      b c e ...
+//      d e f ...
+//       ...  ...
+//
+class CovKernel : public Kernel {
 public:
-    ExpKernel (const double* scale) { set_scale (scale[0]); };
-    void set_scale (const double v) { s_ = fabs(v); };
-
-    double evaluate (const double& x1, const double& x2, int *flag) const {
-        double d = x1 - x2;
-        *flag = 1;
-        return exp(-fabs(d) / s_);
+    CovKernel (const long ndim, const double* cov) {
+        int n = 0;
+        MatrixXd m(ndim, ndim);
+        for (int i = 0; i < ndim; ++i)
+            for (int j = 0; j <= i; ++j)
+                m(i, j) = cov[n++];
+        icov_ = Eigen::LDLT<MatrixXd, Eigen::Lower> (m);
     };
 
-private:
-    double s_;
+    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
+        VectorXd d = x1 - x2;
+        double r2 = d.dot(icov_.solve(d));
+        *flag = 1;
+        return get_value(r2);
+    };
+
+    virtual double get_value (const double r2) const {
+        return exp(-0.5 * r2);
+    };
+    Eigen::LDLT<MatrixXd, Eigen::Lower> icov_;
 };
 
-class ExpSquaredKernel : public Kernel {
+class ExpKernel : public CovKernel {
 public:
-    ExpSquaredKernel (const double* scale) { set_scale (scale[0]); };
-    void set_scale (const double v) { s2_ = v*v; };
-
-    double evaluate (const double& x1, const double& x2, int *flag) const {
-        double d = x1 - x2;
-        *flag = 1;
-        return exp(-0.5 * d * d / s2_);
+    ExpKernel (const long ndim, const double* cov) : CovKernel(ndim, cov) {};
+    double get_value (const double r2) const {
+        return exp(-sqrt(r2));
     };
+};
 
-private:
-    double s2_;
+class RBFKernel : public CovKernel {
+public:
+    RBFKernel (const long ndim, const double* cov) : CovKernel(ndim, cov) {};
+    double get_value (const double r2) const {
+        return exp(-0.5 * r2);
+    };
 };
 
 class CosineKernel : public Kernel {
 public:
-    CosineKernel (const double* period) { set_period (period[0]); };
-    void set_period (const double v) { omega_ = 2 * M_PI / fabs(v); };
-
-    double evaluate (const double& x1, const double& x2, int *flag) const {
-        double d = x1 - x2;
+    CosineKernel (const int ndim, const double* period) {
+        omega_ = 2 * M_PI / fabs(period[0]);
+    };
+    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
+        VectorXd d = x1 - x2;
         *flag = 1;
-        return cos(omega_ * d);
+        return cos(omega_ * sqrt(d.dot(d)));
     };
 
 private:
@@ -139,15 +164,13 @@ private:
 
 class ExpSine2Kernel : public Kernel {
 public:
-    ExpSine2Kernel (const double* params) {
-        set_gamma (params[0]);
-        set_period (params[1]);
+    ExpSine2Kernel (const int ndim, const double* params) {
+        gamma_ = fabs(params[0]);
+        omega_ = M_PI / fabs(params[1]);
     };
-    void set_gamma (const double v) { gamma_ = fabs(v); };
-    void set_period (const double v) { omega_ = M_PI / fabs(v); };
-
-    double evaluate (const double& x1, const double& x2, int *flag) const {
-        double d = x1 - x2, s = sin(omega_ * d);
+    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
+        VectorXd d = x1 - x2;
+        double s = sin(omega_ * sqrt(d.dot(d)));
         *flag = 1;
         return exp(-gamma_*s*s);
     };
@@ -157,34 +180,22 @@ private:
 };
 
 
-class Matern32Kernel : public Kernel {
+class Matern32Kernel : public CovKernel {
 public:
-    Matern32Kernel (const double* scale) { set_scale (scale[0]); };
-    void set_scale (const double v) { scale_ = fabs(v); };
-
-    double evaluate (const double& x1, const double& x2, int *flag) const {
-        double r = sqrt(3.0) / scale_ * fabs(x1 - x2);
-        *flag = 1;
+    Matern32Kernel (const long ndim, const double* cov) : CovKernel(ndim, cov) {};
+    double get_value (const double r2) const {
+        double r = sqrt(3.0 * r2);
         return (1.0 + r) * exp(-r);
     };
-
-private:
-    double scale_;
 };
 
-class Matern52Kernel : public Kernel {
+class Matern52Kernel : public CovKernel {
 public:
-    Matern52Kernel (const double* scale) { set_scale (scale[0]); };
-    void set_scale (const double v) { scale_ = fabs(v); };
-
-    double evaluate (const double& x1, const double& x2, int *flag) const {
-        double r = sqrt(5.0) / scale_ * fabs(x1 - x2);
-        *flag = 1;
+    Matern52Kernel (const long ndim, const double* cov) : CovKernel(ndim, cov) {};
+    double get_value (const double r2) const {
+        double r = sqrt(5.0 * r2);
         return (1.0 + r + r*r / 3.0) * exp(-r);
     };
-
-private:
-    double scale_;
 };
 
 }; // kernels
