@@ -4,7 +4,7 @@ George
 Fast Gaussian processes for regression
 --------------------------------------
 
-This is *one-dimensional* GP code built on top of Sivaram Ambikasaran's
+This is Gaussian process code built on top of Sivaram Ambikasaran's
 `HODLR solver <https://github.com/sivaramambikasaran/HODLR_Solver>`_
 designed to be fast on **huge** problems. So far it's only being used to
 model the noise in *Kepler* light curves but it should be more generally
