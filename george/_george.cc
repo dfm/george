@@ -115,8 +115,18 @@ kernels::Kernel* parse_kernel (PyObject* kernel)
     PyObject* ktype_obj = PyObject_GetAttrString(kernel, "kernel_type");
     long ktype = PyInt_AsLong(ktype_obj);
     Py_XDECREF(ktype_obj);
-    if (ktype_obj == NULL || PyErr_Occurred() != NULL) {
+    if (PyErr_Occurred() != NULL) {
         PyErr_SetString(PyExc_TypeError, "Invalid kernel type");
+        return NULL;
+    }
+
+    // Get the number of dimensions.
+    PyObject* ndim_obj = PyObject_GetAttrString(kernel, "ndim");
+    long ndim = PyInt_AsLong(ndim_obj);
+    Py_XDECREF(ndim_obj);
+    if (PyErr_Occurred() != NULL) {
+        PyErr_SetString(PyExc_TypeError,
+                        "Couldn't parse number of kernel dimensions");
         return NULL;
     }
 
@@ -139,21 +149,21 @@ kernels::Kernel* parse_kernel (PyObject* kernel)
 
 #define GEORGE_DEFINE_KERNEL(N,NAME) { \
     if (npars != N) { \
-        PyErr_SetString(PyExc_ValueError, "The NAME requires 2 parameters."); \
+        PyErr_SetString(PyExc_ValueError, "The NAME requires N parameters."); \
         Py_DECREF(pars_array); \
         return NULL; \
     } \
-    k = new kernels::NAME(pars); \
+    k = new kernels::NAME(ndim, pars); \
 }
 
     if (ktype == 0)      GEORGE_DEFINE_KERNEL (1, ConstantKernel)
     else if (ktype == 1) GEORGE_DEFINE_KERNEL (0, DotProductKernel)
-    else if (ktype == 2) GEORGE_DEFINE_KERNEL (1, ExpKernel)
-    else if (ktype == 3) GEORGE_DEFINE_KERNEL (1, ExpSquaredKernel)
+    else if (ktype == 2) GEORGE_DEFINE_KERNEL ((ndim*ndim+ndim)/2, ExpKernel)
+    else if (ktype == 3) GEORGE_DEFINE_KERNEL ((ndim*ndim+ndim)/2, RBFKernel)
     else if (ktype == 4) GEORGE_DEFINE_KERNEL (1, CosineKernel)
     else if (ktype == 5) GEORGE_DEFINE_KERNEL (2, ExpSine2Kernel)
-    else if (ktype == 6) GEORGE_DEFINE_KERNEL (1, Matern32Kernel)
-    else if (ktype == 7) GEORGE_DEFINE_KERNEL (1, Matern52Kernel)
+    else if (ktype == 6) GEORGE_DEFINE_KERNEL ((ndim*ndim+ndim)/2, Matern32Kernel)
+    else if (ktype == 7) GEORGE_DEFINE_KERNEL ((ndim*ndim+ndim)/2, Matern52Kernel)
     else PyErr_SetString(PyExc_TypeError, "Unknown kernel");
 
 #undef GEORGE_DEFINE_KERNEL
@@ -200,14 +210,10 @@ static PyObject* _george_compute (_george_object* self, PyObject* args)
     }
 
     // Get the dimensions.
-    int nsamples = (int)PyArray_DIM(x_array, 0);
-    if ((int)PyArray_NDIM(x_array) >= 2) {
-        Py_DECREF(x_array);
-        Py_DECREF(yerr_array);
-        PyErr_SetString(PyExc_ValueError, "George only works in 1D for now.");
-        return NULL;
-    }
-    if ((int)PyArray_DIM(yerr_array, 0) != nsamples) {
+    int nsamples = (int)PyArray_DIM(x_array, 1),
+        ndim = (int)PyArray_DIM(x_array, 0);
+    if ((int)PyArray_NDIM(x_array) != 2 ||
+            (int)PyArray_DIM(yerr_array, 0) != nsamples) {
         Py_DECREF(x_array);
         Py_DECREF(yerr_array);
         PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
@@ -219,8 +225,8 @@ static PyObject* _george_compute (_george_object* self, PyObject* args)
            * yerr = (double*)PyArray_DATA(yerr_array);
 
     // Map to vectors.
-    VectorXd x_vec = VectorXd::Map(x, nsamples),
-             yerr_vec = VectorXd::Map(yerr, nsamples);
+    MatrixXd x_vec = MatrixXd::Map(x, nsamples, ndim);
+    VectorXd yerr_vec = VectorXd::Map(yerr, nsamples);
 
     // Pre-compute the factorization.
     int info = self->solver->compute (x_vec, yerr_vec);
@@ -299,14 +305,10 @@ static PyObject* _george_predict (_george_object* self, PyObject* args)
 
     // Get the dimensions.
     int nsamples = (int)PyArray_DIM(y_array, 0),
-        ntest = (int)PyArray_DIM(x_array, 0);
-    if ((int)PyArray_NDIM(x_array) >= 2) {
-        Py_DECREF(x_array);
-        Py_DECREF(y_array);
-        PyErr_SetString(PyExc_ValueError, "George only works in 1D for now.");
-        return NULL;
-    }
-    if (self->solver->get_dimension() != nsamples) {
+        ntest = (int)PyArray_DIM(x_array, 0),
+        ndim = (int)PyArray_DIM(x_array, 1);
+    if ((int)PyArray_NDIM(x_array) != 2 ||
+            self->solver->get_dimension() != nsamples) {
         Py_DECREF(x_array);
         Py_DECREF(y_array);
         PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
@@ -319,8 +321,8 @@ static PyObject* _george_predict (_george_object* self, PyObject* args)
 
     // Compute the mean.
     VectorXd y_vec = VectorXd::Map(y, nsamples),
-             x_vec = VectorXd::Map(x, ntest),
              mu_vec;
+    MatrixXd x_vec = MatrixXd::Map(x, ntest, ndim);
     MatrixXd cov_mat;
     self->solver->predict(y_vec, x_vec, mu_vec, cov_mat);
 
@@ -380,15 +382,17 @@ static PyObject* _george_get_matrix (_george_object* self, PyObject* args)
     }
 
     // Get the dimensions.
-    int n = (int)PyArray_DIM(t_array, 0);
-    if ((int)PyArray_NDIM(t_array) >= 2) {
+    int n = (int)PyArray_DIM(t_array, 1),
+        ndim = (int)PyArray_DIM(t_array, 0);
+    if ((int)PyArray_NDIM(t_array) != 2) {
         Py_DECREF(t_array);
-        PyErr_SetString(PyExc_ValueError, "George only works in 1D for now.");
+        PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
         return NULL;
     }
 
     // Access the data.
     double* t = (double*) PyArray_DATA(t_array);
+    MatrixXd tm = MatrixXd::Map(t, n, ndim);
 
     // Allocate the output arrays.
     npy_intp dim[] = {n, n};
@@ -405,7 +409,7 @@ static PyObject* _george_get_matrix (_george_object* self, PyObject* args)
     kernels::Kernel* kernel = self->kernel;
     for (int i = 0; i < n; ++i)
         for (int j = 0; j < n; ++j)
-            matrix[i*n+j] = kernel->evaluate(t[i], t[j], &flag);
+            matrix[i*n+j] = kernel->evaluate(tm.row(i), tm.row(j), &flag);
 
     Py_DECREF(t_array);
     return (PyObject*)out_array;

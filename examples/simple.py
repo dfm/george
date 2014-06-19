@@ -51,7 +51,7 @@ fig = pl.figure(figsize=(8, 8))
 for i, (name, runs) in enumerate(experiments):
     fig.clf()
     gp = george.GaussianProcess(runs[0][2])
-    img = gp._gp.get_matrix(t)
+    img = gp.get_matrix(t)
     ax = fig.add_subplot(111)
     ax.set_title(name)
     ax.imshow(img, cmap="gray", interpolation="nearest")
