@@ -72,7 +72,7 @@ public:
     //
     // Pre-compute and factorize the kernel matrix.
     //
-    int compute (const MatrixXd x, const VectorXd& yerr) {
+    int compute (const MatrixXd x, const VectorXd& yerr, int seed) {
         int flag;
 
         // Check the dimensions.
@@ -96,6 +96,7 @@ public:
 
         // Set up the solver object.
         if (solver_ != NULL) delete solver_;
+        srand(seed);
         solver_ = new HODLR_Tree<HODLRSolverMatrix<K> > (matrix_, n, nleaf_);
         solver_->assemble_Matrix(diag, tol_);
 

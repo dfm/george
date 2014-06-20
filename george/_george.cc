@@ -192,10 +192,11 @@ static int _george_init(_george_object* self, PyObject* args, PyObject* kwds)
 
 static PyObject* _george_compute (_george_object* self, PyObject* args)
 {
+    int seed;
     PyObject* x_obj, * yerr_obj;
 
     // Parse the input arguments.
-    if (!PyArg_ParseTuple(args, "OO", &x_obj, &yerr_obj))
+    if (!PyArg_ParseTuple(args, "OOi", &x_obj, &yerr_obj, &seed))
         return NULL;
 
     // Decode the numpy arrays.
@@ -229,7 +230,7 @@ static PyObject* _george_compute (_george_object* self, PyObject* args)
     VectorXd yerr_vec = VectorXd::Map(yerr, nsamples);
 
     // Pre-compute the factorization.
-    int info = self->solver->compute (x_vec, yerr_vec);
+    int info = self->solver->compute (x_vec, yerr_vec, seed);
 
     // Clean up.
     Py_DECREF(x_array);

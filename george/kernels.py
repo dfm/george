@@ -1,8 +1,6 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import (division, print_function, absolute_import,
-                        unicode_literals)
+from __future__ import division, print_function
 
 __all__ = ["Sum", "Product", "Kernel",
            "ConstantKernel", "DotProductKernel", "ExpKernel",
@@ -13,6 +11,10 @@ import numpy as np
 
 
 class Kernel(object):
+    """
+    The abstract kernel type.
+
+    """
 
     is_kernel = True
     kernel_type = -1
@@ -66,6 +68,17 @@ class Product(_operator):
 
 
 class ConstantKernel(Kernel):
+    """
+    This kernel returns the constant
+
+    .. math::
+
+        k(x_i,\,x_j) = c^2
+
+    where :math:`c` is the single parameter ``value``.
+
+    """
+
     kernel_type = 0
 
     def __init__(self, value, ndim=1):
@@ -102,6 +115,17 @@ class ExpKernel(_cov_kernel):
 
 
 class ExpSquaredKernel(_cov_kernel):
+    r"""
+    The **exponential-squared** kernel.
+
+    .. math::
+
+        k(x_i,\,x_j) = \exp \left ( -\frac{1}{2}\,\mathbf{r}^\mathrm{T}\,
+                                   C\,\mathbf{r} \right )
+
+    where
+
+    """
     kernel_type = 3
 
 

@@ -5,6 +5,7 @@ from __future__ import division, print_function, absolute_import
 
 __all__ = ["GaussianProcess"]
 
+import time
 import numpy as np
 from ._george import _george
 
@@ -79,7 +80,7 @@ class GaussianProcess(object):
 
         return t[inds].T, inds
 
-    def compute(self, x, yerr, sort=True):
+    def compute(self, x, yerr, sort=True, seed=None):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
@@ -91,8 +92,10 @@ class GaussianProcess(object):
             The uncertainties on the data points at coordinates ``x``.
 
         """
+        if seed is None:
+            seed = int(time.time())
         x0, self.inds = self._parse_samples(np.array(x), sort)
-        return self._gp.compute(x0, yerr[self.inds])
+        return self._gp.compute(x0, yerr[self.inds], seed)
 
     def lnlikelihood(self, y):
         """
