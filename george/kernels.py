@@ -61,10 +61,16 @@ class Sum(_operator):
     is_kernel = False
     operator_type = 0
 
+    def __call__(self, x1, x2):
+        return self.k1(x1, x2) + self.k2(x1, x2)
+
 
 class Product(_operator):
     is_kernel = False
     operator_type = 1
+
+    def __call__(self, x1, x2):
+        return self.k1(x1, x2) * self.k2(x1, x2)
 
 
 class ConstantKernel(Kernel):
@@ -83,6 +89,9 @@ class ConstantKernel(Kernel):
 
     def __init__(self, value, ndim=1):
         super(ConstantKernel, self).__init__(value, ndim=ndim)
+
+    def __call__(self, x1, x2):
+        return self.pars[0] ** 2
 
 
 class DotProductKernel(Kernel):
@@ -109,9 +118,34 @@ class _cov_kernel(Kernel):
                     raise ValueError("Dimension mismatch")
         super(_cov_kernel, self).__init__(*pars, ndim=ndim)
 
+        # Build the covariance matrix.
+        self.matrix = np.zeros((self.ndim, self.ndim))
+        self.matrix[np.tril_indices_from(self.matrix)] = self.pars
+        self.matrix += self.matrix.T
+        self.matrix[np.diag_indices_from(self.matrix)] *= 0.5
+
+    def __call__(self, x1, x2):
+        dx = x1 - x2
+        dxf = dx.reshape((-1, self.ndim)).T
+        r = np.sum(dxf * np.linalg.solve(self.matrix, dxf), axis=0)
+        r = r.reshape(dx.shape[:-1])
+        return self.get_value(r)
+
 
 class ExpKernel(_cov_kernel):
+    r"""
+    The **exponential** kernel.
+
+    .. math::
+
+        k(x_i,\,x_j) = \exp \left ( -\sqrt{\mathbf{r}^\mathrm{T}\,
+                                   C^{-1}\,\mathbf{r}} \right )
+
+    """
     kernel_type = 2
+
+    def get_value(self, dx):
+        return np.exp(-np.sqrt(dx))
 
 
 class ExpSquaredKernel(_cov_kernel):
@@ -121,12 +155,13 @@ class ExpSquaredKernel(_cov_kernel):
     .. math::
 
         k(x_i,\,x_j) = \exp \left ( -\frac{1}{2}\,\mathbf{r}^\mathrm{T}\,
-                                   C\,\mathbf{r} \right )
-
-    where
+                                   C^{-1}\,\mathbf{r} \right )
 
     """
     kernel_type = 3
+
+    def get_value(self, dx):
+        return np.exp(-0.5 * dx)
 
 
 class RBFKernel(_cov_kernel):
@@ -150,6 +185,14 @@ class ExpSine2Kernel(Kernel):
 class Matern32Kernel(_cov_kernel):
     kernel_type = 6
 
+    def get_value(self, dx):
+        r = np.sqrt(3.0 * dx)
+        return (1.0 + r) * np.exp(-r)
+
 
 class Matern52Kernel(_cov_kernel):
     kernel_type = 7
+
+    def get_value(self, dx):
+        r = np.sqrt(5.0 * dx)
+        return (1.0 + r + r*r / 3.0) * np.exp(-r)
