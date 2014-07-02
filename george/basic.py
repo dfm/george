@@ -136,7 +136,7 @@ class GaussianProcess(object):
 
         return mu, cov
 
-    def sample_conditional(self, y, t, N=1, size=None, sort=True):
+    def sample_conditional(self, y, t, size=1):
         """
         Draw samples from the predictive conditional distribution.
 
@@ -147,22 +147,17 @@ class GaussianProcess(object):
             The coordinates where the predictive distribution should be
             computed.
 
-        :param N: (optional)
+        :param size: (optional)
             The number of samples to draw.
 
         :returns samples: ``(N, ntest)``
             A list of predictions at coordinates given by ``t``.
 
         """
-        if size is not None:
-            N = size
         mu, cov = self.predict(y, t)
-        samples = np.random.multivariate_normal(mu, cov, size=N)
-        if N == 1:
-            return samples[0]
-        return samples
+        return multivariate_gaussian_samples(cov, size, mean=mu)
 
-    def sample_prior(self, t, N=1, size=None):
+    def sample(self, t, size=1):
         """
         Draw samples from the prior distribution.
 
@@ -176,16 +171,20 @@ class GaussianProcess(object):
             A list of predictions at coordinates given by ``t``.
 
         """
-        if size is not None:
-            N = size
         cov = self.get_matrix(t)
-        samples = np.random.multivariate_normal(np.zeros(len(t)), cov, size=N)
-        if N == 1:
-            return samples[0]
-        return samples
+        return multivariate_gaussian_samples(cov, size)
 
     def get_matrix(self, t):
         return self._kernel(self._parse_samples(t, False)[0])
+
+
+def multivariate_gaussian_samples(matrix, N, mean=None):
+    if mean is None:
+        mean = np.zeros(len(matrix))
+    samples = np.random.multivariate_normal(mean, matrix, N)
+    if N == 1:
+        return samples[0]
+    return samples
 
 
 def nd_sort_samples(samples):
