@@ -2,14 +2,14 @@
 
 from __future__ import division, print_function
 
-__all__ = []
+__all__ = ["GP"]
 
 import numpy as np
 from scipy.spatial import cKDTree
 from scipy.linalg import cho_factor, cho_solve
 
 
-class GaussianProcess(object):
+class GP(object):
 
     def __init__(self, kernel):
         self.kernel = kernel

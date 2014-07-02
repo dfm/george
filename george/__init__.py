@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 __version__ = "2.1.0-dev"
@@ -9,6 +8,8 @@ except NameError:
     __GEORGE_SETUP__ = False
 
 if not __GEORGE_SETUP__:
-    # __all__ = ["GaussianProcess", "kernels"]
-    # from .george import GaussianProcess
+    __all__ = ["kernels", "GP", "HODLRGP"]
+
     from . import kernels
+    from .basic import GP
+    from .hodlr import HODLRGP

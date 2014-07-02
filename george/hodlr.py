@@ -1,18 +1,17 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import division, print_function, absolute_import
+from __future__ import division, print_function
 
 __all__ = ["HODLRGP"]
 
 import time
 import numpy as np
 
+from .basic import GP
 from ._george import _george
-from .basic import GaussianProcess
 
 
-class HODLRGP(GaussianProcess):
+class HODLRGP(GP):
     """
     This is the money object.
 
