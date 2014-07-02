@@ -48,8 +48,6 @@ def test_predict(N=20, N2=50, seed=123):
     gp2.compute(t, yerr)
     mu2, cov2 = gp2.predict(y, t0)
 
-    print(cov1, cov2)
-
     assert np.allclose(mu1, mu2), "The predictive means don't match"
     assert np.allclose(cov1, cov2), \
         "The predictive covariances don't match"
