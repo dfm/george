@@ -3,34 +3,16 @@
 
 from __future__ import division, print_function, absolute_import
 
-__all__ = ["GaussianProcess"]
+__all__ = ["HODLRGP"]
 
 import time
 import numpy as np
+
 from ._george import _george
-
-try:
-    from scipy.spatial import cKDTree
-except ImportError:
-    cKDTree = None
+from .basic import GaussianProcess
 
 
-def nd_sort_samples(samples):
-    if cKDTree is None:
-        raise ImportError("scipy.spatial.cKDTree is required for N-D sorting")
-
-    # Check the shape of the sample list.
-    assert len(samples.shape) == 2
-
-    # Build a KD-tree on the samples.
-    tree = cKDTree(samples)
-
-    # Compute the distances.
-    d, i = tree.query(samples[0], k=len(samples))
-    return i
-
-
-class GaussianProcess(object):
+class HODLRGP(GaussianProcess):
     """
     This is the money object.
 
@@ -43,7 +25,7 @@ class GaussianProcess(object):
     def __init__(self, kernel, nleaf=100, tol=1e-12):
         self.nleaf = nleaf
         self.tol = tol
-        self.kernel = kernel
+        super(HODLRGP, self).__init__(kernel)
 
     @property
     def computed(self):
@@ -57,28 +39,6 @@ class GaussianProcess(object):
     def kernel(self, v):
         self._gp = _george(v, self.nleaf, self.tol)
         self._kernel = v
-
-    def _parse_samples(self, t, sort):
-        t = np.atleast_1d(t)
-        if len(t.shape) == 1:
-            # Deal with one-dimensional data.
-            if sort:
-                inds = np.argsort(t)
-            else:
-                inds = np.arange(len(t), dtype=int)
-            t = np.atleast_2d(t).T
-        elif sort:
-            # Sort the data using a KD-tree.
-            inds = nd_sort_samples(t)
-        else:
-            # Otherwise, assume that the samples are sorted.
-            inds = np.arange(t.shape[0], dtype=int)
-
-        # Double check the dimensions against the kernel.
-        if len(t.shape) != 2 or t.shape[1] != self.kernel.ndim:
-            raise ValueError("Dimension mismatch")
-
-        return t[inds].T, inds
 
     def compute(self, x, yerr, sort=True, seed=None):
         """
@@ -94,25 +54,15 @@ class GaussianProcess(object):
         """
         if seed is None:
             seed = int(time.time())
-        x0, self.inds = self._parse_samples(np.array(x), sort)
-        return self._gp.compute(x0, yerr[self.inds], seed)
 
-    def lnlikelihood(self, y):
-        """
-        Compute the log-likelihood of a set of observations under the Gaussian
-        process model. You must call ``compute`` before this function.
+        # Parse the input coordinates.
+        self._x, self.inds = self._parse_samples(np.array(x), sort)
+        self._yerr = self._check_dimensions(yerr)[self.inds]
 
-        :param y: ``(nsamples, )``
-            The observations at the coordinates provided in the ``compute``
-            step.
+        return self._gp.compute(self._x, self._yerr, seed)
 
-        """
-        if not self.computed:
-            raise RuntimeError("You need to compute the model first")
-        ll = self._gp.lnlikelihood(y[self.inds])
-        if np.isfinite(ll):
-            return ll
-        return -np.inf
+    def _compute_lnlike(self, r):
+        return self._gp.lnlikelihood(r)
 
     def predict(self, y, t):
         """
@@ -132,57 +82,8 @@ class GaussianProcess(object):
             The predictive covariance.
 
         """
-        t, i = self._parse_samples(t, False)
-        return self._gp.predict(y, t)
-
-    def sample_conditional(self, y, t, N=1, size=None, sort=True):
-        """
-        Draw samples from the predictive conditional distribution.
-
-        :param y: ``(nsamples, )``
-            The observations to condition the model on.
-
-        :param t: ``(ntest, )`` or ``(ntest, ndim)``
-            The coordinates where the predictive distribution should be
-            computed.
-
-        :param N: (optional)
-            The number of samples to draw.
-
-        :returns samples: ``(N, ntest)``
-            A list of predictions at coordinates given by ``t``.
-
-        """
-        if size is not None:
-            N = size
-        mu, cov = self.predict(y, t)
-        samples = np.random.multivariate_normal(mu, cov, size=N)
-        if N == 1:
-            return samples[0]
-        return samples
-
-    def sample_prior(self, t, N=1, size=None):
-        """
-        Draw samples from the prior distribution.
-
-        :param t: ``(ntest, )`` or ``(ntest, ndim)``
-            The coordinates where the model should be sampled.
-
-        :param N: (optional)
-            The number of samples to draw.
-
-        :returns samples: ``(N, ntest)``
-            A list of predictions at coordinates given by ``t``.
-
-        """
-        if size is not None:
-            N = size
-        cov = self.get_matrix(t)
-        samples = np.random.multivariate_normal(np.zeros(len(t)), cov, size=N)
-        if N == 1:
-            return samples[0]
-        return samples
+        return self._gp.predict(self._check_dimensions(y),
+                                self._parse_samples(t, False)[0])
 
     def get_matrix(self, t):
-        t, i = self._parse_samples(t, False)
-        return self._gp.get_matrix(t)
+        return self._gp.get_matrix(self._parse_samples(t, False)[0])

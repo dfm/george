@@ -2,10 +2,13 @@
 
 from __future__ import division, print_function
 
-__all__ = ["Sum", "Product", "Kernel",
-           "ConstantKernel", "DotProductKernel", "ExpKernel",
-           "ExpSquaredKernel", "RBFKernel", "CosineKernel", "ExpSine2Kernel",
-           "Matern32Kernel", "Matern52Kernel"]
+__all__ = [
+    "Sum", "Product", "Kernel",
+    "ConstantKernel", "DotProductKernel",
+    "CovKernel", "ExpKernel", "ExpSquaredKernel", "RBFKernel",
+    "CosineKernel", "ExpSine2Kernel",
+    "Matern32Kernel", "Matern52Kernel",
+]
 
 import numpy as np
 
@@ -74,7 +77,7 @@ class Product(_operator):
 
 
 class ConstantKernel(Kernel):
-    """
+    r"""
     This kernel returns the constant
 
     .. math::
@@ -84,24 +87,34 @@ class ConstantKernel(Kernel):
     where :math:`c` is the single parameter ``value``.
 
     """
-
     kernel_type = 0
 
     def __init__(self, value, ndim=1):
         super(ConstantKernel, self).__init__(value, ndim=ndim)
 
     def __call__(self, x1, x2):
-        return self.pars[0] ** 2
+        return self.pars[0] ** 2 + np.sum(np.zeros_like(x1 - x2), axis=-1)
 
 
 class DotProductKernel(Kernel):
+    r"""
+    The **dot-product** kernel
+
+    .. math::
+
+        k(x_i,\,x_j) = x_i^{\mathrm{T}} \cdot x_j
+
+    """
     kernel_type = 1
 
     def __init__(self, ndim=1):
         super(DotProductKernel, self).__init__(ndim=ndim)
 
+    def __call__(self, x1, x2):
+        return np.sum(x1 * x2, axis=-1)
 
-class _cov_kernel(Kernel):
+
+class CovKernel(Kernel):
 
     def __init__(self, cov, ndim=1):
         inds = np.tri(ndim, dtype=bool)
@@ -116,7 +129,7 @@ class _cov_kernel(Kernel):
                 pars = np.array(cov)
                 if l != (ndim*ndim + ndim) / 2:
                     raise ValueError("Dimension mismatch")
-        super(_cov_kernel, self).__init__(*pars, ndim=ndim)
+        super(CovKernel, self).__init__(*pars, ndim=ndim)
 
         # Build the covariance matrix.
         self.matrix = np.zeros((self.ndim, self.ndim))
@@ -131,8 +144,11 @@ class _cov_kernel(Kernel):
         r = r.reshape(dx.shape[:-1])
         return self.get_value(r)
 
+    def get_value(self, r):
+        raise NotImplementedError("Subclasses must implement this method.")
 
-class ExpKernel(_cov_kernel):
+
+class ExpKernel(CovKernel):
     r"""
     The **exponential** kernel.
 
@@ -148,7 +164,7 @@ class ExpKernel(_cov_kernel):
         return np.exp(-np.sqrt(dx))
 
 
-class ExpSquaredKernel(_cov_kernel):
+class ExpSquaredKernel(CovKernel):
     r"""
     The **exponential-squared** kernel.
 
@@ -164,25 +180,23 @@ class ExpSquaredKernel(_cov_kernel):
         return np.exp(-0.5 * dx)
 
 
-class RBFKernel(_cov_kernel):
-    kernel_type = 3
+class RBFKernel(ExpSquaredKernel):
+    r"""
+    An alias for :class:`ExpSquaredKernel`.
+
+    """
 
 
-class CosineKernel(Kernel):
-    kernel_type = 4
+class Matern32Kernel(CovKernel):
+    r"""
+    The **Matern-3/2** kernel.
 
-    def __init__(self, period, ndim=1):
-        super(CosineKernel, self).__init__(period, ndim=ndim)
+    .. math::
 
+        k(r) = \left( 1+\sqrt{3\,r} \right)\,
+               \exp \left (-\sqrt{3\,r} \right )
 
-class ExpSine2Kernel(Kernel):
-    kernel_type = 5
-
-    def __init__(self, gamma, period, ndim=1):
-        super(ExpSine2Kernel, self).__init__(gamma, period, ndim=ndim)
-
-
-class Matern32Kernel(_cov_kernel):
+    """
     kernel_type = 6
 
     def get_value(self, dx):
@@ -190,9 +204,42 @@ class Matern32Kernel(_cov_kernel):
         return (1.0 + r) * np.exp(-r)
 
 
-class Matern52Kernel(_cov_kernel):
+class Matern52Kernel(CovKernel):
+    r"""
+    The **Matern-5/2** kernel.
+
+    .. math::
+
+        k(r) = \left( 1+\sqrt{5\,r} + \frac{5\,r}{3} \right)\,
+               \exp \left (-\sqrt{5\,r} \right )
+
+    """
     kernel_type = 7
 
     def get_value(self, dx):
         r = np.sqrt(5.0 * dx)
         return (1.0 + r + r*r / 3.0) * np.exp(-r)
+
+
+class CosineKernel(Kernel):
+    kernel_type = 4
+
+    def __init__(self, period, ndim=1):
+        super(CosineKernel, self).__init__(period, ndim=ndim)
+        self._omega = 2 * np.pi / np.abs(period)
+
+    def __call__(self, x1, x2):
+        return np.cos(self._omega * np.sqrt(np.sum((x1 - x2) ** 2, axis=-1)))
+
+
+class ExpSine2Kernel(Kernel):
+    kernel_type = 5
+
+    def __init__(self, gamma, period, ndim=1):
+        super(ExpSine2Kernel, self).__init__(gamma, period, ndim=ndim)
+        self._gamma = np.abs(gamma)
+        self._omega = np.pi / np.abs(period)
+
+    def __call__(self, x1, x2):
+        s = np.sin(self._omega * np.sqrt(np.sum((x1 - x2) ** 2, axis=-1)))
+        return np.exp(-self._gamma * s**2)

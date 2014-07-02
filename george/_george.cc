@@ -8,6 +8,10 @@ using namespace george;
 
 using george::HODLRSolver;
 
+// Eigen is column major and numpy is row major. Barf.
+typedef Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
+                          Eigen::RowMajor> > RowMajorMap;
+
 #define PARSE_ARRAY(o) (PyArrayObject*) PyArray_FROM_OTF(o, NPY_DOUBLE, \
         NPY_IN_ARRAY)
 
@@ -211,8 +215,8 @@ static PyObject* _george_compute (_george_object* self, PyObject* args)
     }
 
     // Get the dimensions.
-    int nsamples = (int)PyArray_DIM(x_array, 1),
-        ndim = (int)PyArray_DIM(x_array, 0);
+    int nsamples = (int)PyArray_DIM(x_array, 0),
+        ndim = (int)PyArray_DIM(x_array, 1);
     if ((int)PyArray_NDIM(x_array) != 2 ||
             (int)PyArray_DIM(yerr_array, 0) != nsamples) {
         Py_DECREF(x_array);
@@ -226,7 +230,7 @@ static PyObject* _george_compute (_george_object* self, PyObject* args)
            * yerr = (double*)PyArray_DATA(yerr_array);
 
     // Map to vectors.
-    MatrixXd x_vec = MatrixXd::Map(x, nsamples, ndim);
+    MatrixXd x_vec = RowMajorMap(x, nsamples, ndim);
     VectorXd yerr_vec = VectorXd::Map(yerr, nsamples);
 
     // Pre-compute the factorization.
@@ -323,7 +327,7 @@ static PyObject* _george_predict (_george_object* self, PyObject* args)
     // Compute the mean.
     VectorXd y_vec = VectorXd::Map(y, nsamples),
              mu_vec;
-    MatrixXd x_vec = MatrixXd::Map(x, ntest, ndim);
+    MatrixXd x_vec = RowMajorMap(x, ntest, ndim);
     MatrixXd cov_mat;
     self->solver->predict(y_vec, x_vec, mu_vec, cov_mat);
 
@@ -382,18 +386,20 @@ static PyObject* _george_get_matrix (_george_object* self, PyObject* args)
         return NULL;
     }
 
-    // Get the dimensions.
-    int n = (int)PyArray_DIM(t_array, 1),
-        ndim = (int)PyArray_DIM(t_array, 0);
+    // Check the shape of the input array.
     if ((int)PyArray_NDIM(t_array) != 2) {
         Py_DECREF(t_array);
         PyErr_SetString(PyExc_ValueError, "Dimension mismatch");
         return NULL;
     }
 
+    // Get the dimensions of the problem.
+    int n = (int)PyArray_DIM(t_array, 0),
+        ndim = (int)PyArray_DIM(t_array, 1);
+
     // Access the data.
     double* t = (double*) PyArray_DATA(t_array);
-    MatrixXd tm = MatrixXd::Map(t, n, ndim);
+    MatrixXd tm = RowMajorMap(t, n, ndim);
 
     // Allocate the output arrays.
     npy_intp dim[] = {n, n};
@@ -406,11 +412,16 @@ static PyObject* _george_get_matrix (_george_object* self, PyObject* args)
 
     // Copy over the result.
     int flag;
-    double *matrix = (double*)PyArray_DATA(out_array);
+    double* matrix = (double*)PyArray_DATA(out_array), value;
     kernels::Kernel* kernel = self->kernel;
-    for (int i = 0; i < n; ++i)
-        for (int j = 0; j < n; ++j)
-            matrix[i*n+j] = kernel->evaluate(tm.row(i), tm.row(j), &flag);
+    for (int i = 0; i < n; ++i) {
+        matrix[i*n+i] = kernel->evaluate(tm.row(i), tm.row(i), &flag);
+        for (int j = 0; j < i; ++j) {
+            value = kernel->evaluate(tm.row(i), tm.row(j), &flag);
+            matrix[i*n+j] = value;
+            matrix[j*n+i] = value;
+        }
+    }
 
     Py_DECREF(t_array);
     return (PyObject*)out_array;

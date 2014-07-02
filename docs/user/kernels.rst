@@ -14,3 +14,5 @@ Combining Kernels
 
 .. autoclass:: george.kernels.ConstantKernel
 .. autoclass:: george.kernels.ExpSquaredKernel
+.. autoclass:: george.kernels.Matern32Kernel
+.. autoclass:: george.kernels.Matern52Kernel

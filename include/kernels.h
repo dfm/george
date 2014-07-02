@@ -147,6 +147,24 @@ public:
     };
 };
 
+class Matern32Kernel : public CovKernel {
+public:
+    Matern32Kernel (const long ndim, const double* cov) : CovKernel(ndim, cov) {};
+    double get_value (const double r2) const {
+        double r = sqrt(3.0 * r2);
+        return (1.0 + r) * exp(-r);
+    };
+};
+
+class Matern52Kernel : public CovKernel {
+public:
+    Matern52Kernel (const long ndim, const double* cov) : CovKernel(ndim, cov) {};
+    double get_value (const double r2) const {
+        double r = sqrt(5.0 * r2);
+        return (1.0 + r + r*r / 3.0) * exp(-r);
+    };
+};
+
 class CosineKernel : public Kernel {
 public:
     CosineKernel (const int ndim, const double* period) {
@@ -177,25 +195,6 @@ public:
 
 private:
     double gamma_, omega_;
-};
-
-
-class Matern32Kernel : public CovKernel {
-public:
-    Matern32Kernel (const long ndim, const double* cov) : CovKernel(ndim, cov) {};
-    double get_value (const double r2) const {
-        double r = sqrt(3.0 * r2);
-        return (1.0 + r) * exp(-r);
-    };
-};
-
-class Matern52Kernel : public CovKernel {
-public:
-    Matern52Kernel (const long ndim, const double* cov) : CovKernel(ndim, cov) {};
-    double get_value (const double r2) const {
-        double r = sqrt(5.0 * r2);
-        return (1.0 + r + r*r / 3.0) * exp(-r);
-    };
 };
 
 }; // kernels
