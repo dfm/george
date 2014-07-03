@@ -276,7 +276,7 @@ class CosineKernel(Kernel):
     .. math::
 
         k(\mathbf{x}_i,\,\mathbf{x}_j) =
-            \cos\left(\frac{2\,\pi}{P}\,|x_i-x_j| \right)
+            \cos\left(\frac{2\,\pi}{P}\,\left|x_i-x_j\right| \right)
 
     where :math:`P` is the period.
 
@@ -308,7 +308,9 @@ class ExpSine2Kernel(Kernel):
     .. math::
 
         k(\mathbf{x}_i,\,\mathbf{x}_j) =
-            \sin \left( \right)
+            \sin \left( -\Gamma\,\sin^2\left[
+                \frac{\pi}{P}\,\left|x_i-x_j\right|
+            \right] \right)
 
     where :math:`\Gamma` is the "scale" of the correlation and :math:`P` is
     the period of the oscillation measured in the same units as

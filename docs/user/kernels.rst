@@ -4,12 +4,25 @@
 Kernels
 =======
 
-There are a bunch of standard default kernels:
+George comes equipped with a suite of standard covariance functions or
+kernels that can be combined to build more complex models.
+The standard kernels fall into the following categories:
 
-1. constant kernel (:class:`ConstantKernel`),
-2. exponential-squared (:class:`ExpSquaredKernel`),
-3. dude.
+1. :ref:`basic-kernels` — trivial (constant or parameterless) functions,
+2. :ref:`radial-kernels` — functions that depend only on the radial distance
+   between points in some user-defined metric, and
+3. :ref:`periodic-kernels` — exactly period functions that, when combined with
+   a radial kernel, can model quasi-periodic signals.
 
+:ref:`combining-kernels` describes how to combine kernels to build more
+sophisticated models and :ref:`new-kernels` explains how you would go about
+incorporating a custom kernel.
+
+**Note:** every kernel takes an optional ``ndim`` keyword that must be set to
+the number of input dimensions for your problem.
+
+
+.. _basic-kernels:
 
 Basic Kernels
 -------------
@@ -17,6 +30,8 @@ Basic Kernels
 .. autoclass:: george.kernels.ConstantKernel
 .. autoclass:: george.kernels.DotProductKernel
 
+
+.. _radial-kernels:
 
 Radial Kernels
 --------------
@@ -29,6 +44,8 @@ Radial Kernels
 .. autoclass:: george.kernels.Matern52Kernel
 
 
+.. _periodic-kernels:
+
 Periodic Kernels
 ----------------
 
@@ -36,5 +53,17 @@ Periodic Kernels
 .. autoclass:: george.kernels.ExpSine2Kernel
 
 
+.. _combining-kernels:
+
 Combining Kernels
 -----------------
+
+*Coming soon*
+
+
+.. _new-kernels:
+
+Implementing New Kernels
+------------------------
+
+*Coming soon*
