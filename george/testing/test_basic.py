@@ -8,18 +8,18 @@ __all__ = ["test_basic", "test_predict", "test_sample"]
 import numpy as np
 
 from .. import kernels
-from ..george import HODLRGP
-from ..basic import GaussianProcess
+from ..hodlr import HODLRGP
+from ..basic import GP
 
 
-def test_basic(N=20, seed=123):
+def test_basic(N=1200, seed=123):
     kernel = 1e-6 * kernels.ExpKernel(1.0, 2)
     np.random.seed(seed)
-    t = np.random.randn(N, kernel.ndim)
+    t = 0.01 * N * np.random.rand(N, kernel.ndim)
     y = np.sin(np.sum(t**2, axis=1))
     yerr = 1e-6 * np.ones_like(y)
 
-    gp1 = GaussianProcess(kernel)
+    gp1 = GP(kernel)
     gp1.compute(t, yerr)
     ll1 = gp1.lnlikelihood(y)
 
@@ -40,7 +40,7 @@ def test_predict(N=20, N2=50, seed=123):
     y = np.sin(np.sum(t**2, axis=1))
     yerr = 1e-6 * np.ones_like(y)
 
-    gp1 = GaussianProcess(kernel)
+    gp1 = GP(kernel)
     gp1.compute(t, yerr)
     mu1, cov1 = gp1.predict(y, t0)
 
@@ -63,7 +63,7 @@ def test_sample(N=20, N2=50, seed=123):
     y = np.sin(np.sum(t**2, axis=1))
     yerr = 1e-6 * np.ones_like(y)
 
-    gp1 = GaussianProcess(kernel)
+    gp1 = GP(kernel)
     gp1.compute(t, yerr)
 
     np.random.seed(seed)

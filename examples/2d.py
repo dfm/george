@@ -16,15 +16,14 @@ from george.kernels import ExpSquaredKernel
 np.random.seed(12345)
 
 kernel = ExpSquaredKernel([3, 0.5], ndim=2)
-print(kernel.pars)
-gp = george.GaussianProcess(kernel, tol=1e-14)
+gp = george.HODLRGP(kernel)
 
-x, y = np.linspace(-5, 5, 42), np.linspace(-5, 5, 40)
+x, y = np.linspace(-5, 5, 62), np.linspace(-5, 5, 60)
 x, y = np.meshgrid(x, y, indexing="ij")
 shape = x.shape
 samples = np.vstack((x.flatten(), y.flatten())).T
-i = george.george.nd_sort_samples(samples)
 print(len(samples))
+i = george.utils.nd_sort_samples(samples)
 
 img = gp.get_matrix(samples[i])
 pl.imshow(img, cmap="gray", interpolation="nearest")
@@ -35,13 +34,12 @@ pl.savefig("2d-cov.png")
 
 pl.clf()
 z = np.empty(len(samples))
-z[i] = gp.sample_prior(samples[i])
+z[i] = gp.sample(samples[i])
 pl.pcolor(x, y, z.reshape(shape), cmap="gray")
 pl.colorbar()
 pl.savefig("2d.png")
 
 import time
-print("dude")
 
 s = time.time()
 gp.compute(samples, 1e-4*np.ones_like(z), sort=False)

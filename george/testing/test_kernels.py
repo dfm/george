@@ -7,7 +7,7 @@ import numpy as np
 from itertools import izip
 
 from .. import kernels
-from ..george import HODLRGP
+from ..hodlr import HODLRGP
 
 
 def do_kernel_t(kernel, N=20, seed=123):

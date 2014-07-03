@@ -5,8 +5,9 @@ from __future__ import division, print_function
 __all__ = ["GP"]
 
 import numpy as np
-from scipy.spatial import cKDTree
 from scipy.linalg import cho_factor, cho_solve
+
+from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 
 class GP(object):
@@ -175,25 +176,5 @@ class GP(object):
         return multivariate_gaussian_samples(cov, size)
 
     def get_matrix(self, t):
-        return self._kernel(self._parse_samples(t, False)[0])
-
-
-def multivariate_gaussian_samples(matrix, N, mean=None):
-    if mean is None:
-        mean = np.zeros(len(matrix))
-    samples = np.random.multivariate_normal(mean, matrix, N)
-    if N == 1:
-        return samples[0]
-    return samples
-
-
-def nd_sort_samples(samples):
-    # Check the shape of the sample list.
-    assert len(samples.shape) == 2
-
-    # Build a KD-tree on the samples.
-    tree = cKDTree(samples)
-
-    # Compute the distances.
-    d, i = tree.query(samples[0], k=len(samples))
-    return i
+        r, _ = self._parse_samples(t, False)
+        return self._kernel(r[:, None], r[None, :])

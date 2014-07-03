@@ -35,8 +35,8 @@ fig.subplots_adjust(left=0.1, bottom=0.1, right=0.96, top=0.98,
                     wspace=0.0, hspace=0.05)
 for ax, (name, runs) in zip(axes, experiments):
     for style, label, kernel in runs:
-        gp = george.GaussianProcess(kernel)
-        f = gp.sample_prior(t)
+        gp = george.GP(kernel)
+        f = gp.sample(t)
         ax.plot(t, f, style, lw=1.5, label=label)
     ax.legend(prop={"size": 12})
     ax.set_ylim(-2.8, 3.8)
@@ -50,7 +50,7 @@ fig.savefig("simple.pdf")
 fig = pl.figure(figsize=(8, 8))
 for i, (name, runs) in enumerate(experiments):
     fig.clf()
-    gp = george.GaussianProcess(runs[0][2])
+    gp = george.GP(runs[0][2])
     img = gp.get_matrix(t)
     ax = fig.add_subplot(111)
     ax.set_title(name)

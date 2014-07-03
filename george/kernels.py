@@ -5,7 +5,7 @@ from __future__ import division, print_function
 __all__ = [
     "Sum", "Product", "Kernel",
     "ConstantKernel", "DotProductKernel",
-    "CovKernel", "ExpKernel", "ExpSquaredKernel", "RBFKernel",
+    "RadialKernel", "ExpKernel", "ExpSquaredKernel", "RBFKernel",
     "CosineKernel", "ExpSine2Kernel",
     "Matern32Kernel", "Matern52Kernel",
 ]
@@ -82,9 +82,12 @@ class ConstantKernel(Kernel):
 
     .. math::
 
-        k(x_i,\,x_j) = c^2
+        k(\mathbf{x}_i,\,\mathbf{x}_j) = c^2
 
-    where :math:`c` is the single parameter ``value``.
+    where :math:`c` is a parameter.
+
+    :param value:
+        The constant value :math:`c` in the above equation.
 
     """
     kernel_type = 0
@@ -98,11 +101,12 @@ class ConstantKernel(Kernel):
 
 class DotProductKernel(Kernel):
     r"""
-    The **dot-product** kernel
+    The dot-product kernel takes the form
 
     .. math::
 
-        k(x_i,\,x_j) = x_i^{\mathrm{T}} \cdot x_j
+        k(\mathbf{x}_i,\,\mathbf{x}_j) = \mathbf{x}_i^{\mathrm{T}} \cdot
+                                         \mathbf{x}_j
 
     """
     kernel_type = 1
@@ -114,22 +118,48 @@ class DotProductKernel(Kernel):
         return np.sum(x1 * x2, axis=-1)
 
 
-class CovKernel(Kernel):
+class RadialKernel(Kernel):
+    """
+    This abstract base class implements a radial kernel in an arbitrary
+    metric.  The metric is specified as a matrix :math:`C` where the
+    radius :math:`{r_{ij}}^2` is
 
-    def __init__(self, cov, ndim=1):
+    .. math::
+
+        {r_{ij}}^2 = (\mathbf{x}_i - \mathbf{x}_j)^\mathrm{T}\,
+                     C^{-1}\,(\mathbf{x}_i - \mathbf{x}_j)
+
+    :param metric:
+        There are a few different ways that you can specify the metric:
+
+        1. if ``metric`` is a scalar, the metric is assumed isotropic with an
+           axis-aligned variance of ``metric`` in each dimension,
+        2. if ``metric`` is one-dimensional, it is assumed to specify the
+           axis-aligned variances in each dimension, and
+        3. if ``metric`` is two-dimensional, it is assumed to give the full
+           matrix :math:`C`.
+
+    **Note:**
+    Subclasses should implement the :func:`get_value` method to give
+    the value of the kernel at a given radius and this class will deal with
+    the metric.
+
+    """
+
+    def __init__(self, metric, ndim=1):
         inds = np.tri(ndim, dtype=bool)
         try:
-            l = len(cov)
+            l = len(metric)
         except TypeError:
-            pars = np.diag(float(cov) * np.ones(ndim))[inds]
+            pars = np.diag(float(metric) * np.ones(ndim))[inds]
         else:
             if l == ndim:
-                pars = np.diag(cov)[inds]
+                pars = np.diag(metric)[inds]
             else:
-                pars = np.array(cov)
+                pars = np.array(metric)
                 if l != (ndim*ndim + ndim) / 2:
                     raise ValueError("Dimension mismatch")
-        super(CovKernel, self).__init__(*pars, ndim=ndim)
+        super(RadialKernel, self).__init__(*pars, ndim=ndim)
 
         # Build the covariance matrix.
         self.matrix = np.zeros((self.ndim, self.ndim))
@@ -148,14 +178,18 @@ class CovKernel(Kernel):
         raise NotImplementedError("Subclasses must implement this method.")
 
 
-class ExpKernel(CovKernel):
+class ExpKernel(RadialKernel):
     r"""
-    The **exponential** kernel.
+    The exponential kernel is a :class:`RadialKernel` where the value at a
+    given radius :math:`r^2` is given by:
 
     .. math::
 
-        k(x_i,\,x_j) = \exp \left ( -\sqrt{\mathbf{r}^\mathrm{T}\,
-                                   C^{-1}\,\mathbf{r}} \right )
+        k({r_{ij}}) = \exp \left ( -|r| \right )
+
+    :param metric:
+        The custom metric specified as described in the :class:`RadialKernel`
+        description.
 
     """
     kernel_type = 2
@@ -164,14 +198,18 @@ class ExpKernel(CovKernel):
         return np.exp(-np.sqrt(dx))
 
 
-class ExpSquaredKernel(CovKernel):
+class ExpSquaredKernel(RadialKernel):
     r"""
-    The **exponential-squared** kernel.
+    The exponential-squared kernel is a :class:`RadialKernel` where the value
+    at a given radius :math:`r^2` is given by:
 
     .. math::
 
-        k(x_i,\,x_j) = \exp \left ( -\frac{1}{2}\,\mathbf{r}^\mathrm{T}\,
-                                   C^{-1}\,\mathbf{r} \right )
+        k(r^2) = \exp \left ( -\frac{r^2}{2} \right )
+
+    :param metric:
+        The custom metric specified as described in the :class:`RadialKernel`
+        description.
 
     """
     kernel_type = 3
@@ -187,14 +225,19 @@ class RBFKernel(ExpSquaredKernel):
     """
 
 
-class Matern32Kernel(CovKernel):
+class Matern32Kernel(RadialKernel):
     r"""
-    The **Matern-3/2** kernel.
+    The Matern-3/2 kernel is a :class:`RadialKernel` where the value at a
+    given radius :math:`r^2` is given by:
 
     .. math::
 
-        k(r) = \left( 1+\sqrt{3\,r} \right)\,
-               \exp \left (-\sqrt{3\,r} \right )
+        k(r^2) = \left( 1+\sqrt{3\,r^2} \right)\,
+                 \exp \left (-\sqrt{3\,r^2} \right )
+
+    :param metric:
+        The custom metric specified as described in the :class:`RadialKernel`
+        description.
 
     """
     kernel_type = 6
@@ -204,14 +247,19 @@ class Matern32Kernel(CovKernel):
         return (1.0 + r) * np.exp(-r)
 
 
-class Matern52Kernel(CovKernel):
+class Matern52Kernel(RadialKernel):
     r"""
-    The **Matern-5/2** kernel.
+    The Matern-5/2 kernel is a :class:`RadialKernel` where the value at a
+    given radius :math:`r^2` is given by:
 
     .. math::
 
-        k(r) = \left( 1+\sqrt{5\,r} + \frac{5\,r}{3} \right)\,
-               \exp \left (-\sqrt{5\,r} \right )
+        k(r^2) = \left( 1+\sqrt{5\,r^2} + \frac{5\,r^2}{3} \right)\,
+                 \exp \left (-\sqrt{5\,r^2} \right )
+
+    :param metric:
+        The custom metric specified as described in the :class:`RadialKernel`
+        description.
 
     """
     kernel_type = 7
@@ -222,6 +270,26 @@ class Matern52Kernel(CovKernel):
 
 
 class CosineKernel(Kernel):
+    r"""
+    The cosine kernel is given by:
+
+    .. math::
+
+        k(\mathbf{x}_i,\,\mathbf{x}_j) =
+            \cos\left(\frac{2\,\pi}{P}\,|x_i-x_j| \right)
+
+    where :math:`P` is the period.
+
+    :param period:
+        The period :math:`P` of the oscillation (in the same units as
+        :math:`\mathbf{x}`).
+
+    **Note:**
+    A shortcoming of this kernel is that it currently only accepts a single
+    period so it's not very applicable to problems with input dimension larger
+    than one.
+
+    """
     kernel_type = 4
 
     def __init__(self, period, ndim=1):
@@ -233,6 +301,32 @@ class CosineKernel(Kernel):
 
 
 class ExpSine2Kernel(Kernel):
+    r"""
+    The exp-sine-squared kernel is used to model stellar rotation and *might*
+    be applicable in some other contexts. It is given by the equation:
+
+    .. math::
+
+        k(\mathbf{x}_i,\,\mathbf{x}_j) =
+            \sin \left( \right)
+
+    where :math:`\Gamma` is the "scale" of the correlation and :math:`P` is
+    the period of the oscillation measured in the same units as
+    :math:`\mathbf{x}`.
+
+    :param gamma:
+        The scale :math:`\Gamma` of the correlations.
+
+    :param period:
+        The period :math:`P` of the oscillation (in the same units as
+        :math:`\mathbf{x}`).
+
+    **Note:**
+    A shortcoming of this kernel is that it currently only accepts a single
+    period and scale so it's not very applicable to problems with input
+    dimension larger than one.
+
+    """
     kernel_type = 5
 
     def __init__(self, gamma, period, ndim=1):

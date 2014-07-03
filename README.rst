@@ -61,7 +61,7 @@ Here's the simplest possible example of how you might want to use George::
 
   # Set up the Gaussian process.
   kernel = ExpSquaredKernel(1.0)
-  gp = george.GaussianProcess(kernel)
+  gp = george.GP(kernel)
 
   # Pre-compute the factorization of the matrix.
   gp.compute(x, yerr)
@@ -93,7 +93,7 @@ To use George as a replacement for this likelihood function, you would just
 do::
 
   kernel = a * ExpSquaredKernel(s)
-  gp = george.GaussianProcess(kernel)
+  gp = george.GP(kernel)
   gp.compute(x, yerr)
 
   def lnlike(params):
@@ -105,7 +105,7 @@ GP, this would be replaced by::
 
   def lnlike(lna, lns, params):
       kernel = np.exp(lna) * ExpSquaredKernel(np.exp(lns))
-      gp = george.GaussianProcess(kernel)
+      gp = george.GP(kernel)
       gp.compute(x, yerr)
 
       m = compute_model(params, x)
@@ -119,7 +119,7 @@ for underestimated error bars), it is as simple as::
 
   def lnlike(lna, lns, lnjitter, params):
       kernel = np.exp(lna) * ExpSquaredKernel(np.exp(lns))
-      gp = george.GaussianProcess(kernel)
+      gp = george.GP(kernel)
       j2 = np.exp(2*lnjitter)
       gp.compute(x, np.sqrt(yerr**2 + j2))
 
