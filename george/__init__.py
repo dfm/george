@@ -13,3 +13,5 @@ if not __GEORGE_SETUP__:
     from . import kernels
     from .basic import GP
     from .hodlr import HODLRGP
+
+    from testing import *

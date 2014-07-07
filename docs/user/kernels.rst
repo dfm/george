@@ -1,5 +1,6 @@
-.. _kernels:
 .. module:: george.kernels
+
+.. _kernels:
 
 Kernels
 =======

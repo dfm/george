@@ -3,8 +3,18 @@
 
 from __future__ import division, print_function, absolute_import
 
+__all__ = [
+    "test_constant", "test_dot_prod",
+
+    "test_exp", "test_exp_squared", "test_rbf", "test_matern32",
+    "test_matern52",
+
+    "test_cosine", "test_exp_sine2",
+
+    "test_combine",
+]
+
 import numpy as np
-from itertools import izip
 
 from .. import kernels
 from ..hodlr import HODLRGP

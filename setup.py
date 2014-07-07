@@ -133,7 +133,7 @@ if __name__ == "__main__":
         author_email="danfm@nyu.edu",
         url="https://github.com/dfm/george",
         license="MIT",
-        packages=["george"],
+        packages=["george", "george.testing"],
         ext_modules=[ext],
         description="Blazingly fast Gaussian Processes for regression.",
         long_description=open("README.rst").read(),

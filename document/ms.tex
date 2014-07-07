@@ -36,10 +36,14 @@
 \newcommand{\dd}{\ensuremath{\,\mathrm{d}}}
 \newcommand{\bvec}[1]{\ensuremath{\boldsymbol{#1}}}
 
+\newcommand{\todo}[3]{{\color{#2} \emph{#1} TODO: #3}}
+\newcommand{\dfmtodo}[1]{\todo{DFM}{red}{#1}}
+
 \begin{document}
 
 \title{%
-    An effective noise model for Kepler light curves
+Gaussian processes in astronomy: \\
+An effective noise model for Kepler light curves
 }
 
 \newcommand{\nyu}{2}
@@ -145,6 +149,29 @@ applying this model and advocate for specific algorithmic choices.
 We compare the performance of our model to other industry standard techniques
 when applied to signals injected into \emph{real \kepler\ light curves} in
 \sect{parameters}.
+
+\section{The power of correlated noise}
+\sectlabel{corr-noise}
+
+Correlated noise is ubiquitous when analyzing real data taken using real
+instruments.
+The effects of correlated noise on our inferences can vary dramatically and
+there are many examples in the astrophysics literature where results have been
+substantially improved when the noise is correctly modeled (\dfmtodo{CITE}).
+In this section, we will demonstrate with a simple but realistic example the
+effect that correlated noise can have on our inferred results.
+
+\paragraph{The problem}
+For the demonstration in this section, we have generated some synthetic data
+from a linear model with correlated noise.
+Since these data are synthetic, we know the true parameters of the linear
+model and the covariance structure of the observations but we will perform our
+inference assuming that these are not known.
+The dataset that we're using includes $K$ scalar observations
+$\{y_k\}_{k=1}^K$ observed at independent coordinates $\{x_k\}_{k=1}^K$ with
+uncertainties $\{\sigma_k\}_{k=1}^K$.
+These quoted uncertainties are meant to describe the independent component of
+the noise
 
 \section{Gaussian processes for regression}\sectlabel{gps}
 
