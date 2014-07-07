@@ -1,0 +1,8 @@
+.DS_Store
+build
+dist
+docs
+document
+examples
+george
+george.egg-info

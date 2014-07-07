@@ -1,0 +1,442 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Solvers &mdash; George 2.1.0-dev documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="George 2.1.0-dev documentation" href="../../"/>
+        <link rel="prev" title="Kernels" href="../kernels/"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../" class="fa fa-home"> George</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#a-simple-example">A Simple Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../kernels/">Kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#basic-kernels">Basic Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#radial-kernels">Radial Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#periodic-kernels">Periodic Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#combining-kernels">Combining Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#implementing-new-kernels">Implementing New Kernels</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-basic-sover">The Basic Sover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-hodlr-solver">The HODLR Solver</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../">George</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../">Docs</a> &raquo;</li>
+      
+    <li>Solvers</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/user/solvers.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="solvers">
+<span id="id1"></span><h1>Solvers<a class="headerlink" href="#solvers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-basic-sover">
+<h2>The Basic Sover<a class="headerlink" href="#the-basic-sover" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="george.GP">
+<em class="property">class </em><tt class="descclassname">george.</tt><tt class="descname">GP</tt><big>(</big><em>kernel</em><big>)</big><a class="headerlink" href="#george.GP" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="george.GP.compute">
+<tt class="descname">compute</tt><big>(</big><em>x</em>, <em>yerr</em>, <em>sort=True</em>, <em>_scale=0.91893853320467267</em><big>)</big><a class="headerlink" href="#george.GP.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pre-compute the covariance matrix and factorize it for a set of times
+and uncertainties.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Params x:</th><td class="field-body"><tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The independent coordinates of the data points.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Params yerr:</th><td class="field-body"><tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The uncertainties on the data points at coordinates <tt class="docutils literal"><span class="pre">x</span></tt>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.lnlikelihood">
+<tt class="descname">lnlikelihood</tt><big>(</big><em>y</em><big>)</big><a class="headerlink" href="#george.GP.lnlikelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the log-likelihood of a set of observations under the Gaussian
+process model. You must call <tt class="docutils literal"><span class="pre">compute</span></tt> before this function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations at the coordinates provided in the <tt class="docutils literal"><span class="pre">compute</span></tt>
+step.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.predict">
+<tt class="descname">predict</tt><big>(</big><em>y</em>, <em>t</em><big>)</big><a class="headerlink" href="#george.GP.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the conditional predictive distribution of the model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations to condition the model on.</li>
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt>
+The coordinates where the predictive distribution should be
+computed.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns mu:</th><td class="field-body"><p class="first"><tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt>
+The mean of the predictive distribution.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns cov:</th><td class="field-body"><p class="first last"><tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ntest)</span></tt>
+The predictive covariance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.sample">
+<tt class="descname">sample</tt><big>(</big><em>t</em>, <em>size=1</em><big>)</big><a class="headerlink" href="#george.GP.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw samples from the prior distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the model should be sampled.</li>
+<li><strong>N</strong> &#8211; (optional)
+The number of samples to draw.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Returns samples:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last"><tt class="docutils literal"><span class="pre">(N,</span> <span class="pre">ntest)</span></tt>
+A list of predictions at coordinates given by <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.sample_conditional">
+<tt class="descname">sample_conditional</tt><big>(</big><em>y</em>, <em>t</em>, <em>size=1</em><big>)</big><a class="headerlink" href="#george.GP.sample_conditional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw samples from the predictive conditional distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations to condition the model on.</li>
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the predictive distribution should be
+computed.</li>
+<li><strong>size</strong> &#8211; (optional)
+The number of samples to draw.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Returns samples:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last"><tt class="docutils literal"><span class="pre">(N,</span> <span class="pre">ntest)</span></tt>
+A list of predictions at coordinates given by <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="the-hodlr-solver">
+<h2>The HODLR Solver<a class="headerlink" href="#the-hodlr-solver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="george.HODLRGP">
+<em class="property">class </em><tt class="descclassname">george.</tt><tt class="descname">HODLRGP</tt><big>(</big><em>kernel</em>, <em>nleaf=100</em>, <em>tol=1e-12</em><big>)</big><a class="headerlink" href="#george.HODLRGP" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the money object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Params pars:</th><td class="field-body">The hyperparameters of the covariance function. For now, this must be
+a list or vector of length 2: amplitude and standard deviation.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="george.HODLRGP.compute">
+<tt class="descname">compute</tt><big>(</big><em>x</em>, <em>yerr</em>, <em>sort=True</em>, <em>seed=None</em><big>)</big><a class="headerlink" href="#george.HODLRGP.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pre-compute the covariance matrix and factorize it for a set of times
+and uncertainties.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Params x:</th><td class="field-body"><tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The independent coordinates of the data points.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Params yerr:</th><td class="field-body"><tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The uncertainties on the data points at coordinates <tt class="docutils literal"><span class="pre">x</span></tt>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.lnlikelihood">
+<tt class="descname">lnlikelihood</tt><big>(</big><em>y</em><big>)</big><a class="headerlink" href="#george.HODLRGP.lnlikelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the log-likelihood of a set of observations under the Gaussian
+process model. You must call <tt class="docutils literal"><span class="pre">compute</span></tt> before this function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations at the coordinates provided in the <tt class="docutils literal"><span class="pre">compute</span></tt>
+step.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.predict">
+<tt class="descname">predict</tt><big>(</big><em>y</em>, <em>t</em><big>)</big><a class="headerlink" href="#george.HODLRGP.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the conditional predictive distribution of the model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations to condition the model on.</li>
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt>
+The coordinates where the predictive distribution should be
+computed.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns mu:</th><td class="field-body"><p class="first"><tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt>
+The mean of the predictive distribution.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns cov:</th><td class="field-body"><p class="first last"><tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ntest)</span></tt>
+The predictive covariance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.sample">
+<tt class="descname">sample</tt><big>(</big><em>t</em>, <em>size=1</em><big>)</big><a class="headerlink" href="#george.HODLRGP.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw samples from the prior distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the model should be sampled.</li>
+<li><strong>N</strong> &#8211; (optional)
+The number of samples to draw.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Returns samples:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last"><tt class="docutils literal"><span class="pre">(N,</span> <span class="pre">ntest)</span></tt>
+A list of predictions at coordinates given by <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.sample_conditional">
+<tt class="descname">sample_conditional</tt><big>(</big><em>y</em>, <em>t</em>, <em>size=1</em><big>)</big><a class="headerlink" href="#george.HODLRGP.sample_conditional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw samples from the predictive conditional distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations to condition the model on.</li>
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the predictive distribution should be
+computed.</li>
+<li><strong>size</strong> &#8211; (optional)
+The number of samples to draw.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Returns samples:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last"><tt class="docutils literal"><span class="pre">(N,</span> <span class="pre">ntest)</span></tt>
+A list of predictions at coordinates given by <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../kernels/" class="btn btn-neutral" title="Kernels"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014 Dan Foreman-Mackey.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'2.1.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

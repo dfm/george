@@ -1,0 +1,4 @@
+.. _intro:
+
+An Introduction to Gaussian Processes
+=====================================
