@@ -78,6 +78,11 @@ def find_hodlr(hint=None):
 
 
 class build_ext(_build_ext):
+    """
+    A custom extension builder that finds the include directories for Eigen
+    and HODLR before compiling.
+
+    """
 
     def build_extension(self, ext):
         dirs = ext.include_dirs + self.compiler.include_dirs
