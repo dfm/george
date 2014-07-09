@@ -34,7 +34,7 @@ class Kernel(object):
     def pars(self, v):
         self._pars = np.array(v)
         self.set_pars(v)
-        self._dirty = True
+        self.dirty = True
 
     def __getitem__(self, i):
         return self._pars[i]
@@ -84,6 +84,7 @@ class _operator(Kernel):
         self.k1 = k1
         self.k2 = k2
         self.ndim = k1.ndim
+        self.dirty = True
 
     @property
     def pars(self):
@@ -91,6 +92,7 @@ class _operator(Kernel):
 
     @pars.setter
     def pars(self, v):
+        self.dirty = True
         i = len(self.k1)
         self.k1.pars = v[:i]
         self.k2.pars = v[i:]

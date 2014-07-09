@@ -48,7 +48,7 @@ def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-7):
     assert np.allclose(k1, k2), (k1, k2)
 
     # Check the gradients.
-    g0 = kernel.grad(t[:, None], t[None, :])
+    g1 = kernel.grad(t[:, None], t[None, :])
     for i in range(len(kernel)):
         # Compute the centered finite difference approximation to the gradient.
         kernel[i] += eps
@@ -56,8 +56,8 @@ def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-7):
         kernel[i] -= 2*eps
         km = kernel(t[:, None], t[None, :])
         kernel[i] += eps
-        g1 = 0.5 * (kp - km) / eps
-        assert np.allclose(g0[i], g1), \
+        g0 = 0.5 * (kp - km) / eps
+        assert np.allclose(g1[i], g0), \
             "Python gradient computation failed in dimension {0}".format(i)
 
 
