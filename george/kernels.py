@@ -26,6 +26,26 @@ class Kernel(object):
         self.ndim = kwargs.get("ndim", 1)
         self.pars = np.array(pars)
 
+    @property
+    def pars(self):
+        return self._pars
+
+    @pars.setter
+    def pars(self, v):
+        self._pars = np.array(v)
+        self.set_pars(v)
+        self.dirty = True
+
+    def __getitem__(self, i):
+        return self._pars[i]
+
+    def __setitem__(self, i, v):
+        self._pars[i] = v
+        self.pars = self._pars
+
+    def set_pars(self, pars):
+        pass
+
     def __len__(self):
         return len(self.pars)
 
@@ -47,6 +67,12 @@ class Kernel(object):
     def __rmul__(self, b):
         return self.__mul__(b)
 
+    def __call__(self, x1, x2):
+        raise NotImplementedError("Must be implemented by subclasses")
+
+    def grad(self, x1, x2):
+        raise NotImplementedError("Must be implemented by subclasses")
+
 
 class _operator(Kernel):
     is_kernel = False
@@ -58,6 +84,26 @@ class _operator(Kernel):
         self.k1 = k1
         self.k2 = k2
         self.ndim = k1.ndim
+        self.dirty = True
+
+    @property
+    def pars(self):
+        return np.append(self.k1.pars, self.k2.pars)
+
+    @pars.setter
+    def pars(self, v):
+        self.dirty = True
+        i = len(self.k1)
+        self.k1.pars = v[:i]
+        self.k2.pars = v[i:]
+
+    def __getitem__(self, i):
+        return self.pars[i]
+
+    def __setitem__(self, i, v):
+        p = self.pars
+        p[i] = v
+        self.pars = p
 
 
 class Sum(_operator):
@@ -67,6 +113,11 @@ class Sum(_operator):
     def __call__(self, x1, x2):
         return self.k1(x1, x2) + self.k2(x1, x2)
 
+    def grad(self, x1, x2):
+        g1 = self.k1.grad(x1, x2)
+        g2 = self.k2.grad(x1, x2)
+        return np.concatenate((g1, g2), axis=0)
+
 
 class Product(_operator):
     is_kernel = False
@@ -74,6 +125,13 @@ class Product(_operator):
 
     def __call__(self, x1, x2):
         return self.k1(x1, x2) * self.k2(x1, x2)
+
+    def grad(self, x1, x2):
+        g1 = self.k1.grad(x1, x2)
+        g2 = self.k2.grad(x1, x2)
+        s = [None] + [slice(None)] * (len(g1.shape) - 1)
+        return np.concatenate((g1 * self.k2(x1, x2)[s],
+                               g2 * self.k1(x1, x2)[s]), axis=0)
 
 
 class ConstantKernel(Kernel):
@@ -98,6 +156,10 @@ class ConstantKernel(Kernel):
     def __call__(self, x1, x2):
         return self.pars[0] ** 2 + np.sum(np.zeros_like(x1 - x2), axis=-1)
 
+    def grad(self, x1, x2):
+        x = np.sum(np.zeros_like(x1 - x2), axis=-1)
+        return 2 * self.pars[0] + np.zeros(np.append(1, x.shape))
+
 
 class DotProductKernel(Kernel):
     r"""
@@ -116,6 +178,9 @@ class DotProductKernel(Kernel):
 
     def __call__(self, x1, x2):
         return np.sum(x1 * x2, axis=-1)
+
+    def grad(self, x1, x2):
+        return np.zeros(np.append(1, self(x1, x2).shape))
 
 
 class RadialKernel(Kernel):
@@ -161,11 +226,22 @@ class RadialKernel(Kernel):
                     raise ValueError("Dimension mismatch")
         super(RadialKernel, self).__init__(*pars, ndim=ndim)
 
-        # Build the covariance matrix.
-        self.matrix = np.zeros((self.ndim, self.ndim))
-        self.matrix[np.tril_indices_from(self.matrix)] = self.pars
-        self.matrix += self.matrix.T
-        self.matrix[np.diag_indices_from(self.matrix)] *= 0.5
+        # Build the gradient indicator masks.
+        self.gm = np.empty(np.append(len(pars), self.matrix.shape), dtype=int)
+        for i in range(len(pars)):
+            ind = np.zeros(len(pars), dtype=int)
+            ind[i] = 1
+            self.gm[i] = self._build_matrix(ind)
+
+    def _build_matrix(self, x, dtype=float):
+        m = np.zeros((self.ndim, self.ndim), dtype=dtype)
+        m[np.tril_indices_from(m)] = x
+        m += m.T
+        m[np.diag_indices_from(m)] *= 0.5
+        return m
+
+    def set_pars(self, pars):
+        self.matrix = self._build_matrix(pars)
 
     def __call__(self, x1, x2):
         dx = x1 - x2
@@ -174,7 +250,29 @@ class RadialKernel(Kernel):
         r = r.reshape(dx.shape[:-1])
         return self.get_value(r)
 
+    def grad(self, x1, x2):
+        dx = x1 - x2
+        dxf = dx.reshape((-1, self.ndim)).T
+        alpha = np.linalg.solve(self.matrix, dxf)
+
+        # Compute the radial gradient.
+        g = np.empty(np.append(len(self.gm), dx.shape[:-1]))
+        for i, gm in enumerate(self.gm):
+            g[i] = np.sum(dxf*np.linalg.solve(self.matrix, np.dot(gm, alpha)),
+                          axis=0).reshape(dx.shape[:-1])
+
+        # Compute the function gradient.
+        r = np.sum(dxf * alpha, axis=0)
+        r = r.reshape(dx.shape[:-1])
+        s = [None] + [slice(None)] * len(r.shape)
+        g *= -self.get_grad(r)[s]
+
+        return g
+
     def get_value(self, r):
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    def get_grad(self, r):
         raise NotImplementedError("Subclasses must implement this method.")
 
 
@@ -197,6 +295,13 @@ class ExpKernel(RadialKernel):
     def get_value(self, dx):
         return np.exp(-np.sqrt(dx))
 
+    def get_grad(self, dx):
+        sx = np.sqrt(dx)
+        m = sx > 0
+        g = np.zeros_like(sx)
+        g[m] = -0.5 * np.exp(-sx[m]) / sx[m]
+        return g
+
 
 class ExpSquaredKernel(RadialKernel):
     r"""
@@ -216,6 +321,9 @@ class ExpSquaredKernel(RadialKernel):
 
     def get_value(self, dx):
         return np.exp(-0.5 * dx)
+
+    def get_grad(self, dx):
+        return -0.5 * np.exp(-0.5 * dx)
 
 
 class RBFKernel(ExpSquaredKernel):
@@ -246,6 +354,10 @@ class Matern32Kernel(RadialKernel):
         r = np.sqrt(3.0 * dx)
         return (1.0 + r) * np.exp(-r)
 
+    def get_grad(self, dx):
+        r = np.sqrt(3.0 * dx)
+        return -3 * 0.5 * np.exp(-r)
+
 
 class Matern52Kernel(RadialKernel):
     r"""
@@ -267,6 +379,10 @@ class Matern52Kernel(RadialKernel):
     def get_value(self, dx):
         r = np.sqrt(5.0 * dx)
         return (1.0 + r + r*r / 3.0) * np.exp(-r)
+
+    def get_grad(self, dx):
+        r = np.sqrt(5.0 * dx)
+        return -5 * (1.0 + r) * np.exp(-r) / 6.0
 
 
 class CosineKernel(Kernel):
@@ -294,10 +410,19 @@ class CosineKernel(Kernel):
 
     def __init__(self, period, ndim=1):
         super(CosineKernel, self).__init__(period, ndim=ndim)
-        self._omega = 2 * np.pi / np.abs(period)
+
+    def set_pars(self, pars, twopi=2*np.pi):
+        self._omega = twopi / float(pars)
 
     def __call__(self, x1, x2):
         return np.cos(self._omega * np.sqrt(np.sum((x1 - x2) ** 2, axis=-1)))
+
+    def grad(self, x1, x2, itwopi=1.0/(2*np.pi)):
+        x = np.sqrt(np.sum((x1 - x2) ** 2, axis=-1))
+        g = np.empty(np.append(1, x.shape))
+        s = [0] + [slice(None)] * len(x.shape)
+        g[s] = itwopi * x * np.sin(self._omega * x) * self._omega ** 2
+        return g
 
 
 class ExpSine2Kernel(Kernel):
@@ -333,9 +458,32 @@ class ExpSine2Kernel(Kernel):
 
     def __init__(self, gamma, period, ndim=1):
         super(ExpSine2Kernel, self).__init__(gamma, period, ndim=ndim)
-        self._gamma = np.abs(gamma)
-        self._omega = np.pi / np.abs(period)
+
+    def set_pars(self, pars):
+        self._omega = np.pi / pars[1]
 
     def __call__(self, x1, x2):
         s = np.sin(self._omega * np.sqrt(np.sum((x1 - x2) ** 2, axis=-1)))
-        return np.exp(-self._gamma * s**2)
+        return np.exp(-self.pars[0] * s**2)
+
+    def grad(self, x1, x2):
+        # Pre-compute some factors.
+        x = np.sqrt(np.sum((x1 - x2) ** 2, axis=-1))
+        sx = np.sin(self._omega * x)
+        cx = np.cos(self._omega * x)
+        A2 = sx*sx
+        a = self.pars[0]
+        f = np.exp(-a * A2)
+
+        # Build the output array.
+        g = np.empty(np.append(2, x.shape))
+        s = [0] + [slice(None)] * len(x.shape)
+
+        # Compute the scale derivative.
+        g[s] = -f * A2
+
+        # Compute the period derivative.
+        s[0] = 1
+        g[s] = 2 * f * a * sx * cx * x * self._omega ** 2 / np.pi
+
+        return g

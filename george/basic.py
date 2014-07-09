@@ -18,16 +18,13 @@ class GP(object):
 
     @property
     def computed(self):
-        return self._computed
+        return self._computed and not self.kernel.dirty
 
-    @property
-    def kernel(self):
-        return self._kernel
-
-    @kernel.setter
-    def kernel(self, v):
-        self._computed = False
-        self._kernel = v
+    @computed.setter
+    def computed(self, v):
+        self._computed = v
+        if v:
+            self.kernel.dirty = False
 
     def _parse_samples(self, t, sort):
         t = np.atleast_1d(t)
@@ -77,7 +74,7 @@ class GP(object):
         self._yerr = self._check_dimensions(yerr)[self.inds]
 
         # Compute the kernel matrix.
-        K = self._kernel(self._x[:, None], self._x[None, :])
+        K = self.kernel(self._x[:, None], self._x[None, :])
         K[np.diag_indices_from(K)] += self._yerr ** 2
 
         # Factor the matrix and compute the log-determinant.
@@ -85,7 +82,7 @@ class GP(object):
         self._const = -(np.sum(np.log(np.diag(factor))) + _scale*len(self._x))
 
         # Save the computed state.
-        self._computed = True
+        self.computed = True
 
     def _compute_lnlike(self, r):
         return self._const - 0.5*np.dot(r.T, cho_solve(self._factor, r))
@@ -105,6 +102,27 @@ class GP(object):
         ll = self._compute_lnlike(self._check_dimensions(y)[self.inds])
         return ll if np.isfinite(ll) else -np.inf
 
+    def grad_lnlikelihood(self, y):
+        if not self.computed:
+            raise RuntimeError("You need to compute the model first")
+
+        r = self._check_dimensions(y)[self.inds]
+
+        # Pre-compute some factors.
+        alpha = cho_solve(self._factor, r)
+        aaT = alpha[:, None] * alpha[None, :]
+        Kg = self.kernel.grad(self._x[:, None], self._x[None, :])
+
+        # FIXME: make faster.
+
+        # Loop over dimensions and compute the gradient in each one.
+        g = np.empty(len(Kg))
+        for i, k in enumerate(Kg):
+            d = np.diag(np.dot(aaT, k) - cho_solve(self._factor, k))
+            g[i] = 0.5 * np.sum(d)
+
+        return g
+
     def predict(self, y, t):
         """
         Compute the conditional predictive distribution of the model.
@@ -123,16 +141,19 @@ class GP(object):
             The predictive covariance.
 
         """
-        r = self._check_dimensions(y)
+        if not self.computed:
+            raise RuntimeError("You need to compute the model first")
+
+        r = self._check_dimensions(y)[self.inds]
         xs, i = self._parse_samples(t, False)
         alpha = cho_solve(self._factor, r)
 
         # Compute the predictive mean.
-        Kxs = self._kernel(self._x[None, :], xs[:, None])
+        Kxs = self.kernel(self._x[None, :], xs[:, None])
         mu = np.dot(Kxs, alpha)
 
         # Compute the predictive covariance.
-        cov = self._kernel(xs[:, None], xs[None, :])
+        cov = self.kernel(xs[:, None], xs[None, :])
         cov -= np.dot(Kxs, cho_solve(self._factor, Kxs.T))
 
         return mu, cov
@@ -177,4 +198,4 @@ class GP(object):
 
     def get_matrix(self, t):
         r, _ = self._parse_samples(t, False)
-        return self._kernel(r[:, None], r[None, :])
+        return self.kernel(r[:, None], r[None, :])

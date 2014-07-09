@@ -81,7 +81,7 @@ class HODLRGP(GP):
             The predictive covariance.
 
         """
-        return self._gp.predict(self._check_dimensions(y),
+        return self._gp.predict(self._check_dimensions(y)[self.inds],
                                 self._parse_samples(t, False)[0])
 
     def get_matrix(self, t):
