@@ -62,6 +62,14 @@
 <li class="toctree-l2"><a class="reference internal" href="../user/quickstart/#a-simple-example">A Simple Example</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../user/model/">Fitting a model to data with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user/model/#the-model">The Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user/model/#the-data">The Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user/model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user/model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user/model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../user/kernels/#basic-kernels">Basic Kernels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user/kernels/#radial-kernels">Radial Kernels</a></li>
@@ -71,8 +79,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../user/solvers/">Solvers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../user/solvers/#the-basic-sover">The Basic Sover</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../user/solvers/#the-hodlr-solver">The HODLR Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user/solvers/#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user/solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
 </ul>
@@ -116,6 +124,7 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
+ | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#P"><strong>P</strong></a>
@@ -137,11 +146,21 @@
 
       </dl></dd>
       
+  <dt><a href="../user/solvers/#george.GP.computed">computed (george.GP attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="../user/solvers/#george.HODLRGP.computed">(george.HODLRGP attribute)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
   <dt><a href="../user/kernels/#george.kernels.ConstantKernel">ConstantKernel (class in george.kernels)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="../user/kernels/#george.kernels.CosineKernel">CosineKernel (class in george.kernels)</a>
   </dt>
@@ -183,13 +202,31 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="../user/solvers/#module-george">george (module)</a>
+  </dt>
+
+      
   <dt><a href="../user/kernels/#module-george.kernels">george.kernels (module)</a>
   </dt>
 
+      
+  <dt><a href="../user/solvers/#george.GP.get_matrix">get_matrix() (george.GP method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="../user/solvers/#george.HODLRGP.get_matrix">(george.HODLRGP method)</a>
+  </dt>
+
+      </dl></dd>
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="../user/solvers/#george.GP">GP (class in george)</a>
+  </dt>
+
+      
+  <dt><a href="../user/solvers/#george.GP.grad_lnlikelihood">grad_lnlikelihood() (george.GP method)</a>
   </dt>
 
   </dl></td>
@@ -200,6 +237,16 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="../user/solvers/#george.HODLRGP">HODLRGP (class in george)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/kernels/#george.kernels.Kernel">Kernel (class in george.kernels)</a>
   </dt>
 
   </dl></td>
@@ -239,6 +286,18 @@
 
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/solvers/#george.GP.parse_samples">parse_samples() (george.GP method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="../user/solvers/#george.HODLRGP.parse_samples">(george.HODLRGP method)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="../user/solvers/#george.GP.predict">predict() (george.GP method)</a>

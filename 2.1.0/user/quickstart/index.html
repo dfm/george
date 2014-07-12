@@ -29,7 +29,7 @@
 
   
     <link rel="top" title="George 2.1.0-dev documentation" href="../../"/>
-        <link rel="next" title="Kernels" href="../kernels/"/>
+        <link rel="next" title="Fitting a model to data with correlated noise" href="../model/"/>
         <link rel="prev" title="George" href="../../"/> 
 
   
@@ -63,6 +63,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#a-simple-example">A Simple Example</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Fitting a model to data with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-model">The Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-data">The Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../kernels/#basic-kernels">Basic Kernels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../kernels/#radial-kernels">Radial Kernels</a></li>
@@ -72,8 +80,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../solvers/">Solvers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../solvers/#the-basic-sover">The Basic Sover</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../solvers/#the-hodlr-solver">The HODLR Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
 </ul>
@@ -142,8 +150,13 @@ you don&#8217;t already have your own opinions.</p>
 <div class="highlight-bash"><div class="highlight"><pre>pip install george
 </pre></div>
 </div>
-<p>If you installed Eigen in a strange place, unfortunately you&#8217;ll need to use
-the development version as described below in <a class="reference internal" href="#dev"><em>Development Version</em></a>.</p>
+<p>If you installed Eigen in a strange place, specify that location by running
+(sorry to say that it&#8217;s pretty freaking ugly):</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip install george <span class="se">\</span>
+    --global-option<span class="o">=</span>build_ext <span class="se">\</span>
+    --global-option<span class="o">=</span>-I/path/to/eigen3
+</pre></div>
+</div>
 </div>
 <div class="section" id="development-version">
 <span id="dev"></span><h3>Development Version<a class="headerlink" href="#development-version" title="Permalink to this headline">¶</a></h3>
@@ -161,7 +174,7 @@ git submodule update
 </div>
 <p>If installed Eigen in a non-standard location, you can specify the correct
 path using the install command:</p>
-<div class="highlight-bash"><div class="highlight"><pre>python setup.py install --eigen-include<span class="o">=</span>/path/to/eigen
+<div class="highlight-bash"><div class="highlight"><pre>python setup.py build_ext -I/path/to/eigen3 install
 </pre></div>
 </div>
 </div>
@@ -182,8 +195,6 @@ on GitHub</a>.</p>
 <p>The following code generates some fake data (from a sinusoidal model) with
 error bars:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">george</span>
-<span class="kn">from</span> <span class="nn">george.kernels</span> <span class="kn">import</span> <span class="n">ExpSquaredKernel</span>
 
 <span class="c"># Generate some fake noisy data.</span>
 <span class="n">x</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
@@ -194,7 +205,10 @@ error bars:</p>
 <p>Then, we&#8217;ll choose a simple kernel function (see <a class="reference internal" href="../kernels/#kernels"><em>Kernels</em></a> for some other
 choices) and compute the log-likelihood of the fake data under a Gaussian
 process model with this kernel:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Set up the Gaussian process.</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
+<span class="kn">from</span> <span class="nn">george.kernels</span> <span class="kn">import</span> <span class="n">ExpSquaredKernel</span>
+
+<span class="c"># Set up the Gaussian process.</span>
 <span class="n">kernel</span> <span class="o">=</span> <span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
 
@@ -225,7 +239,7 @@ patch is the 68% credible interval for the prediction.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../kernels/" class="btn btn-neutral float-right" title="Kernels"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../model/" class="btn btn-neutral float-right" title="Fitting a model to data with correlated noise"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../../" class="btn btn-neutral" title="George"><span class="fa fa-arrow-circle-left"></span> Previous</a>

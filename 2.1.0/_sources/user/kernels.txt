@@ -28,6 +28,7 @@ the number of input dimensions for your problem.
 Basic Kernels
 -------------
 
+.. autoclass:: george.kernels.Kernel
 .. autoclass:: george.kernels.ConstantKernel
 .. autoclass:: george.kernels.DotProductKernel
 

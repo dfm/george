@@ -8,5 +8,6 @@ User Guide
    :maxdepth: 2
 
    user/quickstart
+   user/model
    user/kernels
    user/solvers

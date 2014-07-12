@@ -30,7 +30,7 @@
   
     <link rel="top" title="George 2.1.0-dev documentation" href="../../"/>
         <link rel="next" title="Solvers" href="../solvers/"/>
-        <link rel="prev" title="Getting started" href="../quickstart/"/> 
+        <link rel="prev" title="Fitting a model to data with correlated noise" href="../model/"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -63,6 +63,14 @@
 <li class="toctree-l2"><a class="reference internal" href="../quickstart/#a-simple-example">A Simple Example</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Fitting a model to data with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-model">The Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-data">The Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#basic-kernels">Basic Kernels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#radial-kernels">Radial Kernels</a></li>
@@ -72,8 +80,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../solvers/">Solvers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../solvers/#the-basic-sover">The Basic Sover</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../solvers/#the-hodlr-solver">The HODLR Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
 </ul>
@@ -129,6 +137,12 @@ incorporating a custom kernel.</p>
 the number of input dimensions for your problem.</p>
 <div class="section" id="basic-kernels">
 <span id="id2"></span><h2>Basic Kernels<a class="headerlink" href="#basic-kernels" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="george.kernels.Kernel">
+<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">Kernel</tt><big>(</big><em>*pars</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#george.kernels.Kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>The abstract kernel type.</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="george.kernels.ConstantKernel">
 <em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">ConstantKernel</tt><big>(</big><em>value</em>, <em>ndim=1</em><big>)</big><a class="headerlink" href="#george.kernels.ConstantKernel" title="Permalink to this definition">¶</a></dt>
@@ -348,7 +362,7 @@ dimension larger than one.</p>
         <a href="../solvers/" class="btn btn-neutral float-right" title="Solvers"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../quickstart/" class="btn btn-neutral" title="Getting started"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../model/" class="btn btn-neutral" title="Fitting a model to data with correlated noise"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

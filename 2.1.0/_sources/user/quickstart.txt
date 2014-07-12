@@ -48,8 +48,15 @@ The simplest way to install the `most recent stable version of George
 
     pip install george
 
-If you installed Eigen in a strange place, unfortunately you'll need to use
-the development version as described below in :ref:`dev`.
+If you installed Eigen in a strange place, specify that location by running
+(sorry to say that it's pretty freaking ugly):
+
+.. code-block:: bash
+
+    pip install george \
+        --global-option=build_ext \
+        --global-option=-I/path/to/eigen3
+
 
 .. _dev:
 
@@ -77,7 +84,7 @@ path using the install command:
 
 .. code-block:: bash
 
-    python setup.py install --eigen-include=/path/to/eigen
+    python setup.py build_ext -I/path/to/eigen3 install
 
 Testing
 +++++++
@@ -103,8 +110,6 @@ error bars:
 .. code-block:: python
 
     import numpy as np
-    import george
-    from george.kernels import ExpSquaredKernel
 
     # Generate some fake noisy data.
     x = 10 * np.sort(np.random.rand(10))
@@ -116,6 +121,9 @@ choices) and compute the log-likelihood of the fake data under a Gaussian
 process model with this kernel:
 
 .. code-block:: python
+
+    import george
+    from george.kernels import ExpSquaredKernel
 
     # Set up the Gaussian process.
     kernel = ExpSquaredKernel(1.0)
