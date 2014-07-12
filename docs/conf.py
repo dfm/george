@@ -16,6 +16,9 @@ templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
 
+# # FIXME
+# mathjax_path = "MathJax/MathJax.js"
+
 # General information about the project.
 project = u"George"
 copyright = u"2013-2014 Dan Foreman-Mackey"

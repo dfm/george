@@ -16,12 +16,14 @@ from george.kernels import ExpSquaredKernel
 np.random.seed(12345)
 
 kernel = ExpSquaredKernel([3, 0.5], ndim=2)
-gp = george.HODLRGP(kernel)
+gp = george.HODLRGP(kernel, tol=1e-10)
 
 x, y = np.linspace(-5, 5, 62), np.linspace(-5, 5, 60)
 x, y = np.meshgrid(x, y, indexing="ij")
 shape = x.shape
 samples = np.vstack((x.flatten(), y.flatten())).T
+gp.compute(samples, 1e-4*np.ones(len(samples)), sort=False)
+
 print(len(samples))
 i = george.utils.nd_sort_samples(samples)
 

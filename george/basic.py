@@ -11,6 +11,13 @@ from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 
 class GP(object):
+    """
+    The basic Gaussian Process object.
+
+    :param kernel:
+        An instance of a subclass of :class:`kernels.Kernel`.
+
+    """
 
     def __init__(self, kernel):
         self.kernel = kernel
@@ -18,6 +25,10 @@ class GP(object):
 
     @property
     def computed(self):
+        """
+        Has the processes been computed since the last update of the kernel?
+
+        """
         return self._computed and not self.kernel.dirty
 
     @computed.setter
@@ -26,7 +37,34 @@ class GP(object):
         if v:
             self.kernel.dirty = False
 
-    def _parse_samples(self, t, sort):
+    def parse_samples(self, t, sort=False):
+        """
+        Parse a list of samples to make sure that it has the correct
+        dimensions and optionally sort it. In one dimension, the samples will
+        be sorted in the logical order. In higher dimensions, a kd-tree is
+        built and the samples are sorted in increasing distance from the
+        *first* sample.
+
+        :param t: ``(nsamples,)`` or ``(nsamples, ndim)``
+            The list of samples. If 1-D, this is assumed to be a list of
+            one-dimensional samples otherwise, the size of the second
+            dimension is assumed to be the dimension of the input space.
+
+        :param sort:
+            A boolean flag indicating whether or not the samples should be
+            sorted.
+
+        Returns a tuple ``(samples, inds)`` where
+
+        * **samples** is an array with shape ``(nsamples, ndim)`` and if
+          ``sort`` was ``True``, it will also be sorted, and
+        * **inds** is an ``(nsamples,)`` list of integer permutations used to
+          sort the list of samples.
+
+        Raises a ``RuntimeError`` if the input dimension doesn't match the
+        dimension of the kernel.
+
+        """
         t = np.atleast_1d(t)
         if len(t.shape) == 1:
             # Deal with one-dimensional data.
@@ -62,15 +100,24 @@ class GP(object):
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
 
-        :params x: ``(nsamples, )``
+        :param x: ``(nsamples,)`` or ``(nsamples, ndim)``
             The independent coordinates of the data points.
 
-        :params yerr: ``(nsamples, )``
-            The uncertainties on the data points at coordinates ``x``.
+        :param yerr: ``(nsamples,)``
+            The Gaussian uncertainties on the data points at coordinates
+            ``x``. These values will be added in quadrature to the diagonal of
+            the covariance matrix.
+
+        :param sort: (optional)
+            Should the samples be sorted before computing the covariance
+            matrix? This can lead to more numerically stable results and with
+            some linear algebra libraries this can more computationally
+            efficient. Either way, this flag is passed directly to
+            :func:`parse_samples`.
 
         """
         # Parse the input coordinates.
-        self._x, self.inds = self._parse_samples(np.array(x), sort)
+        self._x, self.inds = self.parse_samples(x, sort)
         self._yerr = self._check_dimensions(yerr)[self.inds]
 
         # Compute the kernel matrix.
@@ -89,7 +136,7 @@ class GP(object):
 
     def lnlikelihood(self, y):
         """
-        Compute the log-likelihood of a set of observations under the Gaussian
+        Compute the ln-likelihood of a set of observations under the Gaussian
         process model. You must call ``compute`` before this function.
 
         :param y: ``(nsamples, )``
@@ -103,6 +150,16 @@ class GP(object):
         return ll if np.isfinite(ll) else -np.inf
 
     def grad_lnlikelihood(self, y):
+        """
+        Compute the gradient of the ln-likelihood function as a function of
+        the kernel parameters.
+
+        :param y: ``(nsamples,)``
+            The list of observations at coordinates ``x`` provided to the
+            :func:`compute` function.
+
+
+        """
         if not self.computed:
             raise RuntimeError("You need to compute the model first")
 
@@ -110,16 +167,14 @@ class GP(object):
 
         # Pre-compute some factors.
         alpha = cho_solve(self._factor, r)
-        aaT = alpha[:, None] * alpha[None, :]
         Kg = self.kernel.grad(self._x[:, None], self._x[None, :])
-
-        # FIXME: make faster.
 
         # Loop over dimensions and compute the gradient in each one.
         g = np.empty(len(Kg))
         for i, k in enumerate(Kg):
-            d = np.diag(np.dot(aaT, k) - cho_solve(self._factor, k))
-            g[i] = 0.5 * np.sum(d)
+            d = np.sum(map(lambda r: np.dot(alpha, r), alpha[:, None] * k))
+            d -= np.sum(np.diag(cho_solve(self._factor, k)))
+            g[i] = 0.5 * d
 
         return g
 
@@ -127,25 +182,24 @@ class GP(object):
         """
         Compute the conditional predictive distribution of the model.
 
-        :param y: ``(nsamples, )``
+        :param y: ``(nsamples,)``
             The observations to condition the model on.
 
-        :param t: ``(ntest, )``
+        :param t: ``(ntest,)`` or ``(ntest, ndim)``
             The coordinates where the predictive distribution should be
             computed.
 
-        :returns mu: ``(ntest, )``
-            The mean of the predictive distribution.
+        Returns a tuple ``(mu, cov)`` where
 
-        :returns cov: ``(ntest, ntest)``
-            The predictive covariance.
+        * **mu** ``(ntest,)`` is the mean of the predictive distribution, and
+        * **cov** ``(ntest, ntest)`` is the predictive covariance.
 
         """
         if not self.computed:
             raise RuntimeError("You need to compute the model first")
 
         r = self._check_dimensions(y)[self.inds]
-        xs, i = self._parse_samples(t, False)
+        xs, i = self.parse_samples(t, False)
         alpha = cho_solve(self._factor, r)
 
         # Compute the predictive mean.
@@ -172,8 +226,8 @@ class GP(object):
         :param size: (optional)
             The number of samples to draw.
 
-        :returns samples: ``(N, ntest)``
-            A list of predictions at coordinates given by ``t``.
+        Returns **samples** ``(N, ntest)``, a list of predictions at
+        coordinates given by ``t``.
 
         """
         mu, cov = self.predict(y, t)
@@ -189,13 +243,20 @@ class GP(object):
         :param N: (optional)
             The number of samples to draw.
 
-        :returns samples: ``(N, ntest)``
-            A list of predictions at coordinates given by ``t``.
+        Returns **samples** ``(N, ntest)``, a list of predictions at
+        coordinates given by ``t``.
 
         """
         cov = self.get_matrix(t)
         return multivariate_gaussian_samples(cov, size)
 
     def get_matrix(self, t):
-        r, _ = self._parse_samples(t, False)
+        """
+        Get the covariance matrix at a given set of independent coordinates.
+
+        :param t: ``(nsamples,)`` or ``(nsamples, ndim)``
+            The list of samples.
+
+        """
+        r, _ = self.parse_samples(t, False)
         return self.kernel(r[:, None], r[None, :])
