@@ -1,6 +1,10 @@
 George
 ======
 
+George is a fast and flexible Python library for Gaussian Process Regression
+(see `Rasmussen & Williams (2006) <http://www.gaussianprocess.org/gpml/>`_ for
+an introduction).
+
 User Guide
 ----------
 

@@ -24,15 +24,16 @@ gp.compute(x, yerr)
 # Compute the log likelihood.
 print(gp.lnlikelihood(y))
 
-# Draw 10k samples from the predictive conditional distribution.
+# Compute the predictive conditional distribution.
 t = np.linspace(0, 10, 500)
-samples = gp.sample_conditional(y, t, size=10000)
+mu, cov = gp.predict(y, t)
+std = np.sqrt(np.diag(cov))
 
-# Compute the bounds of the prediction.
-q = np.percentile(samples, [16.0, 84.0], axis=0)
-
-pl.fill_between(t, q[0], q[1], color="k", alpha=0.2)
-pl.errorbar(x, y, yerr=yerr, fmt="ok", capsize=0)
+pl.fill_between(t, mu+std, mu-std, color="k", alpha=0.1)
+pl.plot(t, mu+std, color="k", alpha=1, lw=0.25)
+pl.plot(t, mu-std, color="k", alpha=1, lw=0.25)
+pl.plot(t, mu, color="k", alpha=1, lw=0.5)
+pl.errorbar(x, y, yerr=yerr, fmt=".k", capsize=0)
 pl.xlabel("$x$")
 pl.ylabel("$y$")
-pl.savefig("../_static/quickstart/conditional.png")
+pl.savefig("../_static/quickstart/conditional.png", dpi=150)
