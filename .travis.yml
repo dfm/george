@@ -22,6 +22,8 @@ before_install:
     - conda update --yes conda
 
 install:
+    - sudo apt-get install -qq libeigen3-dev
+
     - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
     - source activate test
 
