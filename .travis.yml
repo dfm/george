@@ -3,7 +3,6 @@ language: python
 env:
     global:
         - NUMPY_VERSION=1.8
-        - SCIPY_VERSION=0.14
 
 matrix:
     include:
@@ -27,7 +26,7 @@ install:
     - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
     - source activate test
 
-    - conda install --yes numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION nose pip
+    - conda install --yes numpy=$NUMPY_VERSION scipy nose pip
 
     - python setup.py build_ext --inplace
 
