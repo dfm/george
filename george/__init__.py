@@ -14,4 +14,4 @@ if not __GEORGE_SETUP__:
     from .basic import GP
     from .hodlr import HODLRGP
 
-    from testing import *
+    from .testing import *

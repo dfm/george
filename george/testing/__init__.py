@@ -1,4 +1,3 @@
 # -*- coding: utf-8 -*-
 
-import test_basic
-import test_kernels
+from . import test_basic, test_kernels

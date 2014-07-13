@@ -4,6 +4,10 @@
 
 #include "george.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define PyInt_AsLong PyLong_AsLong
+#endif
+
 using namespace george;
 
 using george::HODLRSolver;
@@ -38,8 +42,19 @@ static PyObject* _george_computed (_george_object* self, PyObject* args);
 static PyObject* _george_predict (_george_object* self, PyObject* args);
 static PyObject* _george_get_matrix (_george_object* self, PyObject* args);
 
-// Module interactions.
+// Python 3.
+
+#if PY_MAJOR_VERSION >= 3
+
+PyObject *PyInit__george (void);
+static int _george_traverse(PyObject* m, visitproc visit, void* arg);
+static int _george_clear(PyObject* m);
+
+#else
+
 void init_george (void);
+
+#endif
 
 }
 
@@ -47,7 +62,7 @@ static void _george_dealloc (_george_object* self)
 {
     if (self->kernel != NULL) delete self->kernel;
     if (self->solver != NULL) delete self->solver;
-    self->ob_type->tp_free((PyObject*)self);
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static PyObject *_george_new (PyTypeObject* type, PyObject* args, PyObject* kwds)
@@ -464,8 +479,7 @@ static PyMethodDef _george_methods[] = {
 static char _george_doc[] = "This is the ``_george`` object. "
                             "There is some black magic.";
 static PyTypeObject _george_type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                           /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "_george._george",           /*tp_name*/
     sizeof(_george_object),      /*tp_basicsize*/
     0,                           /*tp_itemsize*/
@@ -512,20 +526,68 @@ static PyTypeObject _george_type = {
 //
 
 static char module_doc[] = "GP Module";
-static PyMethodDef module_methods[] = {{NULL}};
-void init_george(void)
+
+#if PY_MAJOR_VERSION >= 3
+
+struct george_state {
+    PyObject *error;
+};
+#define GETSTATE(m) ((struct george_state*)PyModule_GetState(m))
+
+static int _george_traverse(PyObject* m, visitproc visit, void* arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int _george_clear(PyObject* m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+extern "C" {
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "_george",
+    module_doc,
+    sizeof(struct george_state),
+    _george_methods,
+    NULL,
+    _george_traverse,
+    _george_clear,
+    NULL
+};
+}
+
+#define INITERROR return NULL
+
+PyObject *PyInit__george (void)
+
+#else
+#define INITERROR return
+
+void init_george (void)
+
+#endif
 {
     PyObject *m;
+    if (PyType_Ready(&_george_type) < 0) INITERROR;
 
-    if (PyType_Ready(&_george_type) < 0)
-        return;
+#if PY_MAJOR_VERSION >= 3
+    m = PyModule_Create(&moduledef);
+#else
+    m = Py_InitModule3("_george", _george_methods, module_doc);
+#endif
 
-    m = Py_InitModule3("_george", module_methods, module_doc);
-    if (m == NULL)
-        return;
+    if (m == NULL) INITERROR;
 
+    // Add the _george type.
     Py_INCREF(&_george_type);
     PyModule_AddObject(m, "_george", (PyObject *)&_george_type);
 
+    // Numpy.
     import_array();
+
+#if PY_MAJOR_VERSION >= 3
+    return m;
+#endif
 }

@@ -1,3 +1,5 @@
+# Much of this script was adapted from astropy/astropy.
+
 language: python
 
 env:

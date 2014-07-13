@@ -172,7 +172,7 @@ class GP(object):
         # Loop over dimensions and compute the gradient in each one.
         g = np.empty(len(Kg))
         for i, k in enumerate(Kg):
-            d = np.sum(map(lambda r: np.dot(alpha, r), alpha[:, None] * k))
+            d = sum(map(lambda r: np.dot(alpha, r), alpha[:, None] * k))
             d -= np.sum(np.diag(cho_solve(self._factor, k)))
             g[i] = 0.5 * d
 
