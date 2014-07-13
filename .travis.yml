@@ -21,16 +21,10 @@ matrix:
           env: NUMPY_VERSION=1.7
         - python: 3.3
           env: NUMPY_VERSION=1.7
-        - python: 3.4
-          env: NUMPY_VERSION=1.7
 
         - python: 2.6
           env: NUMPY_VERSION=1.6
         - python: 2.7
-          env: NUMPY_VERSION=1.6
-        - python: 3.3
-          env: NUMPY_VERSION=1.6
-        - python: 3.4
           env: NUMPY_VERSION=1.6
 
 before_install:
