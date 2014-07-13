@@ -27,5 +27,7 @@ install:
 
     - conda install --yes numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION nose pip
 
+    - python setup.py build_ext --inplace
+
 script:
     - nosetests -v
