@@ -34,9 +34,9 @@
 \newcommand{\sectlabel}[1]{\label{sect:#1}}
 
 \newcommand{\dd}{\ensuremath{\,\mathrm{d}}}
-\newcommand{\bvec}[1]{\ensuremath{\boldsymbol{#1}}}
+\newcommand{\bvec}[1]{{\ensuremath{\boldsymbol{#1}}}}
 
-\newcommand{\todo}[3]{{\color{#2} \emph{#1} TODO: #3}}
+\newcommand{\todo}[3]{{\color{#2} \emph{#1}: #3}}
 \newcommand{\dfmtodo}[1]{\todo{DFM}{red}{#1}}
 
 \begin{document}
@@ -150,7 +150,7 @@ We compare the performance of our model to other industry standard techniques
 when applied to signals injected into \emph{real \kepler\ light curves} in
 \sect{parameters}.
 
-\section{The power of correlated noise}
+\section{What to do if your model is wrong}
 \sectlabel{corr-noise}
 
 Correlated noise is ubiquitous when analyzing real data taken using real
@@ -162,16 +162,67 @@ In this section, we will demonstrate with a simple but realistic example the
 effect that correlated noise can have on our inferred results.
 
 \paragraph{The problem}
+
 For the demonstration in this section, we have generated some synthetic data
-from a linear model with correlated noise.
-Since these data are synthetic, we know the true parameters of the linear
-model and the covariance structure of the observations but we will perform our
-inference assuming that these are not known.
-The dataset that we're using includes $K$ scalar observations
-$\{y_k\}_{k=1}^K$ observed at independent coordinates $\{x_k\}_{k=1}^K$ with
-uncertainties $\{\sigma_k\}_{k=1}^K$.
-These quoted uncertainties are meant to describe the independent component of
-the noise
+from a known model and added some correlated noise.
+The model is a Gaussian feature superimposed on a constant background:
+\begin{eqnarray}\eqlabel{demo-base-model}
+f_\bvec{\theta}(x) &=& a\,\exp\left(-\frac{[x - x_0]^2}{2\,w^2}\right) + b
+\end{eqnarray}
+where the amplitude $a$, the location $x_0$, the width $w$, and the background
+level $b$ are the parameters \bvec{\theta}.
+Since these data are synthetic, we know the true parameters
+$\bvec{\theta}_\mathrm{t}$ but we will run our inference assuming that
+these are unknown and compare our results to the truth.
+
+The synthetic dataset has $K$ scalar observations $\{y_k\}_{k=1}^K$ observed
+at independent coordinates $\{x_k\}_{k=1}^K$ with uncertainties
+$\{\sigma_k\}_{k=1}^K$.
+These quoted uncertainties are meant to be estimates of the independent
+component of the noise.
+This independent component is a quantity that can often be robustly estimated
+using an understanding of the measurement device, \etc\ (\dfmtodo{add some
+examples}).
+If we look at the data plotted in \dfmtodo{SOMEFIGURE}, we can easily see that
+the error bars don't sufficiently capture all the residuals away from the
+data.
+This is essentially a problem with the \emph{calibration} of the data and
+we will discuss two techniques for dealing with these calibration issues.
+
+\paragraph{Parametric calibration}
+
+One option would be to model these excess residuals \emph{parametrically}
+with, for example, a polynomial.
+This amounts to changing the generative model in \eq{demo-base-model} to
+\begin{eqnarray}\eqlabel{demo-poly-model}
+f_{\bvec{\theta},\bvec{\alpha}}(x) &=&
+    a\,\exp\left(-\frac{[x - x_0]^2}{2\,w^2}\right) + b
+    + q_\bvec{\alpha} (x)
+\end{eqnarray}
+where the calibration function could be something like
+\begin{eqnarray}
+q_\bvec{\alpha} &=& \alpha_1\,x + \alpha_2\,x^2 + \cdots
+\end{eqnarray}
+and fitting for the extra parameters $\bvec{\alpha}$.
+We choose a linear model for $q_\bvec{\alpha}$ and run MCMC on the full
+parameter set:
+\begin{eqnarray}
+\{\bvec{\theta},\,\bvec{\alpha}\} &=& (a,\,x_0,\,w,\,b,\,\alpha_1) \quad.
+\end{eqnarray}
+\dfmtodo{SOMEFIGURE} shows the results of this inference and the marginalized
+posterior constraints on the parameters of interest.
+\dfmtodo{Describe/make this figure.}
+
+\paragraph{Non-parametric calibration}
+
+The calibration model that we propose in \eq{demo-poly-model} is extremely
+rigid and it might be useful for a problem where we have strong prior
+knowledge about defects in the device.
+A more common situation is where we don't have a good parametric model but we
+do have some intuition about the covariances in the measurements---the
+systematic effects at points close in time or on the detector should be more
+correlated than points at further distances.
+To make a non-parametric model like this, we can resort to Gaussian processes.
 
 \section{Gaussian processes for regression}\sectlabel{gps}
 
