@@ -4,7 +4,7 @@
 from __future__ import division, print_function, absolute_import
 
 __all__ = [
-    "test_constant", "test_dot_prod",
+    "test_constant", "test_white", "test_dot_prod",
 
     "test_exp", "test_exp_squared", "test_rbf", "test_matern32",
     "test_matern52",
@@ -69,6 +69,12 @@ def test_constant():
     do_kernel_t(kernels.ConstantKernel(0.1))
     do_kernel_t(kernels.ConstantKernel(10.0, 2))
     do_kernel_t(kernels.ConstantKernel(5.0, 5))
+
+
+def test_white():
+    do_kernel_t(kernels.WhiteKernel(0.1))
+    do_kernel_t(kernels.WhiteKernel(10.0, 2))
+    do_kernel_t(kernels.WhiteKernel(5.0, 5))
 
 
 def test_dot_prod():

@@ -4,7 +4,7 @@ from __future__ import division, print_function
 
 __all__ = [
     "Sum", "Product", "Kernel",
-    "ConstantKernel", "DotProductKernel",
+    "ConstantKernel", "WhiteKernel", "DotProductKernel",
     "RadialKernel", "ExpKernel", "ExpSquaredKernel", "RBFKernel",
     "CosineKernel", "ExpSine2Kernel",
     "Matern32Kernel", "Matern52Kernel",
@@ -192,6 +192,36 @@ class ConstantKernel(Kernel):
     def grad(self, x1, x2):
         x = np.sum(np.zeros_like(x1 - x2), axis=-1)
         return 2 * self.pars[0] + np.zeros(np.append(1, x.shape))
+
+
+class WhiteKernel(Kernel):
+    r"""
+    This kernel returns constant along the diagonal.
+
+    .. math::
+
+        k(\mathbf{x}_i,\,\mathbf{x}_j) = c^2 \, \delta_{ij}
+
+    where :math:`c` is the parameter.
+
+    :param value:
+        The constant value :math:`c` in the above equation.
+
+    """
+    kernel_type = 8
+
+    def __init__(self, value, ndim=1):
+        super(WhiteKernel, self).__init__(value, ndim=ndim)
+
+    def __call__(self, x1, x2):
+        d = np.sum((x1 - x2) ** 2, axis=-1)
+        return self.pars[0] ** 2 * (d == 0.0)
+
+    def grad(self, x1, x2):
+        d = np.sum((x1 - x2) ** 2, axis=-1)
+        g = np.zeros(np.append(1, d.shape))
+        g[0] = 2 * self.pars[0] * (d == 0)
+        return g
 
 
 class DotProductKernel(Kernel):

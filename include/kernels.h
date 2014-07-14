@@ -2,6 +2,7 @@
 #define _GEORGE_KERNELS_H_
 
 #include <cmath>
+#include <cfloat>
 #include <Eigen/Dense>
 
 using Eigen::VectorXd;
@@ -84,6 +85,19 @@ public:
     double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
         *flag = 1;
         return value_*value_;
+    };
+
+private:
+    double value_;
+};
+
+class WhiteKernel : public Kernel {
+public:
+    WhiteKernel (const long ndim, const double* value) : value_(value[0]) {};
+    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
+        double d = (x1 - x2).squaredNorm();
+        if (d < DBL_EPSILON) return value_*value_;
+        return 0.0;
     };
 
 private:
