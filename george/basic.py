@@ -16,6 +16,9 @@ from scipy.linalg import cho_factor, cho_solve
 from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 
+TINY = 1.25e-12
+
+
 class GP(object):
     """
     The basic Gaussian Process object.
@@ -101,7 +104,7 @@ class GP(object):
             raise ValueError("Dimension mismatch")
         return y
 
-    def compute(self, x, yerr, sort=True, _scale=0.5*np.log(2*np.pi)):
+    def compute(self, x, yerr=TINY, sort=True, _scale=0.5*np.log(2*np.pi)):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
@@ -109,7 +112,7 @@ class GP(object):
         :param x: ``(nsamples,)`` or ``(nsamples, ndim)``
             The independent coordinates of the data points.
 
-        :param yerr: ``(nsamples,)``
+        :param yerr: (optional) ``(nsamples,)`` or scalar
             The Gaussian uncertainties on the data points at coordinates
             ``x``. These values will be added in quadrature to the diagonal of
             the covariance matrix.
@@ -124,7 +127,11 @@ class GP(object):
         """
         # Parse the input coordinates.
         self._x, self.inds = self.parse_samples(x, sort)
-        self._yerr = self._check_dimensions(yerr)[self.inds]
+
+        try:
+            self._yerr = float(yerr) * np.ones(len(x))
+        except TypeError:
+            self._yerr = self._check_dimensions(yerr)[self.inds]
 
         # Compute the kernel matrix.
         K = self.kernel(self._x[:, None], self._x[None, :])
@@ -301,8 +308,47 @@ class GP(object):
             self.kernel[i] = f(p)
         return -self.grad_lnlikelihood(y, dims=dims)
 
-    def optimize(self, x, y, yerr, sort=True, dims=None, in_log=True,
+    def optimize(self, x, y, yerr=TINY, sort=True, dims=None, in_log=True,
                  verbose=True):
+        """
+        A simple and not terribly robust non-linear optimization algorithm for
+        the kernel hyperpararmeters.
+
+        :param x: ``(nsamples,)`` or ``(nsamples, ndim)``
+            The independent coordinates of the data points.
+
+        :param y: ``(nsamples, )``
+            The observations at the coordinates ``x``.
+
+        :param yerr: (optional) ``(nsamples,)`` or scalar
+            The Gaussian uncertainties on the data points at coordinates
+            ``x``. These values will be added in quadrature to the diagonal of
+            the covariance matrix.
+
+        :param sort: (optional)
+            Should the samples be sorted before computing the covariance
+            matrix?
+
+        :param dims: (optional)
+            If you only want to optimize over some parameters, list their
+            indices here.
+
+        :param in_log: (optional) ``(len(kernel),)``, ``(len(dims),)`` or bool
+            If you want to fit the parameters in the log (this can be useful
+            for parameters that shouldn't go negative) specify that here. This
+            can be a single boolean---in which case it is assumed to apply to
+            every dimension---or it can be an array of booleans, one for each
+            dimension.
+
+        :param verbose: (optional)
+            Display the results of the call to :func:`scipy.optimize.minimize`?
+            (default: ``True``)
+
+        Returns ``(pars, status)`` where ``pars`` is the list of optimized
+        parameters and ``status`` is the status code returned by
+        :func:`scipy.optimize.minimize`.
+
+        """
         self.compute(x, yerr, sort=sort)
 
         # By default, optimize all the hyperparameters.
@@ -331,7 +377,7 @@ class GP(object):
         results = op.minimize(self._nll, p0, jac=self._grad_nll, args=args)
 
         if verbose:
-            print(results.message)
+            print(results)
 
         # Update the kernel.
         for i, f, p in izip(dims, conv, results.x):
