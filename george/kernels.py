@@ -15,7 +15,14 @@ import numpy as np
 
 class Kernel(object):
     """
-    The abstract kernel type.
+    The abstract kernel type. Every kernel implemented in George should be
+    a subclass of this object.
+
+    :param pars:
+        The hyper-parameters of the kernel.
+
+    :param ndim: (optional)
+        The number of input dimensions of the kernel. (default: ``1``)
 
     """
 
@@ -26,8 +33,19 @@ class Kernel(object):
         self.ndim = kwargs.get("ndim", 1)
         self.pars = np.array(pars)
 
+    def __repr__(self):
+        return "{0}({1})".format(self.__class__.__name__,
+                                 ", ".join(map("{0}".format,
+                                               self.pars) +
+                                           ["ndim={0}".format(self.ndim)]))
+
     @property
     def pars(self):
+        """
+        A NumPy array listing the vector of hyperparameters specifying the
+        kernel.
+
+        """
         return self._pars
 
     @pars.setter
@@ -68,9 +86,18 @@ class Kernel(object):
         return self.__mul__(b)
 
     def __call__(self, x1, x2):
+        """
+        The value of the kernel evaluated at a specific pair of coordinates.
+
+        """
         raise NotImplementedError("Must be implemented by subclasses")
 
     def grad(self, x1, x2):
+        """
+        The kernel gradient evaluated at a specific pair of coordinates. The
+        order of the parameters is the same as the ``.pars`` property.
+
+        """
         raise NotImplementedError("Must be implemented by subclasses")
 
 
@@ -110,6 +137,9 @@ class Sum(_operator):
     is_kernel = False
     operator_type = 0
 
+    def __repr__(self):
+        return "{0} + {1}".format(self.k1, self.k2)
+
     def __call__(self, x1, x2):
         return self.k1(x1, x2) + self.k2(x1, x2)
 
@@ -122,6 +152,9 @@ class Sum(_operator):
 class Product(_operator):
     is_kernel = False
     operator_type = 1
+
+    def __repr__(self):
+        return "{0} * {1}".format(self.k1, self.k2)
 
     def __call__(self, x1, x2):
         return self.k1(x1, x2) * self.k2(x1, x2)
@@ -184,7 +217,7 @@ class DotProductKernel(Kernel):
 
 
 class RadialKernel(Kernel):
-    """
+    r"""
     This abstract base class implements a radial kernel in an arbitrary
     metric.  The metric is specified as a matrix :math:`C` where the
     radius :math:`{r_{ij}}^2` is
@@ -203,6 +236,24 @@ class RadialKernel(Kernel):
            axis-aligned variances in each dimension, and
         3. if ``metric`` is two-dimensional, it is assumed to give the full
            matrix :math:`C`.
+
+    However you specify ``metric``, the ``pars`` property of the kernel will
+    be a NumPy array with elements:
+
+    .. code-block:: python
+
+        kernel.pars = [a, b, c, d, e, f, ...]
+
+    where
+
+    .. math::
+
+        C = \left ( \begin{array}{cccc}
+            a & b & d & \\
+            b & c & e & \cdots \\
+            d & e & f & \\
+             & \vdots & & \ddots
+        \end{array} \right )
 
     **Note:**
     Subclasses should implement the :func:`get_value` method to give

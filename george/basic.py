@@ -4,7 +4,13 @@ from __future__ import division, print_function
 
 __all__ = ["GP"]
 
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
+
 import numpy as np
+import scipy.optimize as op
 from scipy.linalg import cho_factor, cho_solve
 
 from .utils import multivariate_gaussian_samples, nd_sort_samples
@@ -113,7 +119,7 @@ class GP(object):
             matrix? This can lead to more numerically stable results and with
             some linear algebra libraries this can more computationally
             efficient. Either way, this flag is passed directly to
-            :func:`parse_samples`.
+            :func:`parse_samples`. (default: ``True``)
 
         """
         # Parse the input coordinates.
@@ -131,6 +137,20 @@ class GP(object):
         # Save the computed state.
         self.computed = True
 
+    def recompute(self, sort=False, **kwargs):
+        """
+        Re-compute a previously computed model. You might want to do this if
+        the kernel parameters change and the kernel is labeled as ``dirty``.
+
+        :params sort: (optional)
+            Should the samples be sorted before computing the covariance
+            matrix? (default: ``False``)
+
+        """
+        if not (hasattr(self, "_x") and hasattr(self, "_yerr")):
+            raise RuntimeError("You need to compute the model first")
+        return self.compute(self._x, self._yerr, sort=sort, **kwargs)
+
     def _compute_lnlike(self, r):
         return self._const - 0.5*np.dot(r.T, cho_solve(self._factor, r))
 
@@ -145,11 +165,11 @@ class GP(object):
 
         """
         if not self.computed:
-            raise RuntimeError("You need to compute the model first")
+            self.recompute()
         ll = self._compute_lnlike(self._check_dimensions(y)[self.inds])
         return ll if np.isfinite(ll) else -np.inf
 
-    def grad_lnlikelihood(self, y):
+    def grad_lnlikelihood(self, y, dims=None):
         """
         Compute the gradient of the ln-likelihood function as a function of
         the kernel parameters.
@@ -158,16 +178,26 @@ class GP(object):
             The list of observations at coordinates ``x`` provided to the
             :func:`compute` function.
 
+        :param dims: (optional)
+            If you only want to compute the gradient in some dimensions,
+            list them here.
 
         """
+        # Make sure that the model is computed and try to recompute it if it's
+        # dirty.
         if not self.computed:
-            raise RuntimeError("You need to compute the model first")
+            self.recompute()
 
+        # By default, compute the gradient in all dimensions.
+        if dims is None:
+            dims = np.ones(len(self.kernel), dtype=bool)
+
+        # Parse the input sample list.
         r = self._check_dimensions(y)[self.inds]
 
         # Pre-compute some factors.
         alpha = cho_solve(self._factor, r)
-        Kg = self.kernel.grad(self._x[:, None], self._x[None, :])
+        Kg = self.kernel.grad(self._x[:, None], self._x[None, :])[dims]
 
         # Loop over dimensions and compute the gradient in each one.
         g = np.empty(len(Kg))
@@ -196,7 +226,7 @@ class GP(object):
 
         """
         if not self.computed:
-            raise RuntimeError("You need to compute the model first")
+            self.recompute()
 
         r = self._check_dimensions(y)[self.inds]
         xs, i = self.parse_samples(t, False)
@@ -224,7 +254,7 @@ class GP(object):
             computed.
 
         :param size: (optional)
-            The number of samples to draw.
+            The number of samples to draw. (default: ``1``)
 
         Returns **samples** ``(N, ntest)``, a list of predictions at
         coordinates given by ``t``.
@@ -240,8 +270,8 @@ class GP(object):
         :param t: ``(ntest, )`` or ``(ntest, ndim)``
             The coordinates where the model should be sampled.
 
-        :param N: (optional)
-            The number of samples to draw.
+        :param size: (optional)
+            The number of samples to draw. (default: ``1``)
 
         Returns **samples** ``(N, ntest)``, a list of predictions at
         coordinates given by ``t``.
@@ -260,3 +290,51 @@ class GP(object):
         """
         r, _ = self.parse_samples(t, False)
         return self.kernel(r[:, None], r[None, :])
+
+    def _nll(self, pars, y, dims, conv):
+        for i, f, p in izip(dims, conv, pars):
+            self.kernel[i] = f(p)
+        return -self.lnlikelihood(y)
+
+    def _grad_nll(self, pars, y, dims, conv):
+        for i, f, p in izip(dims, conv, pars):
+            self.kernel[i] = f(p)
+        return -self.grad_lnlikelihood(y, dims=dims)
+
+    def optimize(self, x, y, yerr, sort=True, dims=None, in_log=True,
+                 verbose=True):
+        self.compute(x, yerr, sort=sort)
+
+        # By default, optimize all the hyperparameters.
+        if dims is None:
+            dims = np.ones(len(self.kernel), dtype=bool)
+        dims = np.arange(len(self.kernel))[dims]
+
+        # Deal with conversion functions.
+        try:
+            len(in_log)
+        except TypeError:
+            in_log = in_log * np.ones_like(dims, dtype=bool)
+        else:
+            if len(in_log) != len(dims):
+                raise RuntimeError("Dimension list and log mask mismatch")
+
+        # Build the conversion functions.
+        conv = np.array([lambda x: x for i in range(len(dims))])
+        iconv = np.array([lambda x: x for i in range(len(dims))])
+        conv[in_log] = np.exp
+        iconv[in_log] = np.log
+
+        # Run the optimization.
+        p0 = [f(p) for f, p in izip(iconv, self.kernel.pars[dims])]
+        args = (y, dims, conv)
+        results = op.minimize(self._nll, p0, jac=self._grad_nll, args=args)
+
+        if verbose:
+            print(results.message)
+
+        # Update the kernel.
+        for i, f, p in izip(dims, conv, results.x):
+            self.kernel[i] = f(p)
+
+        return self.kernel.pars[dims], results.status

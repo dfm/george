@@ -42,7 +42,8 @@ class HODLRGP(GP):
         Has the processes been computed since the last update of the kernel?
 
         """
-        return self._gp.computed() and not self.kernel.dirty
+        return (self._gp is not None and self._gp.computed()
+                and not self.kernel.dirty)
 
     @property
     def gp(self):
