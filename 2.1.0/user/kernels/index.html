@@ -30,7 +30,7 @@
   
     <link rel="top" title="George 2.1.0-dev documentation" href="../../"/>
         <link rel="next" title="Solvers" href="../solvers/"/>
-        <link rel="prev" title="Fitting a model to data with correlated noise" href="../model/"/> 
+        <link rel="prev" title="Tutorial: setting the hyperparameters" href="../hyper/"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -63,14 +63,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../quickstart/#a-simple-example">A Simple Example</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../model/">Fitting a model to data with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../model/#the-model">The Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#the-data">The Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Tutorial: model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../hyper/">Tutorial: setting the hyperparameters</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#basic-kernels">Basic Kernels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#radial-kernels">Radial Kernels</a></li>
@@ -140,7 +141,41 @@ the number of input dimensions for your problem.</p>
 <dl class="class">
 <dt id="george.kernels.Kernel">
 <em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">Kernel</tt><big>(</big><em>*pars</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#george.kernels.Kernel" title="Permalink to this definition">¶</a></dt>
-<dd><p>The abstract kernel type.</p>
+<dd><p>The abstract kernel type. Every kernel implemented in George should be
+a subclass of this object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pars</strong> &#8211; The hyper-parameters of the kernel.</li>
+<li><strong>ndim</strong> &#8211; (optional)
+The number of input dimensions of the kernel. (default: <tt class="docutils literal"><span class="pre">1</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="george.kernels.Kernel.__call__">
+<tt class="descname">__call__</tt><big>(</big><em>x1</em>, <em>x2</em><big>)</big><a class="headerlink" href="#george.kernels.Kernel.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value of the kernel evaluated at a specific pair of coordinates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.kernels.Kernel.grad">
+<tt class="descname">grad</tt><big>(</big><em>x1</em>, <em>x2</em><big>)</big><a class="headerlink" href="#george.kernels.Kernel.grad" title="Permalink to this definition">¶</a></dt>
+<dd><p>The kernel gradient evaluated at a specific pair of coordinates. The
+order of the parameters is the same as the <tt class="docutils literal"><span class="pre">.pars</span></tt> property.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="george.kernels.Kernel.pars">
+<tt class="descname">pars</tt><a class="headerlink" href="#george.kernels.Kernel.pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>A NumPy array listing the vector of hyperparameters specifying the
+kernel.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -174,7 +209,7 @@ the number of input dimensions for your problem.</p>
 <span id="id3"></span><h2>Radial Kernels<a class="headerlink" href="#radial-kernels" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="george.kernels.RadialKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">RadialKernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em><big>)</big><a class="headerlink" href="#george.kernels.RadialKernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">RadialKernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em>, <em>extra=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#george.kernels.RadialKernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>This abstract base class implements a radial kernel in an arbitrary
 metric.  The metric is specified as a matrix <span class="math">\(C\)</span> where the
 radius <span class="math">\({r_{ij}}^2\)</span> is</p>
@@ -198,15 +233,30 @@ matrix <span class="math">\(C\)</span>.</li>
 </tr>
 </tbody>
 </table>
+<p>However you specify <tt class="docutils literal"><span class="pre">metric</span></tt>, the <tt class="docutils literal"><span class="pre">pars</span></tt> property of the kernel will
+be a NumPy array with elements:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">kernel</span><span class="o">.</span><span class="n">pars</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>where</p>
+<div class="math">
+\[\begin{split}C = \left ( \begin{array}{cccc}
+    a &amp; b &amp; d &amp; \\
+    b &amp; c &amp; e &amp; \cdots \\
+    d &amp; e &amp; f &amp; \\
+     &amp; \vdots &amp; &amp; \ddots
+\end{array} \right )\end{split}\]</div>
 <p><strong>Note:</strong>
 Subclasses should implement the <tt class="xref py py-func docutils literal"><span class="pre">get_value()</span></tt> method to give
 the value of the kernel at a given radius and this class will deal with
 the metric.</p>
+<p><strong>Another Note:</strong>
+1-D is treated as a special case for speed.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="george.kernels.ExpKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">ExpKernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em><big>)</big><a class="headerlink" href="#george.kernels.ExpKernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">ExpKernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em>, <em>extra=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#george.kernels.ExpKernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The exponential kernel is a <a class="reference internal" href="#george.kernels.RadialKernel" title="george.kernels.RadialKernel"><tt class="xref py py-class docutils literal"><span class="pre">RadialKernel</span></tt></a> where the value at a
 given radius <span class="math">\(r^2\)</span> is given by:</p>
 <div class="math">
@@ -224,7 +274,7 @@ description.</td>
 
 <dl class="class">
 <dt id="george.kernels.ExpSquaredKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">ExpSquaredKernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em><big>)</big><a class="headerlink" href="#george.kernels.ExpSquaredKernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">ExpSquaredKernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em>, <em>extra=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#george.kernels.ExpSquaredKernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The exponential-squared kernel is a <a class="reference internal" href="#george.kernels.RadialKernel" title="george.kernels.RadialKernel"><tt class="xref py py-class docutils literal"><span class="pre">RadialKernel</span></tt></a> where the value
 at a given radius <span class="math">\(r^2\)</span> is given by:</p>
 <div class="math">
@@ -242,13 +292,13 @@ description.</td>
 
 <dl class="class">
 <dt id="george.kernels.RBFKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">RBFKernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em><big>)</big><a class="headerlink" href="#george.kernels.RBFKernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">RBFKernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em>, <em>extra=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#george.kernels.RBFKernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>An alias for <a class="reference internal" href="#george.kernels.ExpSquaredKernel" title="george.kernels.ExpSquaredKernel"><tt class="xref py py-class docutils literal"><span class="pre">ExpSquaredKernel</span></tt></a>.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="george.kernels.Matern32Kernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">Matern32Kernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em><big>)</big><a class="headerlink" href="#george.kernels.Matern32Kernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">Matern32Kernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em>, <em>extra=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#george.kernels.Matern32Kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Matern-3/2 kernel is a <a class="reference internal" href="#george.kernels.RadialKernel" title="george.kernels.RadialKernel"><tt class="xref py py-class docutils literal"><span class="pre">RadialKernel</span></tt></a> where the value at a
 given radius <span class="math">\(r^2\)</span> is given by:</p>
 <div class="math">
@@ -267,7 +317,7 @@ description.</td>
 
 <dl class="class">
 <dt id="george.kernels.Matern52Kernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">Matern52Kernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em><big>)</big><a class="headerlink" href="#george.kernels.Matern52Kernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">Matern52Kernel</tt><big>(</big><em>metric</em>, <em>ndim=1</em>, <em>extra=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#george.kernels.Matern52Kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Matern-5/2 kernel is a <a class="reference internal" href="#george.kernels.RadialKernel" title="george.kernels.RadialKernel"><tt class="xref py py-class docutils literal"><span class="pre">RadialKernel</span></tt></a> where the value at a
 given radius <span class="math">\(r^2\)</span> is given by:</p>
 <div class="math">
@@ -362,7 +412,7 @@ dimension larger than one.</p>
         <a href="../solvers/" class="btn btn-neutral float-right" title="Solvers"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../model/" class="btn btn-neutral" title="Fitting a model to data with correlated noise"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../hyper/" class="btn btn-neutral" title="Tutorial: setting the hyperparameters"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

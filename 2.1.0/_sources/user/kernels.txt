@@ -29,6 +29,9 @@ Basic Kernels
 -------------
 
 .. autoclass:: george.kernels.Kernel
+    :special-members: __call__
+    :members:
+
 .. autoclass:: george.kernels.ConstantKernel
 .. autoclass:: george.kernels.DotProductKernel
 

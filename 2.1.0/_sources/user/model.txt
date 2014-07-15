@@ -1,6 +1,6 @@
 .. _model:
 
-Fitting a model to data with correlated noise
+Tutorial: model fitting with correlated noise
 =============================================
 
 In this example, we're going to simulate a common data analysis situation
@@ -18,8 +18,8 @@ then improve on this model by modeling the covariance structure in the data
 using a Gaussian process.
 
 
-The Model
----------
+A Simple Mean Model
+-------------------
 
 The model that we'll fit in this demo is a single Gaussian feature with three
 parameters: amplitude :math:`\alpha`, location :math:`\ell`, and width
@@ -29,8 +29,8 @@ could think of, and it is qualitatively similar to a few problems in astronomy
 (fitting spectral features, measuring transit times, *etc.*).
 
 
-The Data
---------
+Simulated Dataset
+-----------------
 
 I simulated a dataset of 50 points with known correlated noise.
 In fact, this example is somewhat artificial since the data *were* drawn from

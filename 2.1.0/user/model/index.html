@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Fitting a model to data with correlated noise &mdash; George 2.1.0-dev documentation</title>
+  <title>Tutorial: model fitting with correlated noise &mdash; George 2.1.0-dev documentation</title>
   
 
   
@@ -63,9 +63,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../quickstart/#a-simple-example">A Simple Example</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Fitting a model to data with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#the-model">The Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-data">The Data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial: model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simulated-dataset">Simulated Dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#assuming-white-noise">Assuming White Noise</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#modeling-the-noise">Modeling the Noise</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-final-fit">The Final Fit</a></li>
@@ -107,7 +107,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../../">Docs</a> &raquo;</li>
       
-    <li>Fitting a model to data with correlated noise</li>
+    <li>Tutorial: model fitting with correlated noise</li>
       <li class="wy-breadcrumbs-aside">
         
           <a href="../../_sources/user/model.txt" rel="nofollow"> View page source</a>
@@ -118,8 +118,8 @@
 </div>
           <div role="main">
             
-  <div class="section" id="fitting-a-model-to-data-with-correlated-noise">
-<span id="model"></span><h1>Fitting a model to data with correlated noise<a class="headerlink" href="#fitting-a-model-to-data-with-correlated-noise" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="tutorial-model-fitting-with-correlated-noise">
+<span id="model"></span><h1>Tutorial: model fitting with correlated noise<a class="headerlink" href="#tutorial-model-fitting-with-correlated-noise" title="Permalink to this headline">¶</a></h1>
 <p>In this example, we&#8217;re going to simulate a common data analysis situation
 where our dataset exhibits unknown correlations in the noise.
 When taking data, it is often possible to estimate the independent measurement
@@ -133,8 +133,8 @@ correlated noise and a simple non-linear model.
 We will start by fitting the model assuming that the noise is uncorrelated and
 then improve on this model by modeling the covariance structure in the data
 using a Gaussian process.</p>
-<div class="section" id="the-model">
-<h2>The Model<a class="headerlink" href="#the-model" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="a-simple-mean-model">
+<h2>A Simple Mean Model<a class="headerlink" href="#a-simple-mean-model" title="Permalink to this headline">¶</a></h2>
 <p>The model that we&#8217;ll fit in this demo is a single Gaussian feature with three
 parameters: amplitude <span class="math">\(\alpha\)</span>, location <span class="math">\(\ell\)</span>, and width
 <span class="math">\(\sigma^2\)</span>.
@@ -142,8 +142,8 @@ I&#8217;ve chosen this model because is is the simplest non-linear model that I
 could think of, and it is qualitatively similar to a few problems in astronomy
 (fitting spectral features, measuring transit times, <em>etc.</em>).</p>
 </div>
-<div class="section" id="the-data">
-<h2>The Data<a class="headerlink" href="#the-data" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="simulated-dataset">
+<h2>Simulated Dataset<a class="headerlink" href="#simulated-dataset" title="Permalink to this headline">¶</a></h2>
 <p>I simulated a dataset of 50 points with known correlated noise.
 In fact, this example is somewhat artificial since the data <em>were</em> drawn from
 a Gaussian process but in everything that follows, we&#8217;ll use a different

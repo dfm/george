@@ -29,7 +29,7 @@
 
   
     <link rel="top" title="George 2.1.0-dev documentation" href="../../"/>
-        <link rel="next" title="Fitting a model to data with correlated noise" href="../model/"/>
+        <link rel="next" title="Tutorial: model fitting with correlated noise" href="../model/"/>
         <link rel="prev" title="George" href="../../"/> 
 
   
@@ -63,9 +63,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#a-simple-example">A Simple Example</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../model/">Fitting a model to data with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../model/#the-model">The Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#the-data">The Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Tutorial: model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
@@ -219,17 +219,20 @@ process model with this kernel:</p>
 <span class="k">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Finally, we can sample some new functions from the conditional predictive
-distribution and plot the resulting constraints over the data points:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Draw 100 samples from the predictive conditional distribution.</span>
-<span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
-<span class="n">samples</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">sample_conditional</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<p>Finally, we can compute the predicted values of the function at a fine grid of
+points conditioned on the observed data.
+This prediction will be an <span class="math">\(N_\mathrm{test} \times N_\mathrm{test}\)</span>
+multivariate Gaussian (where <span class="math">\(N_\mathrm{test}\)</span> is the number of points
+in the grid) with mean <tt class="docutils literal"><span class="pre">mu</span></tt> and covariance <tt class="docutils literal"><span class="pre">cov</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+<span class="n">mu</span><span class="p">,</span> <span class="n">cov</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+<span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">cov</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>This should result in a constraint that looks something like:</p>
+<p>This should result is a constraint that looks something like:</p>
 <img alt="../../_images/conditional.png" src="../../_images/conditional.png" />
 <p>where the points with error bars are the simulated data and the filled gray
-patch is the 68% credible interval for the prediction.</p>
+patch is the mean and standard deviation of the prediction.</p>
 </div>
 </div>
 
@@ -239,7 +242,7 @@ patch is the 68% credible interval for the prediction.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../model/" class="btn btn-neutral float-right" title="Fitting a model to data with correlated noise"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../model/" class="btn btn-neutral float-right" title="Tutorial: model fitting with correlated noise"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../../" class="btn btn-neutral" title="George"><span class="fa fa-arrow-circle-left"></span> Previous</a>

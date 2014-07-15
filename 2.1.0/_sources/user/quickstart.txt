@@ -135,18 +135,21 @@ process model with this kernel:
     # Compute the log likelihood.
     print(gp.lnlikelihood(y))
 
-Finally, we can sample some new functions from the conditional predictive
-distribution and plot the resulting constraints over the data points:
+Finally, we can compute the predicted values of the function at a fine grid of
+points conditioned on the observed data.
+This prediction will be an :math:`N_\mathrm{test} \times N_\mathrm{test}`
+multivariate Gaussian (where :math:`N_\mathrm{test}` is the number of points
+in the grid) with mean ``mu`` and covariance ``cov``:
 
 .. code-block:: python
 
-    # Draw 100 samples from the predictive conditional distribution.
     t = np.linspace(0, 10, 500)
-    samples = gp.sample_conditional(y, t, size=100)
+    mu, cov = gp.predict(y, t)
+    std = np.sqrt(np.diag(cov))
 
-This should result in a constraint that looks something like:
+This should result is a constraint that looks something like:
 
 .. image:: ../_static/quickstart/conditional.png
 
 where the points with error bars are the simulated data and the filled gray
-patch is the 68% credible interval for the prediction.
+patch is the mean and standard deviation of the prediction.
