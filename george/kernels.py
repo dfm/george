@@ -292,7 +292,7 @@ class RadialKernel(Kernel):
 
     """
 
-    def __init__(self, metric, ndim=1):
+    def __init__(self, metric, ndim=1, extra=[]):
         inds = np.tri(ndim, dtype=bool)
         try:
             l = len(metric)
@@ -305,7 +305,9 @@ class RadialKernel(Kernel):
                 pars = np.array(metric)
                 if l != (ndim*ndim + ndim) / 2:
                     raise ValueError("Dimension mismatch")
-        super(RadialKernel, self).__init__(*pars, ndim=ndim)
+        self.nextra = len(extra)
+        super(RadialKernel, self).__init__(*(np.append(extra, pars)),
+                                           ndim=ndim)
 
         # Build the gradient indicator masks.
         self.gm = np.empty(np.append(len(pars), self.matrix.shape), dtype=int)
@@ -322,7 +324,7 @@ class RadialKernel(Kernel):
         return m
 
     def set_pars(self, pars):
-        self.matrix = self._build_matrix(pars)
+        self.matrix = self._build_matrix(pars[self.nextra:])
 
     def __call__(self, x1, x2):
         dx = x1 - x2
@@ -337,16 +339,23 @@ class RadialKernel(Kernel):
         alpha = np.linalg.solve(self.matrix, dxf)
 
         # Compute the radial gradient.
-        g = np.empty(np.append(len(self.gm), dx.shape[:-1]))
+        g = np.empty(np.append(len(self.gm)+self.nextra, dx.shape[:-1]))
         for i, gm in enumerate(self.gm):
-            g[i] = np.sum(dxf*np.linalg.solve(self.matrix, np.dot(gm, alpha)),
-                          axis=0).reshape(dx.shape[:-1])
+            g[self.nextra+i] = \
+                np.sum(dxf*np.linalg.solve(self.matrix, np.dot(gm, alpha)),
+                       axis=0).reshape(dx.shape[:-1])
 
         # Compute the function gradient.
         r = np.sum(dxf * alpha, axis=0)
         r = r.reshape(dx.shape[:-1])
+        if self.nextra:
+            kg, g[:self.nextra] = self.get_grad(r)
+        else:
+            kg = self.get_grad(r)
+
+        # Update the full gradient to include the kernel.
         s = [None] + [slice(None)] * len(r.shape)
-        g *= -self.get_grad(r)[s]
+        g[self.nextra:] *= -kg[s]
 
         return g
 
@@ -464,6 +473,40 @@ class Matern52Kernel(RadialKernel):
     def get_grad(self, dx):
         r = np.sqrt(5.0 * dx)
         return -5 * (1.0 + r) * np.exp(-r) / 6.0
+
+
+class RationalQuadraticKernel(RadialKernel):
+    r"""
+    The Matern-5/2 kernel is a :class:`RadialKernel` where the value at a
+    given radius :math:`r^2` is given by:
+
+    .. math::
+
+        k(r^2) = \left( 1+ \frac{r^2}{2\,\alpha} \right )^{-\alpha}
+
+    :param alpha:
+        The shape parameter :math:`\alpha`.
+
+    :param metric:
+        The custom metric specified as described in the :class:`RadialKernel`
+        description.
+
+    """
+    kernel_type = 9
+
+    def __init__(self, alpha, metric, ndim=1):
+        super(RationalQuadraticKernel, self).__init__(metric, extra=[alpha],
+                                                      ndim=ndim)
+
+    def get_value(self, dx):
+        a = self.pars[0]
+        return (1.0 + 0.5 * dx / a) ** (-a)
+
+    def get_grad(self, dx):
+        a = self.pars[0]
+        t1 = 1 + 0.5 * dx / a
+        t2 = 2 * a + dx
+        return -0.5 * t1**(-a-1), t1 ** (-a) * (dx - t2 * np.log(t1)) / t2
 
 
 class CosineKernel(Kernel):

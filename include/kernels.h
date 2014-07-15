@@ -22,9 +22,7 @@ namespace kernels {
 class Kernel {
 public:
     virtual ~Kernel () {};
-    virtual double evaluate (const VectorXd& x1, const VectorXd& x2,
-                             int *flag) const {
-        *flag = 0;
+    virtual double evaluate (const VectorXd& x1, const VectorXd& x2) const {
         return 0.0;
     };
 };
@@ -43,11 +41,9 @@ public:
     Kernel* get_kernel1 () const { return kernel1_; };
     Kernel* get_kernel2 () const { return kernel2_; };
 
-    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
-        int f1, f2;
-        double k1 = kernel1_->evaluate(x1, x2, &f1),
-          k2 = kernel2_->evaluate(x1, x2, &f2);
-        *flag = f1 | f2;
+    double evaluate (const VectorXd& x1, const VectorXd& x2) const {
+        double k1 = kernel1_->evaluate(x1, x2),
+          k2 = kernel2_->evaluate(x1, x2);
         return k1 + k2;
     };
 
@@ -65,10 +61,8 @@ public:
     Kernel* get_kernel1 () const { return kernel1_; };
     Kernel* get_kernel2 () const { return kernel2_; };
 
-    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
-        double k = kernel1_->evaluate(x1, x2, flag);
-        if (!flag) return 0.0;
-        return k * kernel2_->evaluate(x1, x2, flag);
+    double evaluate (const VectorXd& x1, const VectorXd& x2) const {
+        return kernel1_->evaluate(x1, x2) * kernel2_->evaluate(x1, x2);
     };
 
 private:
@@ -82,8 +76,7 @@ private:
 class ConstantKernel : public Kernel {
 public:
     ConstantKernel (const long ndim, const double* value) : value_(value[0]) {};
-    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
-        *flag = 1;
+    double evaluate (const VectorXd& x1, const VectorXd& x2) const {
         return value_*value_;
     };
 
@@ -94,7 +87,7 @@ private:
 class WhiteKernel : public Kernel {
 public:
     WhiteKernel (const long ndim, const double* value) : value_(value[0]) {};
-    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
+    double evaluate (const VectorXd& x1, const VectorXd& x2) const {
         double d = (x1 - x2).squaredNorm();
         if (d < DBL_EPSILON) return value_*value_;
         return 0.0;
@@ -107,8 +100,7 @@ private:
 class DotProductKernel : public Kernel {
 public:
     DotProductKernel (const long ndim, const double* noop) {};
-    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
-        *flag = 1;
+    double evaluate (const VectorXd& x1, const VectorXd& x2) const {
         return x1.dot(x2);
     };
 };
@@ -132,10 +124,9 @@ public:
         icov_ = Eigen::LDLT<MatrixXd, Eigen::Lower> (m);
     };
 
-    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
+    double evaluate (const VectorXd& x1, const VectorXd& x2) const {
         VectorXd d = x1 - x2;
         double r2 = d.dot(icov_.solve(d));
-        *flag = 1;
         return get_value(r2);
     };
 
@@ -184,9 +175,8 @@ public:
     CosineKernel (const int ndim, const double* period) {
         omega_ = 2 * M_PI / fabs(period[0]);
     };
-    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
+    double evaluate (const VectorXd& x1, const VectorXd& x2) const {
         VectorXd d = x1 - x2;
-        *flag = 1;
         return cos(omega_ * sqrt(d.dot(d)));
     };
 
@@ -200,15 +190,29 @@ public:
         gamma_ = fabs(params[0]);
         omega_ = M_PI / fabs(params[1]);
     };
-    double evaluate (const VectorXd& x1, const VectorXd& x2, int *flag) const {
+    double evaluate (const VectorXd& x1, const VectorXd& x2) const {
         VectorXd d = x1 - x2;
         double s = sin(omega_ * sqrt(d.dot(d)));
-        *flag = 1;
         return exp(-gamma_*s*s);
     };
 
 private:
     double gamma_, omega_;
+};
+
+class RationalQuadraticKernel : public CovKernel {
+public:
+    RationalQuadraticKernel (const long ndim, const double* cov)
+        : CovKernel(ndim, &(cov[1]))
+    {
+        alpha_ = cov[0];
+    };
+    double get_value (const double r2) const {
+        return pow(1.0 + 0.5 * r2 / alpha_, -alpha_);
+    };
+
+private:
+    double alpha_;
 };
 
 }; // kernels

@@ -21,10 +21,7 @@ public:
     HODLRSolverMatrix (K* kernel) : kernel_(kernel) {};
     void set_values (MatrixXd v) { t_ = v; };
     double get_Matrix_Entry (const unsigned i, const unsigned j) {
-        int flag = 0;
-        double v = kernel_->evaluate (t_.row(i), t_.row(j), &flag);
-        if (flag) return v;
-        return 0.0;
+        return kernel_->evaluate (t_.row(i), t_.row(j));
     };
 
 private:
@@ -73,8 +70,6 @@ public:
     // Pre-compute and factorize the kernel matrix.
     //
     int compute (const MatrixXd x, const VectorXd& yerr, int seed) {
-        int flag;
-
         // Check the dimensions.
         int n = x.rows();
         if (yerr.rows() != n) {
@@ -89,7 +84,7 @@ public:
         VectorXd diag(n);
         for (int i = 0; i < n; ++i)
             diag[i] = yerr[i]*yerr[i] +
-                      kernel_->evaluate(x.row(i), x.row(i), &flag);
+                      kernel_->evaluate(x.row(i), x.row(i));
 
         // Set the time points for the kernel.
         matrix_->set_values (x);
@@ -150,7 +145,7 @@ public:
     // Get the mean conditional prediction.
     //
     void predict (const VectorXd& y, const MatrixXd& t, VectorXd& mu, MatrixXd& cov) {
-        int n = y.rows(), nt = t.rows(), ndim = t.cols(), flag;
+        int n = y.rows(), nt = t.rows(), ndim = t.cols();
         if (n != x_.rows() || ndim != x_.cols()) {
             status_ = DIMENSION_MISMATCH;
             return;
@@ -160,7 +155,7 @@ public:
         MatrixXd k (nt, n);
         for (int i = 0; i < nt; ++i)
             for (int j = 0; j < n; ++j)
-                k(i, j) = kernel_->evaluate (t.row(i), x_.row(j), &flag);
+                k(i, j) = kernel_->evaluate (t.row(i), x_.row(j));
 
         // Compute the mean prediction.
         mu = k * compute_alpha(y);
@@ -169,7 +164,7 @@ public:
         cov = MatrixXd (nt, nt);
         for (int i = 0; i < nt; ++i)
             for (int j = 0; j < nt; ++j)
-                cov(i, j) = kernel_->evaluate (t.row(i), t.row(j), &flag);
+                cov(i, j) = kernel_->evaluate (t.row(i), t.row(j));
         MatrixXd v(nt, nt),
                  kt = k.transpose();
         solver_->solve(kt, v);

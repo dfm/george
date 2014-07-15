@@ -7,7 +7,7 @@ __all__ = [
     "test_constant", "test_white", "test_dot_prod",
 
     "test_exp", "test_exp_squared", "test_rbf", "test_matern32",
-    "test_matern52",
+    "test_matern52", "test_rational_quadratic",
 
     "test_cosine", "test_exp_sine2",
 
@@ -87,33 +87,38 @@ def test_dot_prod():
 # COVARIANCE KERNELS
 #
 
-def do_cov_t(kernel_type):
-    kernel = kernel_type(0.1)
+def do_cov_t(kernel_type, extra=None):
+    def build_kernel(metric, **kwargs):
+        if extra is None:
+            return kernel_type(metric, **kwargs)
+        return kernel_type(*(extra + [metric]), **kwargs)
+
+    kernel = build_kernel(0.1)
     do_kernel_t(kernel)
 
-    kernel = kernel_type(1.0)
+    kernel = build_kernel(1.0)
     do_kernel_t(kernel)
 
-    kernel = kernel_type(10.0)
+    kernel = build_kernel(10.0)
     do_kernel_t(kernel)
 
     m = [1.0,
          0.5, 2.0,
          0.1, 0.3, 0.7]
-    kernel = kernel_type(m, ndim=3)
+    kernel = build_kernel(m, ndim=3)
     assert np.allclose(kernel.matrix, [[1.0, 0.5, 0.1],
                                        [0.5, 2.0, 0.3],
                                        [0.1, 0.3, 0.7]])
     do_kernel_t(kernel)
 
-    kernel = kernel_type([1.0, 0.1, 10.0], ndim=3)
+    kernel = build_kernel([1.0, 0.1, 10.0], ndim=3)
     do_kernel_t(kernel)
 
-    kernel = kernel_type(1.0, ndim=3)
+    kernel = build_kernel(1.0, ndim=3)
     do_kernel_t(kernel)
 
     try:
-        kernel = kernel_type([1.0, 0.1, 10.0, 500], ndim=3)
+        kernel = build_kernel([1.0, 0.1, 10.0, 500], ndim=3)
     except ValueError:
         pass
     else:
@@ -138,6 +143,12 @@ def test_matern32():
 
 def test_matern52():
     do_cov_t(kernels.Matern52Kernel)
+
+
+def test_rational_quadratic():
+    do_cov_t(kernels.RationalQuadraticKernel, [1.0])
+    do_cov_t(kernels.RationalQuadraticKernel, [0.1])
+    do_cov_t(kernels.RationalQuadraticKernel, [10.0])
 
 
 #

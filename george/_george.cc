@@ -184,6 +184,7 @@ kernels::Kernel* parse_kernel (PyObject* kernel)
     else if (ktype == 6) GEORGE_DEFINE_KERNEL ((ndim*ndim+ndim)/2, Matern32Kernel)
     else if (ktype == 7) GEORGE_DEFINE_KERNEL ((ndim*ndim+ndim)/2, Matern52Kernel)
     else if (ktype == 8) GEORGE_DEFINE_KERNEL (1, WhiteKernel)
+    else if (ktype == 9) GEORGE_DEFINE_KERNEL (1+(ndim*ndim+ndim)/2, RationalQuadraticKernel)
     else PyErr_SetString(PyExc_TypeError, "Unknown kernel");
 
 #undef GEORGE_DEFINE_KERNEL
@@ -427,13 +428,12 @@ static PyObject* _george_get_matrix (_george_object* self, PyObject* args)
     }
 
     // Copy over the result.
-    int flag;
     double* matrix = (double*)PyArray_DATA(out_array), value;
     kernels::Kernel* kernel = self->kernel;
     for (int i = 0; i < n; ++i) {
-        matrix[i*n+i] = kernel->evaluate(tm.row(i), tm.row(i), &flag);
+        matrix[i*n+i] = kernel->evaluate(tm.row(i), tm.row(i));
         for (int j = 0; j < i; ++j) {
-            value = kernel->evaluate(tm.row(i), tm.row(j), &flag);
+            value = kernel->evaluate(tm.row(i), tm.row(j));
             matrix[i*n+j] = value;
             matrix[j*n+i] = value;
         }
