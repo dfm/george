@@ -10,3 +10,4 @@ dist
 .syntastic_c_config
 build
 python/george/__init__.py
+.coverage

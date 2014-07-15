@@ -11,11 +11,13 @@ except ImportError:
 
 import numpy as np
 import scipy.optimize as op
-from scipy.linalg import cho_factor, cho_solve
+from scipy.linalg import cho_factor, cho_solve, LinAlgError
 
 from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 
+# MAGIC: tiny epsilon to add on the diagonal of the matrices in the absence
+# of observational uncertainties. Needed for computational stability.
 TINY = 1.25e-12
 
 
@@ -26,11 +28,26 @@ class GP(object):
     :param kernel:
         An instance of a subclass of :class:`kernels.Kernel`.
 
+    :param mean: (optional)
+        A description of the mean function; can be a callable or a scalar. If
+        scalar, the mean is assumed constant. Otherwise, the function will be
+        called with the array of independent coordinates as the only argument.
+        (default: ``0.0``)
+
     """
 
-    def __init__(self, kernel):
+    def __init__(self, kernel, mean=None):
         self.kernel = kernel
         self._computed = False
+        if mean is None:
+            self.mean = lambda t: np.zeros(len(t), dtype=float)
+        else:
+            try:
+                val = float(mean)
+            except TypeError:
+                self.mean = mean
+            else:
+                self.mean = lambda t: val + np.zeros(len(t), dtype=float)
 
     @property
     def computed(self):
@@ -173,7 +190,8 @@ class GP(object):
         """
         if not self.computed:
             self.recompute()
-        ll = self._compute_lnlike(self._check_dimensions(y)[self.inds])
+        r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
+        ll = self._compute_lnlike(r)
         return ll if np.isfinite(ll) else -np.inf
 
     def grad_lnlikelihood(self, y, dims=None):
@@ -190,17 +208,17 @@ class GP(object):
             list them here.
 
         """
+        # By default, compute the gradient in all dimensions.
+        if dims is None:
+            dims = np.ones(len(self.kernel), dtype=bool)
+
         # Make sure that the model is computed and try to recompute it if it's
         # dirty.
         if not self.computed:
             self.recompute()
 
-        # By default, compute the gradient in all dimensions.
-        if dims is None:
-            dims = np.ones(len(self.kernel), dtype=bool)
-
         # Parse the input sample list.
-        r = self._check_dimensions(y)[self.inds]
+        r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
 
         # Pre-compute some factors.
         alpha = cho_solve(self._factor, r)
@@ -235,13 +253,13 @@ class GP(object):
         if not self.computed:
             self.recompute()
 
-        r = self._check_dimensions(y)[self.inds]
+        r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
         xs, i = self.parse_samples(t, False)
         alpha = cho_solve(self._factor, r)
 
         # Compute the predictive mean.
         Kxs = self.kernel(self._x[None, :], xs[:, None])
-        mu = np.dot(Kxs, alpha)
+        mu = np.dot(Kxs, alpha) + self.mean(xs)
 
         # Compute the predictive covariance.
         cov = self.kernel(xs[:, None], xs[None, :])
@@ -284,8 +302,9 @@ class GP(object):
         coordinates given by ``t``.
 
         """
-        cov = self.get_matrix(t)
-        return multivariate_gaussian_samples(cov, size)
+        x, _ = self.parse_samples(t, False)
+        cov = self.get_matrix(x)
+        return multivariate_gaussian_samples(cov, size, mean=self.mean(x))
 
     def get_matrix(self, t):
         """
@@ -301,12 +320,18 @@ class GP(object):
     def _nll(self, pars, y, dims, conv):
         for i, f, p in izip(dims, conv, pars):
             self.kernel[i] = f(p)
-        return -self.lnlikelihood(y)
+        try:
+            return -self.lnlikelihood(y)
+        except (ValueError, LinAlgError):
+            return 1e25
 
     def _grad_nll(self, pars, y, dims, conv):
         for i, f, p in izip(dims, conv, pars):
             self.kernel[i] = f(p)
-        return -self.grad_lnlikelihood(y, dims=dims)
+        try:
+            return -self.grad_lnlikelihood(y, dims=dims)
+        except (ValueError, LinAlgError):
+            return np.zeros_like(dims, dtype=float)
 
     def optimize(self, x, y, yerr=TINY, sort=True, dims=None, in_log=True,
                  verbose=True):
@@ -377,7 +402,7 @@ class GP(object):
         results = op.minimize(self._nll, p0, jac=self._grad_nll, args=args)
 
         if verbose:
-            print(results)
+            print(results.message)
 
         # Update the kernel.
         for i, f, p in izip(dims, conv, results.x):

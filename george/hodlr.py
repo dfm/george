@@ -20,21 +20,27 @@ class HODLRGP(GP):
     :param kernel:
         An instance of a subclass of :class:`kernels.Kernel`.
 
-    :param nleaf:
-        A tuning parameter for the HODLR algorithm. This parameter sets the
-        size of the smallest leaf in the tree.
+    :param mean: (optional)
+        A description of the mean function; can be a callable or a scalar. If
+        scalar, the mean is assumed constant. Otherwise, the function will be
+        called with the array of independent coordinates as the only argument.
+        (default: ``0.0``)
 
-    :param tol:
+    :param nleaf: (optional)
         A tuning parameter for the HODLR algorithm. This parameter sets the
-        low-rank tolerance of the pivoting algorithm.
+        size of the smallest leaf in the tree. (default: ``100``)
+
+    :param tol: (optional)
+        A tuning parameter for the HODLR algorithm. This parameter sets the
+        low-rank tolerance of the pivoting algorithm. (default: ``1e-12``)
 
     """
 
-    def __init__(self, kernel, nleaf=100, tol=1e-12):
+    def __init__(self, kernel, nleaf=100, tol=1e-12, mean=None):
         self.nleaf = nleaf
         self.tol = tol
         self._gp = None
-        super(HODLRGP, self).__init__(kernel)
+        super(HODLRGP, self).__init__(kernel, mean=mean)
 
     @property
     def computed(self):
@@ -105,8 +111,8 @@ class HODLRGP(GP):
         * **cov** ``(ntest, ntest)`` is the predictive covariance.
 
         """
-        return self.gp.predict(self._check_dimensions(y)[self.inds],
-                               self.parse_samples(t, False)[0])
+        r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
+        return self.gp.predict(r, self.parse_samples(t, False)[0])
 
     def get_matrix(self, t):
         """
