@@ -13,5 +13,6 @@ User Guide
 
    user/quickstart
    user/model
+   user/hyper
    user/kernels
    user/solvers

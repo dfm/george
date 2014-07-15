@@ -40,14 +40,14 @@ class GP(object):
         self.kernel = kernel
         self._computed = False
         if mean is None:
-            self.mean = lambda t: np.zeros(len(t), dtype=float)
+            self.mean = _default_mean(0.)
         else:
             try:
                 val = float(mean)
             except TypeError:
                 self.mean = mean
             else:
-                self.mean = lambda t: val + np.zeros(len(t), dtype=float)
+                self.mean = _default_mean(val)
 
     @property
     def computed(self):
@@ -121,7 +121,7 @@ class GP(object):
             raise ValueError("Dimension mismatch")
         return y
 
-    def compute(self, x, yerr=TINY, sort=True, _scale=0.5*np.log(2*np.pi)):
+    def compute(self, x, yerr=TINY, sort=True, **kwargs):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
@@ -144,12 +144,13 @@ class GP(object):
         """
         # Parse the input coordinates.
         self._x, self.inds = self.parse_samples(x, sort)
-
         try:
             self._yerr = float(yerr) * np.ones(len(x))
         except TypeError:
             self._yerr = self._check_dimensions(yerr)[self.inds]
+        self._do_compute(**kwargs)
 
+    def _do_compute(self, _scale=0.5*np.log(2*np.pi)):
         # Compute the kernel matrix.
         K = self.kernel(self._x[:, None], self._x[None, :])
         K[np.diag_indices_from(K)] += self._yerr ** 2
@@ -317,24 +318,8 @@ class GP(object):
         r, _ = self.parse_samples(t, False)
         return self.kernel(r[:, None], r[None, :])
 
-    def _nll(self, pars, y, dims, conv):
-        for i, f, p in izip(dims, conv, pars):
-            self.kernel[i] = f(p)
-        try:
-            return -self.lnlikelihood(y)
-        except (ValueError, LinAlgError):
-            return 1e25
-
-    def _grad_nll(self, pars, y, dims, conv):
-        for i, f, p in izip(dims, conv, pars):
-            self.kernel[i] = f(p)
-        try:
-            return -self.grad_lnlikelihood(y, dims=dims)
-        except (ValueError, LinAlgError):
-            return np.zeros_like(dims, dtype=float)
-
     def optimize(self, x, y, yerr=TINY, sort=True, dims=None, in_log=True,
-                 verbose=True):
+                 verbose=True, **kwargs):
         """
         A simple and not terribly robust non-linear optimization algorithm for
         the kernel hyperpararmeters.
@@ -369,8 +354,8 @@ class GP(object):
             Display the results of the call to :func:`scipy.optimize.minimize`?
             (default: ``True``)
 
-        Returns ``(pars, status)`` where ``pars`` is the list of optimized
-        parameters and ``status`` is the status code returned by
+        Returns ``(pars, results)`` where ``pars`` is the list of optimized
+        parameters and ``results`` is the results object returned by
         :func:`scipy.optimize.minimize`.
 
         """
@@ -396,10 +381,26 @@ class GP(object):
         conv[in_log] = np.exp
         iconv[in_log] = np.log
 
+        # Define the objective function and gradient.
+        def nll(pars):
+            for i, f, p in izip(dims, conv, pars):
+                self.kernel[i] = f(p)
+            try:
+                return -self.lnlikelihood(y)
+            except (ValueError, LinAlgError):
+                return 1e25
+
+        def grad_nll(pars):
+            for i, f, p in izip(dims, conv, pars):
+                self.kernel[i] = f(p)
+            try:
+                return -self.grad_lnlikelihood(y, dims=dims)
+            except (ValueError, LinAlgError):
+                return np.zeros_like(dims, dtype=float)
+
         # Run the optimization.
         p0 = [f(p) for f, p in izip(iconv, self.kernel.pars[dims])]
-        args = (y, dims, conv)
-        results = op.minimize(self._nll, p0, jac=self._grad_nll, args=args)
+        results = op.minimize(nll, p0, jac=grad_nll, **kwargs)
 
         if verbose:
             print(results.message)
@@ -408,4 +409,13 @@ class GP(object):
         for i, f, p in izip(dims, conv, results.x):
             self.kernel[i] = f(p)
 
-        return self.kernel.pars[dims], results.status
+        return self.kernel.pars[dims], results
+
+
+class _default_mean(object):
+
+    def __init__(self, value):
+        self.value = value
+
+    def __call__(self, t):
+        return self.value + np.zeros(len(t), dtype=float)

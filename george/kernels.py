@@ -11,6 +11,7 @@ __all__ = [
 ]
 
 import numpy as np
+from scipy.linalg import cho_factor, cho_solve
 
 
 class Kernel(object):
@@ -290,31 +291,41 @@ class RadialKernel(Kernel):
     the value of the kernel at a given radius and this class will deal with
     the metric.
 
+    **Another Note:**
+    1-D is treated as a special case for speed.
+
     """
 
     def __init__(self, metric, ndim=1, extra=[]):
-        inds = np.tri(ndim, dtype=bool)
-        try:
-            l = len(metric)
-        except TypeError:
-            pars = np.diag(float(metric) * np.ones(ndim))[inds]
+        # Special case 1-D for speed.
+        if ndim == 1:
+            self.nextra = len(extra)
+            super(RadialKernel, self).__init__(*(np.append(extra, metric)),
+                                               ndim=1)
         else:
-            if l == ndim:
-                pars = np.diag(metric)[inds]
+            inds = np.tri(ndim, dtype=bool)
+            try:
+                l = len(metric)
+            except TypeError:
+                pars = np.diag(float(metric) * np.ones(ndim))[inds]
             else:
-                pars = np.array(metric)
-                if l != (ndim*ndim + ndim) / 2:
-                    raise ValueError("Dimension mismatch")
-        self.nextra = len(extra)
-        super(RadialKernel, self).__init__(*(np.append(extra, pars)),
-                                           ndim=ndim)
+                if l == ndim:
+                    pars = np.diag(metric)[inds]
+                else:
+                    pars = np.array(metric)
+                    if l != (ndim*ndim + ndim) / 2:
+                        raise ValueError("Dimension mismatch")
+            self.nextra = len(extra)
+            super(RadialKernel, self).__init__(*(np.append(extra, pars)),
+                                               ndim=ndim)
 
-        # Build the gradient indicator masks.
-        self.gm = np.empty(np.append(len(pars), self.matrix.shape), dtype=int)
-        for i in range(len(pars)):
-            ind = np.zeros(len(pars), dtype=int)
-            ind[i] = 1
-            self.gm[i] = self._build_matrix(ind)
+            # Build the gradient indicator masks.
+            self.gm = np.empty(np.append(len(pars), self.matrix.shape),
+                               dtype=int)
+            for i in range(len(pars)):
+                ind = np.zeros(len(pars), dtype=int)
+                ind[i] = 1
+                self.gm[i] = self._build_matrix(ind)
 
     def _build_matrix(self, x, dtype=float):
         m = np.zeros((self.ndim, self.ndim), dtype=dtype)
@@ -324,38 +335,58 @@ class RadialKernel(Kernel):
         return m
 
     def set_pars(self, pars):
-        self.matrix = self._build_matrix(pars[self.nextra:])
+        if self.ndim > 1:
+            self.matrix = self._build_matrix(pars[self.nextra:])
+            self._factor = cho_factor(self.matrix)
+        else:
+            self.ivar = 1.0 / pars[self.nextra]
 
     def __call__(self, x1, x2):
-        dx = x1 - x2
-        dxf = dx.reshape((-1, self.ndim)).T
-        r = np.sum(dxf * np.linalg.solve(self.matrix, dxf), axis=0)
-        r = r.reshape(dx.shape[:-1])
+        if self.ndim > 1:
+            dx = x1 - x2
+            dxf = dx.reshape((-1, self.ndim)).T
+            r = np.sum(dxf * cho_solve(self._factor, dxf), axis=0)
+            r = r.reshape(dx.shape[:-1])
+        else:
+            r = np.sum((x1 - x2), axis=-1) ** 2 * self.ivar
         return self.get_value(r)
 
     def grad(self, x1, x2):
-        dx = x1 - x2
-        dxf = dx.reshape((-1, self.ndim)).T
-        alpha = np.linalg.solve(self.matrix, dxf)
+        if self.ndim > 1:
+            dx = x1 - x2
+            dxf = dx.reshape((-1, self.ndim)).T
+            alpha = cho_solve(self._factor, dxf)
 
-        # Compute the radial gradient.
-        g = np.empty(np.append(len(self.gm)+self.nextra, dx.shape[:-1]))
-        for i, gm in enumerate(self.gm):
-            g[self.nextra+i] = \
-                np.sum(dxf*np.linalg.solve(self.matrix, np.dot(gm, alpha)),
-                       axis=0).reshape(dx.shape[:-1])
+            # Compute the radial gradient.
+            g = np.empty(np.append(len(self.gm)+self.nextra, dx.shape[:-1]))
+            for i, gm in enumerate(self.gm):
+                g[self.nextra+i] = \
+                    np.sum(dxf*cho_solve(self._factor, np.dot(gm, alpha)),
+                           axis=0).reshape(dx.shape[:-1])
 
-        # Compute the function gradient.
-        r = np.sum(dxf * alpha, axis=0)
-        r = r.reshape(dx.shape[:-1])
-        if self.nextra:
-            kg, g[:self.nextra] = self.get_grad(r)
+            # Compute the function gradient.
+            r = np.sum(dxf * alpha, axis=0)
+            r = r.reshape(dx.shape[:-1])
+            if self.nextra:
+                kg, g[:self.nextra] = self.get_grad(r)
+            else:
+                kg = self.get_grad(r)
+
+            # Update the full gradient to include the kernel.
+            s = [None] + [slice(None)] * len(r.shape)
+            g[self.nextra:] *= -kg[s]
+
         else:
-            kg = self.get_grad(r)
+            r = np.sum((x1 - x2), axis=-1) ** 2 * self.ivar
 
-        # Update the full gradient to include the kernel.
-        s = [None] + [slice(None)] * len(r.shape)
-        g[self.nextra:] *= -kg[s]
+            # Compute the radial gradient.
+            g = np.empty(np.append(len(self), r.shape))
+            if self.nextra:
+                kg, g[:self.nextra] = self.get_grad(r)
+            else:
+                kg = self.get_grad(r)
+
+            g[self.nextra] = -kg * r * self.ivar
 
         return g
 

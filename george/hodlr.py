@@ -57,35 +57,11 @@ class HODLRGP(GP):
             self._gp = _george(self.kernel, self.nleaf, self.tol)
         return self._gp
 
-    def compute(self, x, yerr, sort=True, seed=None):
-        """
-        Pre-compute the covariance matrix and factorize it for a set of times
-        and uncertainties.
-
-        :param x: ``(nsamples,)`` or ``(nsamples, ndim)``
-            The independent coordinates of the data points.
-
-        :param yerr: ``(nsamples,)``
-            The Gaussian uncertainties on the data points at coordinates
-            ``x``. These values will be added in quadrature to the diagonal of
-            the covariance matrix.
-
-        :param sort: (optional)
-            Should the samples be sorted before computing the covariance
-            matrix? This can lead to more numerically stable results and with
-            some linear algebra libraries this can more computationally
-            efficient. Either way, this flag is passed directly to
-            :func:`parse_samples`.
-
-        """
+    def _do_compute(self, seed=None):
         if seed is None:
             seed = int(time.time())
-
-        # Parse the input coordinates.
-        self._x, self.inds = self.parse_samples(x, sort)
-        self._yerr = self._check_dimensions(yerr)[self.inds]
-
-        return self.gp.compute(self._x, self._yerr, seed)
+        self.gp.compute(self._x, self._yerr, seed)
+        self.kernel.dirty = False
 
     def _compute_lnlike(self, r):
         return self.gp.lnlikelihood(r)
