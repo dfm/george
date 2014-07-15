@@ -61,15 +61,15 @@ p0 = [np.log(kernel.pars) + 1e-8 * np.random.randn(ndim)
 sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob)
 print("Sampling...")
 s = time.time()
-sampler.run_mcmc(p0, 5)
+sampler.run_mcmc(p0, 2000)
 print("Finished {0}".format(time.time() - s))
 
 pickle.dump((sampler.chain, sampler.lnprobability, gp),
             open("hyper-results.pkl", "wb"), -1)
 
-# # Plot the traces.
-# samples = sampler.chain
-# for i in range(samples.shape[2]):
-#     pl.clf()
-#     pl.plot(samples[:, :, i].T, color="k", alpha=0.5)
-#     pl.savefig("time/{0:03d}.png".format(i))
+# Plot the traces.
+samples = sampler.chain
+for i in range(samples.shape[2]):
+    pl.clf()
+    pl.plot(samples[:, :, i].T, color="k", alpha=0.5)
+    pl.savefig("time/{0:03d}.png".format(i))
