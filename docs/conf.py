@@ -30,12 +30,16 @@ exclude_patterns = ["_build"]
 pygments_style = "sphinx"
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-html_static_path = ["_static"]
-html_show_sourcelink = False
+htmp_theme_options = dict(
+    analytics_id="analytics_id",
+)
 html_context = dict(
     display_github=True,
     github_user="dfm",
     github_repo="george",
     github_version="master",
     conf_py_path="/docs/",
+    script_files=["_static/js/analytics.js", ],
 )
+html_static_path = ["_static"]
+html_show_sourcelink = False
