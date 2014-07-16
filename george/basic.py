@@ -405,18 +405,16 @@ class GP(object):
         def nll(pars):
             for i, f, p in izip(dims, conv, pars):
                 self.kernel[i] = f(p)
-            try:
-                return -self.lnlikelihood(y)
-            except (ValueError, LinAlgError):
-                return 1e25
+
+            ll = self.lnlikelihood(y, quiet=True)
+            if not np.isfinite(ll):
+                return 1e25  # The optimizers can't deal with infinities.
+            return -ll
 
         def grad_nll(pars):
             for i, f, p in izip(dims, conv, pars):
                 self.kernel[i] = f(p)
-            try:
-                return -self.grad_lnlikelihood(y, dims=dims)
-            except (ValueError, LinAlgError):
-                return np.zeros_like(dims, dtype=float)
+            return -self.grad_lnlikelihood(y, dims=dims, quiet=True)
 
         # Run the optimization.
         p0 = [f(p) for f, p in izip(iconv, self.kernel.pars[dims])]
