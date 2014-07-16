@@ -14,6 +14,7 @@ import numpy as np
 import cPickle as pickle
 import statsmodels.api as sm
 import matplotlib.pyplot as pl
+from multiprocessing import Pool
 
 import george
 from george import kernels
@@ -49,7 +50,7 @@ def lnprob(p):
     kernel.pars = np.exp(p)
     try:
         return lnprior + gp.lnlikelihood(y)
-    except np.linalg.LinAlgError:
+    except (ValueError, np.linalg.LinAlgError):
         return -np.inf
 
 
@@ -58,14 +59,16 @@ nwalkers, ndim = 36, len(kernel)
 p0 = [np.log(kernel.pars) + 1e-8 * np.random.randn(ndim)
       for i in range(nwalkers)]
 
-sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob)
+sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=Pool())
 print("Sampling...")
 s = time.time()
-sampler.run_mcmc(p0, 2000)
-print("Finished {0}".format(time.time() - s))
+for i in range(10):
+    print(i+1)
+    p0, _, _ = sampler.run_mcmc(p0, 200)
+    pickle.dump((sampler.chain, sampler.lnprobability, gp),
+                open("hyper-results-{0}.pkl".format(i), "wb"), -1)
 
-pickle.dump((sampler.chain, sampler.lnprobability, gp),
-            open("hyper-results.pkl", "wb"), -1)
+print("Finished {0}".format(time.time() - s))
 
 # Plot the traces.
 samples = sampler.chain
