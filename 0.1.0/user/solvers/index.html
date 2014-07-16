@@ -1,0 +1,772 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Solvers &mdash; George 0.1.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="George 0.1.0 documentation" href="../../"/>
+        <link rel="prev" title="Kernels" href="../kernels/"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../" class="fa fa-home"> George</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#a-simple-example">A Simple Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Tutorial: model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../hyper/">Tutorial: setting the hyperparameters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../kernels/">Kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#basic-kernels">Basic Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#radial-kernels">Radial Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#periodic-kernels">Periodic Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#combining-kernels">Combining Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#implementing-new-kernels">Implementing New Kernels</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hodlr-solver">HODLR Solver</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../">George</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../">Docs</a> &raquo;</li>
+      
+    <li>Solvers</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="https://github.com/dfm/george/blob/master/docs/user/solvers.rst" class="fa fa-github"> Edit on GitHub</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <span class="target" id="module-george"></span><div class="section" id="solvers">
+<span id="id1"></span><h1>Solvers<a class="headerlink" href="#solvers" title="Permalink to this headline">¶</a></h1>
+<p>There are currently two different GP solvers included with George using
+different libraries for doing linear algebra.
+Both of the solvers implement the same API and should (up to some tolerance)
+give the same answers on the same datasets.
+The first solver <a class="reference internal" href="#george.GP" title="george.GP"><tt class="xref py py-class docutils literal"><span class="pre">GP</span></tt></a> is a basic implementation using NumPy and SciPy
+so it will be linked to whichever LAPACK/BLAS is used by those libraries.
+This solver is very robust and it should be fairly efficient on small to
+moderate datasets.
+For larger datasets (<span class="math">\(N \gtrsim 5000\)</span>), you might consider using the
+<a class="reference internal" href="#george.HODLRGP" title="george.HODLRGP"><tt class="xref py py-class docutils literal"><span class="pre">HODLRGP</span></tt></a> solver.
+This solver is built using Sivaram Amambikasaran&#8217;s <a class="reference external" href="https://github.com/sivaramambikasaran/HODLR">HODLR library</a> that implements
+<span class="math">\(\mathcal{O}(N\,\log^2 N)\)</span> direct solves of dense matrices as described
+<a class="reference external" href="http://arxiv.org/abs/1403.6015">here</a>.</p>
+<div class="section" id="basic-solver">
+<h2>Basic Solver<a class="headerlink" href="#basic-solver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="george.GP">
+<em class="property">class </em><tt class="descclassname">george.</tt><tt class="descname">GP</tt><big>(</big><em>kernel</em>, <em>mean=None</em><big>)</big><a class="headerlink" href="#george.GP" title="Permalink to this definition">¶</a></dt>
+<dd><p>The basic Gaussian Process object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kernel</strong> &#8211; An instance of a subclass of <a class="reference internal" href="../kernels/#george.kernels.Kernel" title="george.kernels.Kernel"><tt class="xref py py-class docutils literal"><span class="pre">kernels.Kernel</span></tt></a>.</li>
+<li><strong>mean</strong> &#8211; (optional)
+A description of the mean function; can be a callable or a scalar. If
+scalar, the mean is assumed constant. Otherwise, the function will be
+called with the array of independent coordinates as the only argument.
+(default: <tt class="docutils literal"><span class="pre">0.0</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="george.GP.compute">
+<tt class="descname">compute</tt><big>(</big><em>x</em>, <em>yerr=1.25e-12</em>, <em>sort=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#george.GP.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pre-compute the covariance matrix and factorize it for a set of times
+and uncertainties.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+The independent coordinates of the data points.</li>
+<li><strong>yerr</strong> &#8211; (optional) <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or scalar
+The Gaussian uncertainties on the data points at coordinates
+<tt class="docutils literal"><span class="pre">x</span></tt>. These values will be added in quadrature to the diagonal of
+the covariance matrix.</li>
+<li><strong>sort</strong> &#8211; (optional)
+Should the samples be sorted before computing the covariance
+matrix? This can lead to more numerically stable results and with
+some linear algebra libraries this can more computationally
+efficient. Either way, this flag is passed directly to
+<a class="reference internal" href="#george.GP.parse_samples" title="george.GP.parse_samples"><tt class="xref py py-func docutils literal"><span class="pre">parse_samples()</span></tt></a>. (default: <tt class="docutils literal"><span class="pre">True</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="george.GP.computed">
+<tt class="descname">computed</tt><a class="headerlink" href="#george.GP.computed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Has the processes been computed since the last update of the kernel?</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.get_matrix">
+<tt class="descname">get_matrix</tt><big>(</big><em>t</em><big>)</big><a class="headerlink" href="#george.GP.get_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the covariance matrix at a given set of independent coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+The list of samples.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.grad_lnlikelihood">
+<tt class="descname">grad_lnlikelihood</tt><big>(</big><em>y</em>, <em>dims=None</em>, <em>quiet=False</em><big>)</big><a class="headerlink" href="#george.GP.grad_lnlikelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the gradient of the ln-likelihood function as a function of
+the kernel parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt>
+The list of observations at coordinates <tt class="docutils literal"><span class="pre">x</span></tt> provided to the
+<a class="reference internal" href="#george.GP.compute" title="george.GP.compute"><tt class="xref py py-func docutils literal"><span class="pre">compute()</span></tt></a> function.</li>
+<li><strong>dims</strong> &#8211; (optional)
+If you only want to compute the gradient in some dimensions,
+list them here.</li>
+<li><strong>quiet</strong> &#8211; If <tt class="docutils literal"><span class="pre">True</span></tt> return a gradient of zero instead of raising an
+exception when there is an invalid kernel or linear algebra
+failure. (default: <tt class="docutils literal"><span class="pre">False</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.lnlikelihood">
+<tt class="descname">lnlikelihood</tt><big>(</big><em>y</em>, <em>quiet=False</em><big>)</big><a class="headerlink" href="#george.GP.lnlikelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the ln-likelihood of a set of observations under the Gaussian
+process model. You must call <tt class="docutils literal"><span class="pre">compute</span></tt> before this function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations at the coordinates provided in the <tt class="docutils literal"><span class="pre">compute</span></tt>
+step.</li>
+<li><strong>quiet</strong> &#8211; If <tt class="docutils literal"><span class="pre">True</span></tt> return negative infinity instead of raising an
+exception when there is an invalid kernel or linear algebra
+failure. (default: <tt class="docutils literal"><span class="pre">False</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.optimize">
+<tt class="descname">optimize</tt><big>(</big><em>x</em>, <em>y</em>, <em>yerr=1.25e-12</em>, <em>sort=True</em>, <em>dims=None</em>, <em>in_log=True</em>, <em>verbose=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#george.GP.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple and not terribly robust non-linear optimization algorithm for
+the kernel hyperpararmeters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+The independent coordinates of the data points.</li>
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations at the coordinates <tt class="docutils literal"><span class="pre">x</span></tt>.</li>
+<li><strong>yerr</strong> &#8211; (optional) <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or scalar
+The Gaussian uncertainties on the data points at coordinates
+<tt class="docutils literal"><span class="pre">x</span></tt>. These values will be added in quadrature to the diagonal of
+the covariance matrix.</li>
+<li><strong>sort</strong> &#8211; (optional)
+Should the samples be sorted before computing the covariance
+matrix?</li>
+<li><strong>dims</strong> &#8211; (optional)
+If you only want to optimize over some parameters, list their
+indices here.</li>
+<li><strong>in_log</strong> &#8211; (optional) <tt class="docutils literal"><span class="pre">(len(kernel),)</span></tt>, <tt class="docutils literal"><span class="pre">(len(dims),)</span></tt> or bool
+If you want to fit the parameters in the log (this can be useful
+for parameters that shouldn&#8217;t go negative) specify that here. This
+can be a single boolean&#8212;in which case it is assumed to apply to
+every dimension&#8212;or it can be an array of booleans, one for each
+dimension.</li>
+<li><strong>verbose</strong> &#8211; (optional)
+Display the results of the call to <tt class="xref py py-func docutils literal"><span class="pre">scipy.optimize.minimize()</span></tt>?
+(default: <tt class="docutils literal"><span class="pre">True</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns <tt class="docutils literal"><span class="pre">(pars,</span> <span class="pre">results)</span></tt> where <tt class="docutils literal"><span class="pre">pars</span></tt> is the list of optimized
+parameters and <tt class="docutils literal"><span class="pre">results</span></tt> is the results object returned by
+<tt class="xref py py-func docutils literal"><span class="pre">scipy.optimize.minimize()</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.parse_samples">
+<tt class="descname">parse_samples</tt><big>(</big><em>t</em>, <em>sort=False</em><big>)</big><a class="headerlink" href="#george.GP.parse_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a list of samples to make sure that it has the correct
+dimensions and optionally sort it. In one dimension, the samples will
+be sorted in the logical order. In higher dimensions, a kd-tree is
+built and the samples are sorted in increasing distance from the
+<em>first</em> sample.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+The list of samples. If 1-D, this is assumed to be a list of
+one-dimensional samples otherwise, the size of the second
+dimension is assumed to be the dimension of the input space.</li>
+<li><strong>sort</strong> &#8211; A boolean flag indicating whether or not the samples should be
+sorted.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns a tuple <tt class="docutils literal"><span class="pre">(samples,</span> <span class="pre">inds)</span></tt> where</p>
+<ul class="simple">
+<li><strong>samples</strong> is an array with shape <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt> and if
+<tt class="docutils literal"><span class="pre">sort</span></tt> was <tt class="docutils literal"><span class="pre">True</span></tt>, it will also be sorted, and</li>
+<li><strong>inds</strong> is an <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> list of integer permutations used to
+sort the list of samples.</li>
+</ul>
+<p>Raises a <tt class="docutils literal"><span class="pre">RuntimeError</span></tt> if the input dimension doesn&#8217;t match the
+dimension of the kernel.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.predict">
+<tt class="descname">predict</tt><big>(</big><em>y</em>, <em>t</em><big>)</big><a class="headerlink" href="#george.GP.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the conditional predictive distribution of the model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt>
+The observations to condition the model on.</li>
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the predictive distribution should be
+computed.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns a tuple <tt class="docutils literal"><span class="pre">(mu,</span> <span class="pre">cov)</span></tt> where</p>
+<ul class="simple">
+<li><strong>mu</strong> <tt class="docutils literal"><span class="pre">(ntest,)</span></tt> is the mean of the predictive distribution, and</li>
+<li><strong>cov</strong> <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ntest)</span></tt> is the predictive covariance.</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.recompute">
+<tt class="descname">recompute</tt><big>(</big><em>sort=False</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#george.GP.recompute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-compute a previously computed model. You might want to do this if
+the kernel parameters change and the kernel is labeled as <tt class="docutils literal"><span class="pre">dirty</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Params sort:</th><td class="field-body">(optional)
+Should the samples be sorted before computing the covariance
+matrix? (default: <tt class="docutils literal"><span class="pre">False</span></tt>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.sample">
+<tt class="descname">sample</tt><big>(</big><em>t</em>, <em>size=1</em><big>)</big><a class="headerlink" href="#george.GP.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw samples from the prior distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the model should be sampled.</li>
+<li><strong>size</strong> &#8211; (optional)
+The number of samples to draw. (default: <tt class="docutils literal"><span class="pre">1</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns <strong>samples</strong> <tt class="docutils literal"><span class="pre">(N,</span> <span class="pre">ntest)</span></tt>, a list of predictions at
+coordinates given by <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.GP.sample_conditional">
+<tt class="descname">sample_conditional</tt><big>(</big><em>y</em>, <em>t</em>, <em>size=1</em><big>)</big><a class="headerlink" href="#george.GP.sample_conditional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw samples from the predictive conditional distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations to condition the model on.</li>
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the predictive distribution should be
+computed.</li>
+<li><strong>size</strong> &#8211; (optional)
+The number of samples to draw. (default: <tt class="docutils literal"><span class="pre">1</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns <strong>samples</strong> <tt class="docutils literal"><span class="pre">(N,</span> <span class="pre">ntest)</span></tt>, a list of predictions at
+coordinates given by <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="hodlr-solver">
+<h2>HODLR Solver<a class="headerlink" href="#hodlr-solver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="george.HODLRGP">
+<em class="property">class </em><tt class="descclassname">george.</tt><tt class="descname">HODLRGP</tt><big>(</big><em>kernel</em>, <em>nleaf=100</em>, <em>tol=1e-12</em>, <em>mean=None</em><big>)</big><a class="headerlink" href="#george.HODLRGP" title="Permalink to this definition">¶</a></dt>
+<dd><p>A solver built on top of Sivaram Amambikasaran&#8217;s <a class="reference external" href="https://github.com/sivaramambikasaran/HODLR">HODLR library</a> for linear algebra. The
+HODLR library includes an <span class="math">\(\mathcal{O}(N\,\log^2 N)\)</span> direct solver
+for dense matrices as described <a class="reference external" href="http://arxiv.org/abs/1403.6015">here</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kernel</strong> &#8211; An instance of a subclass of <a class="reference internal" href="../kernels/#george.kernels.Kernel" title="george.kernels.Kernel"><tt class="xref py py-class docutils literal"><span class="pre">kernels.Kernel</span></tt></a>.</li>
+<li><strong>mean</strong> &#8211; (optional)
+A description of the mean function; can be a callable or a scalar. If
+scalar, the mean is assumed constant. Otherwise, the function will be
+called with the array of independent coordinates as the only argument.
+(default: <tt class="docutils literal"><span class="pre">0.0</span></tt>)</li>
+<li><strong>nleaf</strong> &#8211; (optional)
+A tuning parameter for the HODLR algorithm. This parameter sets the
+size of the smallest leaf in the tree. (default: <tt class="docutils literal"><span class="pre">100</span></tt>)</li>
+<li><strong>tol</strong> &#8211; (optional)
+A tuning parameter for the HODLR algorithm. This parameter sets the
+low-rank tolerance of the pivoting algorithm. (default: <tt class="docutils literal"><span class="pre">1e-12</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="george.HODLRGP.compute">
+<tt class="descname">compute</tt><big>(</big><em>x</em>, <em>yerr=1.25e-12</em>, <em>sort=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#george.HODLRGP.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pre-compute the covariance matrix and factorize it for a set of times
+and uncertainties.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+The independent coordinates of the data points.</li>
+<li><strong>yerr</strong> &#8211; (optional) <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or scalar
+The Gaussian uncertainties on the data points at coordinates
+<tt class="docutils literal"><span class="pre">x</span></tt>. These values will be added in quadrature to the diagonal of
+the covariance matrix.</li>
+<li><strong>sort</strong> &#8211; (optional)
+Should the samples be sorted before computing the covariance
+matrix? This can lead to more numerically stable results and with
+some linear algebra libraries this can more computationally
+efficient. Either way, this flag is passed directly to
+<a class="reference internal" href="#george.HODLRGP.parse_samples" title="george.HODLRGP.parse_samples"><tt class="xref py py-func docutils literal"><span class="pre">parse_samples()</span></tt></a>. (default: <tt class="docutils literal"><span class="pre">True</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="george.HODLRGP.computed">
+<tt class="descname">computed</tt><a class="headerlink" href="#george.HODLRGP.computed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Has the processes been computed since the last update of the kernel?</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.get_matrix">
+<tt class="descname">get_matrix</tt><big>(</big><em>t</em><big>)</big><a class="headerlink" href="#george.HODLRGP.get_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the covariance matrix at a given set of independent coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+The list of samples.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.lnlikelihood">
+<tt class="descname">lnlikelihood</tt><big>(</big><em>y</em>, <em>quiet=False</em><big>)</big><a class="headerlink" href="#george.HODLRGP.lnlikelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the ln-likelihood of a set of observations under the Gaussian
+process model. You must call <tt class="docutils literal"><span class="pre">compute</span></tt> before this function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations at the coordinates provided in the <tt class="docutils literal"><span class="pre">compute</span></tt>
+step.</li>
+<li><strong>quiet</strong> &#8211; If <tt class="docutils literal"><span class="pre">True</span></tt> return negative infinity instead of raising an
+exception when there is an invalid kernel or linear algebra
+failure. (default: <tt class="docutils literal"><span class="pre">False</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.optimize">
+<tt class="descname">optimize</tt><big>(</big><em>x</em>, <em>y</em>, <em>yerr=1.25e-12</em>, <em>sort=True</em>, <em>dims=None</em>, <em>in_log=True</em>, <em>verbose=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#george.HODLRGP.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple and not terribly robust non-linear optimization algorithm for
+the kernel hyperpararmeters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+The independent coordinates of the data points.</li>
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations at the coordinates <tt class="docutils literal"><span class="pre">x</span></tt>.</li>
+<li><strong>yerr</strong> &#8211; (optional) <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or scalar
+The Gaussian uncertainties on the data points at coordinates
+<tt class="docutils literal"><span class="pre">x</span></tt>. These values will be added in quadrature to the diagonal of
+the covariance matrix.</li>
+<li><strong>sort</strong> &#8211; (optional)
+Should the samples be sorted before computing the covariance
+matrix?</li>
+<li><strong>dims</strong> &#8211; (optional)
+If you only want to optimize over some parameters, list their
+indices here.</li>
+<li><strong>in_log</strong> &#8211; (optional) <tt class="docutils literal"><span class="pre">(len(kernel),)</span></tt>, <tt class="docutils literal"><span class="pre">(len(dims),)</span></tt> or bool
+If you want to fit the parameters in the log (this can be useful
+for parameters that shouldn&#8217;t go negative) specify that here. This
+can be a single boolean&#8212;in which case it is assumed to apply to
+every dimension&#8212;or it can be an array of booleans, one for each
+dimension.</li>
+<li><strong>verbose</strong> &#8211; (optional)
+Display the results of the call to <tt class="xref py py-func docutils literal"><span class="pre">scipy.optimize.minimize()</span></tt>?
+(default: <tt class="docutils literal"><span class="pre">True</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns <tt class="docutils literal"><span class="pre">(pars,</span> <span class="pre">results)</span></tt> where <tt class="docutils literal"><span class="pre">pars</span></tt> is the list of optimized
+parameters and <tt class="docutils literal"><span class="pre">results</span></tt> is the results object returned by
+<tt class="xref py py-func docutils literal"><span class="pre">scipy.optimize.minimize()</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.parse_samples">
+<tt class="descname">parse_samples</tt><big>(</big><em>t</em>, <em>sort=False</em><big>)</big><a class="headerlink" href="#george.HODLRGP.parse_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a list of samples to make sure that it has the correct
+dimensions and optionally sort it. In one dimension, the samples will
+be sorted in the logical order. In higher dimensions, a kd-tree is
+built and the samples are sorted in increasing distance from the
+<em>first</em> sample.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+The list of samples. If 1-D, this is assumed to be a list of
+one-dimensional samples otherwise, the size of the second
+dimension is assumed to be the dimension of the input space.</li>
+<li><strong>sort</strong> &#8211; A boolean flag indicating whether or not the samples should be
+sorted.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns a tuple <tt class="docutils literal"><span class="pre">(samples,</span> <span class="pre">inds)</span></tt> where</p>
+<ul class="simple">
+<li><strong>samples</strong> is an array with shape <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt> and if
+<tt class="docutils literal"><span class="pre">sort</span></tt> was <tt class="docutils literal"><span class="pre">True</span></tt>, it will also be sorted, and</li>
+<li><strong>inds</strong> is an <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> list of integer permutations used to
+sort the list of samples.</li>
+</ul>
+<p>Raises a <tt class="docutils literal"><span class="pre">RuntimeError</span></tt> if the input dimension doesn&#8217;t match the
+dimension of the kernel.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.predict">
+<tt class="descname">predict</tt><big>(</big><em>y</em>, <em>t</em><big>)</big><a class="headerlink" href="#george.HODLRGP.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the conditional predictive distribution of the model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt>
+The observations to condition the model on.</li>
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the predictive distribution should be
+computed.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns a tuple <tt class="docutils literal"><span class="pre">(mu,</span> <span class="pre">cov)</span></tt> where</p>
+<ul class="simple">
+<li><strong>mu</strong> <tt class="docutils literal"><span class="pre">(ntest,)</span></tt> is the mean of the predictive distribution, and</li>
+<li><strong>cov</strong> <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ntest)</span></tt> is the predictive covariance.</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.recompute">
+<tt class="descname">recompute</tt><big>(</big><em>sort=False</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#george.HODLRGP.recompute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-compute a previously computed model. You might want to do this if
+the kernel parameters change and the kernel is labeled as <tt class="docutils literal"><span class="pre">dirty</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Params sort:</th><td class="field-body">(optional)
+Should the samples be sorted before computing the covariance
+matrix? (default: <tt class="docutils literal"><span class="pre">False</span></tt>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.sample">
+<tt class="descname">sample</tt><big>(</big><em>t</em>, <em>size=1</em><big>)</big><a class="headerlink" href="#george.HODLRGP.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw samples from the prior distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the model should be sampled.</li>
+<li><strong>size</strong> &#8211; (optional)
+The number of samples to draw. (default: <tt class="docutils literal"><span class="pre">1</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns <strong>samples</strong> <tt class="docutils literal"><span class="pre">(N,</span> <span class="pre">ntest)</span></tt>, a list of predictions at
+coordinates given by <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="george.HODLRGP.sample_conditional">
+<tt class="descname">sample_conditional</tt><big>(</big><em>y</em>, <em>t</em>, <em>size=1</em><big>)</big><a class="headerlink" href="#george.HODLRGP.sample_conditional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw samples from the predictive conditional distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">)</span></tt>
+The observations to condition the model on.</li>
+<li><strong>t</strong> &#8211; <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">)</span></tt> or <tt class="docutils literal"><span class="pre">(ntest,</span> <span class="pre">ndim)</span></tt>
+The coordinates where the predictive distribution should be
+computed.</li>
+<li><strong>size</strong> &#8211; (optional)
+The number of samples to draw. (default: <tt class="docutils literal"><span class="pre">1</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns <strong>samples</strong> <tt class="docutils literal"><span class="pre">(N,</span> <span class="pre">ntest)</span></tt>, a list of predictions at
+coordinates given by <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../kernels/" class="btn btn-neutral" title="Kernels"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014 Dan Foreman-Mackey.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
