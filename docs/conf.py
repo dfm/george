@@ -39,7 +39,14 @@ html_context = dict(
     github_repo="george",
     github_version="master",
     conf_py_path="/docs/",
-    # extra_script_files=["_static/js/analytics.js", ],
+    script_files=[
+        "_static/jquery.js",
+        "_static/underscore.js",
+        "_static/doctools.js",
+        "//cdn.mathjax.org/mathjax/latest/MathJax.js"
+        "?config=TeX-AMS-MML_HTMLorMML",
+        "_static/js/analytics.js",
+    ],
 )
 html_static_path = ["_static"]
 html_show_sourcelink = False
