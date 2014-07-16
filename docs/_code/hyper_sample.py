@@ -48,10 +48,7 @@ def lnprob(p):
 
     # Update the kernel and compute the lnlikelihood.
     kernel.pars = np.exp(p)
-    try:
-        return lnprior + gp.lnlikelihood(y)
-    except (ValueError, np.linalg.LinAlgError):
-        return -np.inf
+    return lnprior + gp.lnlikelihood(y, quiet=True)
 
 
 # Set up the sampler and initialize the walkers.
