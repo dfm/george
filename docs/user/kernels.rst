@@ -63,7 +63,33 @@ Periodic Kernels
 Combining Kernels
 -----------------
 
-*Coming soon*
+More complicated kernels can be constructed by algebraically combining the
+basic kernels listed in the previous sections.
+In particular, all the kernels support addition and multiplication.
+For example, an exponential-squared kernel with a non-trivial variance can be
+constructed as follows:
+
+.. code-block:: python
+
+    from george import kernels
+    kernel = 1e-3 * kernels.ExpSquaredKernel(3.4)
+
+This is equivalent to:
+
+.. code-block:: python
+
+    from math import sqrt
+    kernel = kernels.Product(kernels.ConstantKernel(sqrt(1e-3)),
+                             kernels.ExpSquaredKernel(3.4))
+
+As demonstrated in :ref:`hyper`, a mixture of kernels can be implemented with
+addition:
+
+.. code-block:: python
+
+    k1 = 1e-3 * kernels.ExpSquaredKernel(3.4)
+    k2 = 1e-4 * kernels.Matern32Kernel(14.53)
+    kernel = k1 + k2
 
 
 .. _new-kernels:

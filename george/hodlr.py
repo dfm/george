@@ -66,7 +66,7 @@ class HODLRGP(GP):
     def _compute_lnlike(self, r):
         return self.gp.lnlikelihood(r)
 
-    def grad_lnlikelihood(self, y):
+    def grad_lnlikelihood(self, *args, **kwargs):
         raise NotImplementedError("Gradients have not been implemented in the "
                                   "HODLR solver yet.")
 

@@ -179,7 +179,7 @@ class GP(object):
     def _compute_lnlike(self, r):
         return self._const - 0.5*np.dot(r.T, cho_solve(self._factor, r))
 
-    def lnlikelihood(self, y):
+    def lnlikelihood(self, y, quiet=False):
         """
         Compute the ln-likelihood of a set of observations under the Gaussian
         process model. You must call ``compute`` before this function.
@@ -188,14 +188,24 @@ class GP(object):
             The observations at the coordinates provided in the ``compute``
             step.
 
+        :param quiet:
+            If ``True`` return negative infinity instead of raising an
+            exception when there is an invalid kernel or linear algebra
+            failure. (default: ``False``)
+
         """
         if not self.computed:
-            self.recompute()
+            try:
+                self.recompute()
+            except (ValueError, LinAlgError):
+                if quiet:
+                    return -np.inf
+                raise
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
         ll = self._compute_lnlike(r)
         return ll if np.isfinite(ll) else -np.inf
 
-    def grad_lnlikelihood(self, y, dims=None):
+    def grad_lnlikelihood(self, y, dims=None, quiet=False):
         """
         Compute the gradient of the ln-likelihood function as a function of
         the kernel parameters.
@@ -208,6 +218,11 @@ class GP(object):
             If you only want to compute the gradient in some dimensions,
             list them here.
 
+        :param quiet:
+            If ``True`` return a gradient of zero instead of raising an
+            exception when there is an invalid kernel or linear algebra
+            failure. (default: ``False``)
+
         """
         # By default, compute the gradient in all dimensions.
         if dims is None:
@@ -216,7 +231,12 @@ class GP(object):
         # Make sure that the model is computed and try to recompute it if it's
         # dirty.
         if not self.computed:
-            self.recompute()
+            try:
+                self.recompute()
+            except (ValueError, LinAlgError):
+                if quiet:
+                    return np.zeros_like(dims, dtype=float)
+                raise
 
         # Parse the input sample list.
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
