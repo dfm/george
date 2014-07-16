@@ -1,3 +1,5 @@
+.. module:: george
+
 .. _hyper:
 
 Tutorial: setting the hyperparameters
@@ -67,8 +69,17 @@ as the hyperparameters for now):
     k4 = 0.18**2 * kernels.ExpSquaredKernel(1.6**2) + kernels.WhiteKernel(0.19)
     kernel = k1 + k2 + k3 + k4
 
-Then, to find the "best-fit" hyperparameters, we want to maximize the
-ln-likelihood as a function of the hyperparameters:
+
+Optimization
+------------
+
+If we want to find the "best-fit" hyperparameters, we should *optimize* an
+objective function.
+The two standard functions (as described in Chapter 5 of R&W) are the
+marginalized ln-likelihood and the cross validation likelihood.
+George implements the former in the :func:`GP.lnlikelihood` function and the
+gradient with respect to the hyperparameters in the
+:func:`GP.grad_lnlikelihood` function:
 
 .. code-block:: python
 
@@ -76,19 +87,19 @@ ln-likelihood as a function of the hyperparameters:
     gp = george.GP(kernel, mean=np.mean(y))
     gp.compute(t)
     print(gp.lnlikelihood(y))
+    print(gp.grad_lnlikelihood(y))
 
 In general, you'll probably want to write a custom routine for optimizing this
-function---possibly using the gradient computed using
-:func:`george.GP.grad_lnlikelihood`---but George does come with a simple
-gradient-based non-linear optimization routine that isn't a bad starting
-point:
+function because the optimal choice of method seems to be very problem
+dependent but George does come with a simple gradient-based non-linear
+optimization routine that we'll use for this demo:
 
 .. code-block:: python
 
     p, results = gp.optimize(t, y)
 
-Running this optimization, we find a final ln-likelihood of -100.22 (slightly
-better than the result in R&W) and the following parameter values:
+After running this optimization, we find a final ln-likelihood of -100.22
+(slightly better than the result in R&W) and the following parameter values:
 
 .. include:: ../_static/hyper/results.txt
 
@@ -104,3 +115,91 @@ optimized Gaussian process model by running:
 and this gives a result just like Figure 5.6 from R&W:
 
 .. image:: ../_static/hyper/figure.png
+
+
+Sampling & Marginalization
+--------------------------
+
+The prediction made in the previous section take into account uncertainties
+due to the fact that a Gaussian process is stochastic but it doesn't take into
+account any uncertainties in the *values of the hyperparameters*.
+This won't matter if the hyperparameters are very well constrained by the data
+but in this case, many of the parameters are actually poorly constrained.
+To take this effect into account, we can apply prior probability functions to
+the hyperparameters and marginalize using `Markov chain Monte Carlo (MCMC)
+<http://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo>`_.
+To do this, we'll use the `emcee <http://dan.iel.fm/emcee>`_ package.
+
+First, we define the probabilistic model:
+
+.. code-block:: python
+
+    def lnprob(p):
+        # Trivial improper prior: uniform in the log.
+        if np.any((-10 > p) + (p > 10)):
+            return -np.inf
+        lnprior = 0.0
+
+        # Update the kernel and compute the lnlikelihood.
+        kernel.pars = np.exp(p)
+        return lnprior + gp.lnlikelihood(y, quiet=True)
+
+In this function, we've applied a prior on every parameter that is uniform in
+the natural log between -10 and 10.
+The ``quiet`` argument in the call to :func:`GP.lnlikelihood` means that that
+function will return ``-numpy.inf`` if the kernel is invalid or if there are
+any linear algebra errors (otherwise it would raise an exception).
+
+Then, we run the sampler (this will probably take a while to run if you want
+to repeat this analysis):
+
+.. code-block:: python
+
+    import emcee
+
+    # You need to compute the GP once before starting. Then the sample list
+    # will be saved.
+    gp.compute(t)
+
+    # Set up the sampler.
+    nwalkers, ndim = 36, len(kernel)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob)
+
+    # Initialize the walkers.
+    p0 = [np.log(kernel.pars) + 1e-4 * np.random.randn(ndim)
+          for i in range(nwalkers)]
+
+    print("Running burn-in")
+    p0, _, _ = sampler.run_mcmc(p0, 2000)
+
+    print("Running production chain")
+    sampler.run_mcmc(p0, 2000)
+
+After this run, you can plot 50 samples from the marginalized predictive
+probability distribution:
+
+.. code-block:: python
+
+    import matplotlib.pyplot as pl
+
+    x = np.linspace(max(t), 2025, 250)
+    for i in range(50):
+        # Choose a random walker and step.
+        w = np.random.randint(chain.shape[0])
+        n = np.random.randint(2000, chain.shape[1])
+        gp.kernel.pars = np.exp(chain[w, n])
+
+        # Plot a single sample.
+        pl.plot(x, gp.sample_conditional(y, x), "k", alpha=0.3)
+
+This should give you a figure similar to this one:
+
+.. image:: ../_static/hyper/mcmc.png
+
+Comparing this to the same figure in the previous section, you'll notice that
+the error bars on the prediction are now substantially larger than before.
+This is because we are now considering all the predictions that are consistent
+with the data, not just the "best" prediction.
+In general, even though it requires much more computation, it is more
+conservative (and honest) to take all these sources of uncertainty into
+account.
