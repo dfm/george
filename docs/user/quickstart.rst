@@ -147,7 +147,7 @@ in the grid) with mean ``mu`` and covariance ``cov``:
     mu, cov = gp.predict(y, t)
     std = np.sqrt(np.diag(cov))
 
-This should result is a constraint that looks something like:
+This should result in a constraint that looks something like:
 
 .. image:: ../_static/quickstart/conditional.png
 
