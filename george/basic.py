@@ -11,7 +11,7 @@ except ImportError:
 
 import numpy as np
 import scipy.optimize as op
-from scipy.linalg import cho_factor, cho_solve, LinAlgError
+from scipy.linalg import cholesky, cho_solve, LinAlgError
 
 from .utils import multivariate_gaussian_samples, nd_sort_samples
 
@@ -156,13 +156,14 @@ class GP(object):
         K[np.diag_indices_from(K)] += self._yerr ** 2
 
         # Factor the matrix and compute the log-determinant.
-        factor, _ = self._factor = cho_factor(K, overwrite_a=True)
+        factor, _ = self._factor = (cholesky(K, overwrite_a=True,
+                                             lower=False), False)
         self._const = -(np.sum(np.log(np.diag(factor))) + _scale*len(self._x))
 
         # Save the computed state.
         self.computed = True
 
-    def recompute(self, sort=False, **kwargs):
+    def recompute(self, sort=False, quiet=False, **kwargs):
         """
         Re-compute a previously computed model. You might want to do this if
         the kernel parameters change and the kernel is labeled as ``dirty``.
@@ -172,9 +173,16 @@ class GP(object):
             matrix? (default: ``False``)
 
         """
-        if not (hasattr(self, "_x") and hasattr(self, "_yerr")):
-            raise RuntimeError("You need to compute the model first")
-        return self.compute(self._x, self._yerr, sort=sort, **kwargs)
+        if not self.computed:
+            if not (hasattr(self, "_x") and hasattr(self, "_yerr")):
+                raise RuntimeError("You need to compute the model first")
+            try:
+                self.compute(self._x, self._yerr, sort=sort, **kwargs)
+            except (ValueError, LinAlgError):
+                if quiet:
+                    return False
+                raise
+        return True
 
     def _compute_lnlike(self, r):
         return self._const - 0.5*np.dot(r.T, cho_solve(self._factor, r))
@@ -194,13 +202,8 @@ class GP(object):
             failure. (default: ``False``)
 
         """
-        if not self.computed:
-            try:
-                self.recompute()
-            except (ValueError, LinAlgError):
-                if quiet:
-                    return -np.inf
-                raise
+        if not self.recompute(quiet=quiet):
+            return -np.inf
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
         ll = self._compute_lnlike(r)
         return ll if np.isfinite(ll) else -np.inf
@@ -230,13 +233,8 @@ class GP(object):
 
         # Make sure that the model is computed and try to recompute it if it's
         # dirty.
-        if not self.computed:
-            try:
-                self.recompute()
-            except (ValueError, LinAlgError):
-                if quiet:
-                    return np.zeros_like(dims, dtype=float)
-                raise
+        if not self.recompute(quiet=quiet):
+            return np.zeros_like(dims, dtype=float)
 
         # Parse the input sample list.
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
@@ -271,9 +269,7 @@ class GP(object):
         * **cov** ``(ntest, ntest)`` is the predictive covariance.
 
         """
-        if not self.computed:
-            self.recompute()
-
+        self.recompute()
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
         xs, i = self.parse_samples(t, False)
         alpha = cho_solve(self._factor, r)
