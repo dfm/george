@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__version__ = "0.1.0"
+__version__ = "0.1.1-dev"
 
 try:
     __GEORGE_SETUP__
@@ -13,7 +13,3 @@ if not __GEORGE_SETUP__:
     from . import kernels
     from .basic import GP
     from .hodlr import HODLRGP
-
-    # Tests.
-    from .testing.test_basic import *  # NOQA
-    from .testing.test_kernels import *  # NOQA
