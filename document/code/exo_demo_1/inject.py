@@ -12,10 +12,10 @@ import numpy as np
 import matplotlib.pyplot as pl
 
 
-def inject(kicid):
+def inject(kicid, rng=6):
     # Download the data.
     client = kplr.API()
-    kic = client.star(2973073)
+    kic = client.star(kicid)
     lcs = kic.get_light_curves(short_cadence=False)
     lc = lcs[np.random.randint(len(lcs))]
 
@@ -34,7 +34,7 @@ def inject(kicid):
     # Build the transit system.
     s = transit.System(transit.Central(q1=np.random.rand(),
                                        q2=np.random.rand()))
-    body = transit.Body(period=365.25, b=np.random.rand(), r=0.02,
+    body = transit.Body(period=365.25, b=np.random.rand(), r=0.04,
                         t0=np.random.uniform(t.max()))
     s.add_body(body)
 
@@ -44,7 +44,7 @@ def inject(kicid):
     f *= model
 
     # Trim the dataset to include data only near the transit.
-    m = np.abs(t - body.t0) < 5
+    m = np.abs(t - body.t0) < rng
     t, f, fe = t[m], f[m], fe[m]
     t -= body.t0
 
@@ -61,10 +61,11 @@ def inject(kicid):
     fig = pl.figure(figsize=(6, 6))
     ax = fig.add_subplot(111)
     ax.plot(t, ppm, ".k")
-    ax.set_xlim(-5, 5)
+    ax.set_xlim(-rng, rng)
     ax.set_xlabel("time since transit [days]")
     ax.set_ylabel("relative flux [ppm]")
-    fig.subplots_adjust(left=0.2, bottom=0.2, top=0.95, right=0.95)
+    ax.set_title("raw light curve")
+    fig.subplots_adjust(left=0.2, bottom=0.2, top=0.9, right=0.9)
     fig.savefig("{0}-raw.pdf".format(kicid))
 
 
@@ -74,5 +75,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         inject(sys.argv[1])
     else:
-        np.random.seed(123)
-        inject(2973073)
+        np.random.seed(12345)
+        inject(2301306)
+        # inject(2973073)
