@@ -40,6 +40,17 @@ class Kernel(object):
                                                self.pars) +
                                            ["ndim={0}".format(self.ndim)]))
 
+    def lnprior(self, vector):
+        return 0.0
+
+    @property
+    def vector(self):
+        return np.log(self.pars)
+
+    @vector.setter
+    def vector(self, v):
+        self.pars = np.exp(v)
+
     @property
     def pars(self):
         """

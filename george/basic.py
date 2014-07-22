@@ -39,15 +39,23 @@ class GP(object):
     def __init__(self, kernel, mean=None):
         self.kernel = kernel
         self._computed = False
+        self.mean = mean
+
+    @property
+    def mean(self):
+        return self._mean
+
+    @mean.setter
+    def mean(self, mean):
         if mean is None:
-            self.mean = _default_mean(0.)
+            self._mean = _default_mean(0.)
         else:
             try:
                 val = float(mean)
             except TypeError:
-                self.mean = mean
+                self._mean = mean
             else:
-                self.mean = _default_mean(val)
+                self._mean = _default_mean(val)
 
     @property
     def computed(self):
@@ -433,3 +441,17 @@ class _default_mean(object):
 
     def __call__(self, t):
         return self.value + np.zeros(len(t), dtype=float)
+
+    def __len__(self):
+        return 1
+
+    @property
+    def pars(self):
+        return np.array([self.value])
+
+    @pars.setter
+    def pars(self, value):
+        self.value = float(value)
+
+    def lnprior(self, value):
+        return 0.0
