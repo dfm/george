@@ -171,21 +171,21 @@ class GP(object):
         # Save the computed state.
         self.computed = True
 
-    def recompute(self, sort=False, quiet=False, **kwargs):
+    def recompute(self, quiet=False, **kwargs):
         """
         Re-compute a previously computed model. You might want to do this if
         the kernel parameters change and the kernel is labeled as ``dirty``.
-
-        :params sort: (optional)
-            Should the samples be sorted before computing the covariance
-            matrix? (default: ``False``)
 
         """
         if not self.computed:
             if not (hasattr(self, "_x") and hasattr(self, "_yerr")):
                 raise RuntimeError("You need to compute the model first")
             try:
-                self.compute(self._x, self._yerr, sort=sort, **kwargs)
+                # Update the model making sure that we store the original
+                # ordering of the points.
+                initial_order = np.array(self.inds)
+                self.compute(self._x, self._yerr, sort=False, **kwargs)
+                self.inds = initial_order
             except (ValueError, LinAlgError):
                 if quiet:
                     return False
@@ -469,5 +469,5 @@ class _default_mean(object):
     def vector(self, value):
         self.value = float(value)
 
-    def lnprior(self, value):
+    def lnprior(self):
         return 0.0

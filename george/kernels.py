@@ -40,7 +40,7 @@ class Kernel(object):
                                                self.pars) +
                                            ["ndim={0}".format(self.ndim)]))
 
-    def lnprior(self, vector):
+    def lnprior(self):
         return 0.0
 
     @property
