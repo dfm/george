@@ -313,20 +313,36 @@ class GP(object):
         mu, cov = self.predict(y, t)
         return multivariate_gaussian_samples(cov, size, mean=mu)
 
-    def sample(self, t, size=1):
+    def sample(self, t=None, size=1):
         """
         Draw samples from the prior distribution.
 
-        :param t: ``(ntest, )`` or ``(ntest, ndim)``
-            The coordinates where the model should be sampled.
+        :param t: ``(ntest, )`` or ``(ntest, ndim)`` (optional)
+            The coordinates where the model should be sampled. If no
+            coordinates are given, the precomputed coordinates and
+            factorization are used.
 
         :param size: (optional)
             The number of samples to draw. (default: ``1``)
 
-        Returns **samples** ``(N, ntest)``, a list of predictions at
-        coordinates given by ``t``.
+        Returns **samples** ``(size, ntest)``, a list of predictions at
+        coordinates given by ``t``. If ``size == 1``, the result is a single
+        sample with shape ``(ntest,)``.
 
         """
+        if t is None:
+            self.recompute()
+            n, _ = self._x.shape
+
+            # Generate samples using the precomputed factorization.
+            samples = np.dot(np.random.randn(size, n), self._factor[0])
+            samples += self.mean(self._x)
+
+            # Reorder the samples correctly.
+            results = np.empty_like(samples)
+            results[:, self.inds] = samples
+            return results[0] if size == 1 else results
+
         x, _ = self.parse_samples(t, False)
         cov = self.get_matrix(x)
         return multivariate_gaussian_samples(cov, size, mean=self.mean(x))
@@ -446,11 +462,11 @@ class _default_mean(object):
         return 1
 
     @property
-    def pars(self):
+    def vector(self):
         return np.array([self.value])
 
-    @pars.setter
-    def pars(self, value):
+    @vector.setter
+    def vector(self, value):
         self.value = float(value)
 
     def lnprior(self, value):
