@@ -17,7 +17,7 @@ def test_tutorial():
 
     def lnlike(p, t, y, yerr):
         a, tau = np.exp(p[:2])
-        gp = GP(a * kernels.Matern32Kernel(tau))
+        gp = GP(a * kernels.Matern32Kernel(tau) + 0.001)
         gp.compute(t, yerr)
         return gp.lnlikelihood(y - model(p, t))
 

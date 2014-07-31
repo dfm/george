@@ -29,7 +29,19 @@ class Kernel(object):
 
     is_kernel = True
     kernel_type = -1
-    __array_priority__ = np.inf  # Deal with numpy scalar operations.
+
+    # This function deals with weird behavior when performing arithmetic
+    # operations with numpy scalars.
+    def __array_wrap__(self, array, context=None):
+        if context is None:
+            raise TypeError("Invalid operation")
+        ufunc, args, _ = context
+        if ufunc.__name__ == "multiply":
+            return float(args[0]) * args[1]
+        elif ufunc.__name__ == "add":
+            return float(args[0]) + args[1]
+        raise TypeError("Invalid operation")
+    __array_priority__ = np.inf
 
     def __init__(self, *pars, **kwargs):
         self.ndim = kwargs.get("ndim", 1)
