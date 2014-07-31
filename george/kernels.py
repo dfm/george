@@ -29,6 +29,7 @@ class Kernel(object):
 
     is_kernel = True
     kernel_type = -1
+    __array_priority__ = np.inf  # Deal with numpy scalar operations.
 
     def __init__(self, *pars, **kwargs):
         self.ndim = kwargs.get("ndim", 1)
