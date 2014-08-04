@@ -58,10 +58,12 @@ class Kernel(object):
 
     @property
     def vector(self):
+        # return self.pars
         return np.log(self.pars)
 
     @vector.setter
     def vector(self, v):
+        # self.pars = v
         self.pars = np.exp(v)
 
     @property
@@ -80,17 +82,18 @@ class Kernel(object):
         self.dirty = True
 
     def __getitem__(self, i):
-        return self._pars[i]
+        return self.vector[i]
 
     def __setitem__(self, i, v):
-        self._pars[i] = v
-        self.pars = self._pars
+        vec = self.vector
+        vec[i] = v
+        self.vector = vec
 
     def set_pars(self, pars):
         pass
 
     def __len__(self):
-        return len(self.pars)
+        return len(self.vector)
 
     def __add__(self, b):
         if not hasattr(b, "is_kernel"):
@@ -120,7 +123,7 @@ class Kernel(object):
     def grad(self, x1, x2):
         """
         The kernel gradient evaluated at a specific pair of coordinates. The
-        order of the parameters is the same as the ``.pars`` property.
+        order of the parameters is the same as the ``.vector`` property.
 
         """
         raise NotImplementedError("Must be implemented by subclasses")
@@ -149,13 +152,24 @@ class _operator(Kernel):
         self.k1.pars = v[:i]
         self.k2.pars = v[i:]
 
+    @property
+    def vector(self):
+        return np.append(self.k1.vector, self.k2.vector)
+
+    @vector.setter
+    def vector(self, v):
+        self.dirty = True
+        i = len(self.k1)
+        self.k1.vector = v[:i]
+        self.k2.vector = v[i:]
+
     def __getitem__(self, i):
-        return self.pars[i]
+        return self.vector[i]
 
     def __setitem__(self, i, v):
-        p = self.pars
+        p = self.vector
         p[i] = v
-        self.pars = p
+        self.vector = p
 
 
 class Sum(_operator):
@@ -216,7 +230,7 @@ class ConstantKernel(Kernel):
 
     def grad(self, x1, x2):
         x = np.sum(np.zeros_like(x1 - x2), axis=-1)
-        return 2 * self.pars[0] + np.zeros(np.append(1, x.shape))
+        return 2 * self.pars[0] ** 2 + np.zeros(np.append(1, x.shape))
 
 
 class WhiteKernel(Kernel):
@@ -245,7 +259,7 @@ class WhiteKernel(Kernel):
     def grad(self, x1, x2):
         d = np.sum((x1 - x2) ** 2, axis=-1)
         g = np.zeros(np.append(1, d.shape))
-        g[0] = 2 * self.pars[0] * (d == 0)
+        g[0] = 2 * self.pars[0] ** 2 * (d == 0)
         return g
 
 
@@ -287,10 +301,19 @@ class RadialKernel(Kernel):
 
         1. if ``metric`` is a scalar, the metric is assumed isotropic with an
            axis-aligned variance of ``metric`` in each dimension,
-        2. if ``metric`` is one-dimensional, it is assumed to specify the
-           axis-aligned variances in each dimension, and
-        3. if ``metric`` is two-dimensional, it is assumed to give the full
-           matrix :math:`C`.
+        2. if ``metric`` has the same length as ``ndim``, it is assumed to
+           specify the axis-aligned variances in each dimension, and
+        3. if ``metric`` has the length ``(ndim*ndim + ndim) / 2``, it is
+           assumed to give the triangular matrix :math:`C` in the form
+           specified below.
+
+    :param isotropic: (optional)
+        Is the metric isotropic? If not given, this is inferred from the
+        metric.
+
+    :param axis_aligned: (optional)
+        Is the metric axis-aligned? If not given, this is inferred from the
+        metric.
 
     However you specify ``metric``, the ``pars`` property of the kernel will
     be a NumPy array with elements:
@@ -320,36 +343,85 @@ class RadialKernel(Kernel):
 
     """
 
-    def __init__(self, metric, ndim=1, extra=[]):
+    def __init__(self, metric, ndim=1, extra=[], axis_aligned=None,
+                 isotropic=None):
         # Special case 1-D for speed.
         if ndim == 1:
             self.nextra = len(extra)
             super(RadialKernel, self).__init__(*(np.append(extra, metric)),
                                                ndim=1)
         else:
-            inds = np.tri(ndim, dtype=bool)
-            try:
-                l = len(metric)
-            except TypeError:
-                pars = np.diag(float(metric) * np.ones(ndim))[inds]
-            else:
-                if l == ndim:
-                    pars = np.diag(metric)[inds]
-                else:
-                    pars = np.array(metric)
-                    if l != (ndim*ndim + ndim) / 2:
-                        raise ValueError("Dimension mismatch")
+            # Save the meta-data about the kernel parameters.
+            self.axis_aligned = axis_aligned
+            self.isotropic = isotropic
             self.nextra = len(extra)
+            self.ndim = ndim
+            pars = self._coerce_metric(metric)
             super(RadialKernel, self).__init__(*(np.append(extra, pars)),
                                                ndim=ndim)
 
             # Build the gradient indicator masks.
-            self.gm = np.empty(np.append(len(pars), self.matrix.shape),
+            self.gm = np.empty(np.append(len(self)-self.nextra,
+                                         self.matrix.shape),
                                dtype=int)
-            for i in range(len(pars)):
-                ind = np.zeros(len(pars), dtype=int)
+            for i in range(len(self) - self.nextra):
+                ind = np.zeros(len(self) - self.nextra, dtype=int)
                 ind[i] = 1
-                self.gm[i] = self._build_matrix(ind)
+                self.gm[i] = self._build_matrix(self._coerce_metric(ind))
+
+    def _coerce_metric(self, metric):
+        # Coerce the input metric into the form required by the C++ solver.
+        inds = np.tri(self.ndim, dtype=bool)
+        if np.isscalar(metric) or len(metric) == 1:
+            # A scalar metric gives an isotropic metric.
+            pars = np.diag(float(metric) * np.ones(self.ndim))[inds]
+
+            # Update the isotropic flag if it wasn't specified.
+            if self.isotropic is None:
+                self.isotropic = True
+        else:
+            # If we asked for an isotropic kernel but the given metric
+            # isn't a scalar then something went wrong.
+            if self.isotropic:
+                raise ValueError("Isotropic kernels only take one metric "
+                                 "parameter, {0}".format(metric))
+
+            # Deal with 1- or 2-dimensional metrics.
+            metric = np.atleast_1d(metric)
+            if len(metric) == self.ndim:
+                pars = np.diag(metric)[inds]
+
+                # Update the axis_aligned flag if it wasn't specified.
+                if self.axis_aligned is None:
+                    self.axis_aligned = True
+            elif len(metric) == self.ndim * (self.ndim + 1) // 2:
+                if self.axis_aligned:
+                    raise ValueError("Axis-aligned kernels can only "
+                                     "take a diagonal metric")
+                pars = np.array(metric)
+            else:
+                raise ValueError("Dimension mismatch")
+        return pars
+
+    @property
+    def vector(self):
+        if self.ndim == 1:
+            return np.log(self.pars)
+        if self.isotropic:
+            return np.log(np.append(self.pars[:self.nextra],
+                                    self.matrix[0, 0]))
+        if self.axis_aligned:
+            p = self.matrix[np.diag_indices_from(self.matrix)]
+            return np.log(np.append(self.pars[:self.nextra], p))
+        return np.log(self.pars)
+
+    @vector.setter
+    def vector(self, v):
+        if self.ndim == 1:
+            self.pars = np.exp(v)
+            return
+        p = self._coerce_metric(np.exp(v[self.nextra:]))
+        self.pars = np.append(np.exp(v[:self.nextra]), p)
 
     def _build_matrix(self, x, dtype=float):
         m = np.zeros((self.ndim, self.ndim), dtype=dtype)
@@ -397,8 +469,9 @@ class RadialKernel(Kernel):
                 kg = self.get_grad(r)
 
             # Update the full gradient to include the kernel.
-            s = [None] + [slice(None)] * len(r.shape)
-            g[self.nextra:] *= -kg[s]
+            s1 = [None] + [slice(None)] * len(r.shape)
+            s2 = [slice(None)] + [None] * len(r.shape)
+            g[self.nextra:] *= -kg[s1] * np.exp(self.vector[self.nextra:])[s2]
 
         else:
             r = np.sum((x1 - x2), axis=-1) ** 2 * self.ivar
@@ -409,8 +482,7 @@ class RadialKernel(Kernel):
                 kg, g[:self.nextra] = self.get_grad(r)
             else:
                 kg = self.get_grad(r)
-
-            g[self.nextra] = -kg * r * self.ivar
+            g[self.nextra] = -kg * r
 
         return g
 
@@ -549,9 +621,9 @@ class RationalQuadraticKernel(RadialKernel):
     """
     kernel_type = 9
 
-    def __init__(self, alpha, metric, ndim=1):
+    def __init__(self, alpha, metric, ndim=1, **kwargs):
         super(RationalQuadraticKernel, self).__init__(metric, extra=[alpha],
-                                                      ndim=ndim)
+                                                      ndim=ndim, **kwargs)
 
     def get_value(self, dx):
         a = self.pars[0]
@@ -561,7 +633,7 @@ class RationalQuadraticKernel(RadialKernel):
         a = self.pars[0]
         t1 = 1 + 0.5 * dx / a
         t2 = 2 * a + dx
-        return -0.5 * t1**(-a-1), t1 ** (-a) * (dx - t2 * np.log(t1)) / t2
+        return -0.5 * t1**(-a-1), t1 ** (-a) * (dx - t2 * np.log(t1)) / t2 * a
 
 
 class CosineKernel(Kernel):
@@ -600,7 +672,7 @@ class CosineKernel(Kernel):
         x = np.sqrt(np.sum((x1 - x2) ** 2, axis=-1))
         g = np.empty(np.append(1, x.shape))
         s = [0] + [slice(None)] * len(x.shape)
-        g[s] = itwopi * x * np.sin(self._omega * x) * self._omega ** 2
+        g[s] = x * np.sin(self._omega * x) * self._omega
         return g
 
 
@@ -659,10 +731,10 @@ class ExpSine2Kernel(Kernel):
         s = [0] + [slice(None)] * len(x.shape)
 
         # Compute the scale derivative.
-        g[s] = -f * A2
+        g[s] = -f * A2 * self.pars[0]
 
         # Compute the period derivative.
         s[0] = 1
-        g[s] = 2 * f * a * sx * cx * x * self._omega ** 2 / np.pi
+        g[s] = 2 * f * a * sx * cx * x * self._omega
 
         return g

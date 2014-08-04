@@ -111,10 +111,11 @@ def do_cov_t(kernel_type, extra=None):
                                        [0.1, 0.3, 0.7]])
     do_kernel_t(kernel)
 
-    kernel = build_kernel([1.0, 0.1, 10.0], ndim=3)
+    kernel = build_kernel([1.0, 0.1, 10.0], ndim=3, axis_aligned=True)
+    kernel.vector = kernel.vector
     do_kernel_t(kernel)
 
-    kernel = build_kernel(1.0, ndim=3)
+    kernel = build_kernel(1.0, ndim=3, isotropic=True)
     do_kernel_t(kernel)
 
     try:
@@ -173,4 +174,5 @@ def test_exp_sine2():
 
 def test_combine():
     do_kernel_t(12 * kernels.ExpSine2Kernel(0.4, 1.0, ndim=5) + 0.1)
-    do_kernel_t(12 * kernels.ExpSquaredKernel(0.4, ndim=3) + 0.1)
+    do_kernel_t(12 * kernels.ExpSquaredKernel(0.4, ndim=3, isotropic=True)
+                + 0.1)
