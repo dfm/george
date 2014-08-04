@@ -63,17 +63,25 @@ An effective noise model for Kepler light curves
 
 \begin{abstract}
 
+Correlated ``noise'' is present in most---if not all---astronomical datasets.
+This noise can be due to instrumental effects---temperature or pointing
+variations in the telescope, wavelength-dependent calibration issues in
+spectra---or un-modeled astrophysical processes---stochastic stellar
+variability when studying exoplanets.
+Ignoring this source of noise will, in general, lead to biased and overly
+confident inferences.
+In this \paper, we describe the Gaussian process as a general, powerful
+technique for taking these effects into account during data analysis.
+We demonstrate the necessity and applicability of the method on both simulated
+and real astronomical datasets in several fields: transiting exoplanet
+discovery and characterization, stellar population modeling, and (MORE).
+
 An open source implementation of the model described here is available at
 \url{https://dan.iel.fm/george} licensed under the liberal MIT License.
 
 \end{abstract}
 
 \keywords{%
-exoplanets: sickness
----
-code: open-source
----
-keywords: made-up-by-Hogg
 }
 
 \section{Introduction}
