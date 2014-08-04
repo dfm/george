@@ -401,14 +401,14 @@ class GP(object):
 
         # Define the objective function and gradient.
         def nll(pars):
-            self.kernel.vector[dims] = pars
+            self.kernel[dims] = pars
             ll = self.lnlikelihood(y, quiet=True)
             if not np.isfinite(ll):
                 return 1e25  # The optimizers can't deal with infinities.
             return -ll
 
         def grad_nll(pars):
-            self.kernel.vector[dims] = pars
+            self.kernel[dims] = pars
             return -self.grad_lnlikelihood(y, dims=dims, quiet=True)
 
         # Run the optimization.
