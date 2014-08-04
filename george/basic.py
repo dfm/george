@@ -358,8 +358,8 @@ class GP(object):
         r, _ = self.parse_samples(t, False)
         return self.kernel(r[:, None], r[None, :])
 
-    def optimize(self, x, y, yerr=TINY, sort=True, dims=None, in_log=True,
-                 verbose=True, **kwargs):
+    def optimize(self, x, y, yerr=TINY, sort=True, dims=None, verbose=True,
+                 **kwargs):
         """
         A simple and not terribly robust non-linear optimization algorithm for
         the kernel hyperpararmeters.
@@ -383,13 +383,6 @@ class GP(object):
             If you only want to optimize over some parameters, list their
             indices here.
 
-        :param in_log: (optional) ``(len(kernel),)``, ``(len(dims),)`` or bool
-            If you want to fit the parameters in the log (this can be useful
-            for parameters that shouldn't go negative) specify that here. This
-            can be a single boolean---in which case it is assumed to apply to
-            every dimension---or it can be an array of booleans, one for each
-            dimension.
-
         :param verbose: (optional)
             Display the results of the call to :func:`scipy.optimize.minimize`?
             (default: ``True``)
@@ -406,48 +399,26 @@ class GP(object):
             dims = np.ones(len(self.kernel), dtype=bool)
         dims = np.arange(len(self.kernel))[dims]
 
-        # Deal with conversion functions.
-        try:
-            len(in_log)
-        except TypeError:
-            in_log = in_log * np.ones_like(dims, dtype=bool)
-        else:
-            if len(in_log) != len(dims):
-                raise RuntimeError("Dimension list and log mask mismatch")
-
-        # Build the conversion functions.
-        conv = np.array([lambda x: x for i in range(len(dims))])
-        iconv = np.array([lambda x: x for i in range(len(dims))])
-        conv[in_log] = np.exp
-        iconv[in_log] = np.log
-
         # Define the objective function and gradient.
         def nll(pars):
-            for i, f, p in izip(dims, conv, pars):
-                self.kernel[i] = f(p)
-
+            self.kernel.vector[dims] = pars
             ll = self.lnlikelihood(y, quiet=True)
             if not np.isfinite(ll):
                 return 1e25  # The optimizers can't deal with infinities.
             return -ll
 
         def grad_nll(pars):
-            for i, f, p in izip(dims, conv, pars):
-                self.kernel[i] = f(p)
+            self.kernel.vector[dims] = pars
             return -self.grad_lnlikelihood(y, dims=dims, quiet=True)
 
         # Run the optimization.
-        p0 = [f(p) for f, p in izip(iconv, self.kernel.pars[dims])]
+        p0 = self.kernel.vector[dims]
         results = op.minimize(nll, p0, jac=grad_nll, **kwargs)
 
         if verbose:
             print(results.message)
 
-        # Update the kernel.
-        for i, f, p in izip(dims, conv, results.x):
-            self.kernel[i] = f(p)
-
-        return self.kernel.pars[dims], results
+        return self.kernel.vector[dims], results
 
 
 class _default_mean(object):
