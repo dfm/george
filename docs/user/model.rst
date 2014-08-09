@@ -17,6 +17,9 @@ We will start by fitting the model assuming that the noise is uncorrelated and
 then improve on this model by modeling the covariance structure in the data
 using a Gaussian process.
 
+All the code used in this tutorial is available `here
+<https://github.com/dfm/george/blob/master/docs/_code/model.py>`_.
+
 
 A Simple Mean Model
 -------------------
