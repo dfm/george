@@ -226,10 +226,11 @@ class ConstantKernel(Kernel):
         super(ConstantKernel, self).__init__(value, ndim=ndim)
 
     def __call__(self, x1, x2):
-        return self.pars[0] ** 2 + np.sum(np.zeros_like(x1 - x2), axis=-1)
+        return (self.pars[0] ** 2 +
+                np.sum(np.zeros_like(x1[:, None] - x2[None, :]), axis=-1))
 
     def grad(self, x1, x2):
-        x = np.sum(np.zeros_like(x1 - x2), axis=-1)
+        x = np.sum(np.zeros_like(x1[:, None] - x2[None, :]), axis=-1)
         return 2 * self.pars[0] ** 2 + np.zeros(np.append(1, x.shape))
 
 
@@ -253,11 +254,11 @@ class WhiteKernel(Kernel):
         super(WhiteKernel, self).__init__(value, ndim=ndim)
 
     def __call__(self, x1, x2):
-        d = np.sum((x1 - x2) ** 2, axis=-1)
+        d = np.sum((x1[:, None] - x2[None, :]) ** 2, axis=-1)
         return self.pars[0] ** 2 * (d == 0.0)
 
     def grad(self, x1, x2):
-        d = np.sum((x1 - x2) ** 2, axis=-1)
+        d = np.sum((x1[:, None] - x2[None, :]) ** 2, axis=-1)
         g = np.zeros(np.append(1, d.shape))
         g[0] = 2 * self.pars[0] ** 2 * (d == 0)
         return g
@@ -279,7 +280,7 @@ class DotProductKernel(Kernel):
         super(DotProductKernel, self).__init__(ndim=ndim)
 
     def __call__(self, x1, x2):
-        return np.sum(x1 * x2, axis=-1)
+        return np.sum(x1[:, None] * x2[None, :], axis=-1)
 
     def grad(self, x1, x2):
         return np.zeros(np.append(1, self(x1, x2).shape))
@@ -439,17 +440,17 @@ class RadialKernel(Kernel):
 
     def __call__(self, x1, x2):
         if self.ndim > 1:
-            dx = x1 - x2
+            dx = x1[:, None] - x2[None, :]
             dxf = dx.reshape((-1, self.ndim)).T
             r = np.sum(dxf * cho_solve(self._factor, dxf), axis=0)
             r = r.reshape(dx.shape[:-1])
         else:
-            r = np.sum((x1 - x2), axis=-1) ** 2 * self.ivar
+            r = np.sum((x1[:, None] - x2[None, :]), axis=-1) ** 2 * self.ivar
         return self.get_value(r)
 
     def grad(self, x1, x2):
         if self.ndim > 1:
-            dx = x1 - x2
+            dx = x1[:, None] - x2[None, :]
             dxf = dx.reshape((-1, self.ndim)).T
             alpha = cho_solve(self._factor, dxf)
 
@@ -474,7 +475,7 @@ class RadialKernel(Kernel):
             g[self.nextra:] *= -kg[s1] * np.exp(self.vector[self.nextra:])[s2]
 
         else:
-            r = np.sum((x1 - x2), axis=-1) ** 2 * self.ivar
+            r = np.sum((x1[:, None] - x2[None, :]), axis=-1) ** 2 * self.ivar
 
             # Compute the radial gradient.
             g = np.empty(np.append(len(self), r.shape))
@@ -666,10 +667,12 @@ class CosineKernel(Kernel):
         self._omega = twopi / float(pars)
 
     def __call__(self, x1, x2):
-        return np.cos(self._omega * np.sqrt(np.sum((x1 - x2) ** 2, axis=-1)))
+        return np.cos(self._omega * np.sqrt(np.sum((x1[:, None]
+                                                    - x2[None, :]) ** 2,
+                                                   axis=-1)))
 
     def grad(self, x1, x2, itwopi=1.0/(2*np.pi)):
-        x = np.sqrt(np.sum((x1 - x2) ** 2, axis=-1))
+        x = np.sqrt(np.sum((x1[:, None] - x2[None, :]) ** 2, axis=-1))
         g = np.empty(np.append(1, x.shape))
         s = [0] + [slice(None)] * len(x.shape)
         g[s] = x * np.sin(self._omega * x) * self._omega
@@ -714,12 +717,14 @@ class ExpSine2Kernel(Kernel):
         self._omega = np.pi / pars[1]
 
     def __call__(self, x1, x2):
-        s = np.sin(self._omega * np.sqrt(np.sum((x1 - x2) ** 2, axis=-1)))
+        d = x1[:, None] - x2[None, :]
+        s = np.sin(self._omega * np.sqrt(np.sum(d ** 2, axis=-1)))
         return np.exp(-self.pars[0] * s**2)
 
     def grad(self, x1, x2):
         # Pre-compute some factors.
-        x = np.sqrt(np.sum((x1 - x2) ** 2, axis=-1))
+        d = x1[:, None] - x2[None, :]
+        x = np.sqrt(np.sum(d ** 2, axis=-1))
         sx = np.sin(self._omega * x)
         cx = np.cos(self._omega * x)
         A2 = sx*sx

@@ -160,7 +160,7 @@ class GP(object):
 
     def _do_compute(self, _scale=0.5*np.log(2*np.pi)):
         # Compute the kernel matrix.
-        K = self.kernel(self._x[:, None], self._x[None, :])
+        K = self.kernel(self._x, self._x)
         K[np.diag_indices_from(K)] += self._yerr ** 2
 
         # Factor the matrix and compute the log-determinant.
@@ -249,7 +249,7 @@ class GP(object):
 
         # Pre-compute some factors.
         alpha = cho_solve(self._factor, r)
-        Kg = self.kernel.grad(self._x[:, None], self._x[None, :])[dims]
+        Kg = self.kernel.grad(self._x, self._x)[dims]
 
         # Loop over dimensions and compute the gradient in each one.
         g = np.empty(len(Kg))
@@ -283,11 +283,11 @@ class GP(object):
         alpha = cho_solve(self._factor, r)
 
         # Compute the predictive mean.
-        Kxs = self.kernel(self._x[None, :], xs[:, None])
+        Kxs = self.kernel(xs, self._x)
         mu = np.dot(Kxs, alpha) + self.mean(xs)
 
         # Compute the predictive covariance.
-        cov = self.kernel(xs[:, None], xs[None, :])
+        cov = self.kernel(xs, xs)
         cov -= np.dot(Kxs, cho_solve(self._factor, Kxs.T))
 
         return mu, cov
@@ -356,7 +356,7 @@ class GP(object):
 
         """
         r, _ = self.parse_samples(t, False)
-        return self.kernel(r[:, None], r[None, :])
+        return self.kernel(r, r)
 
     def optimize(self, x, y, yerr=TINY, sort=True, dims=None, verbose=True,
                  **kwargs):

@@ -30,13 +30,13 @@ def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-7):
     gp = HODLRGP(kernel)
 
     # Compute the two matrices.
-    k1 = kernel(t[:, None], t[None, :])
+    k1 = kernel(t, t)
     k2 = gp.get_matrix(t)
 
     # Build the matrix using brute force and check that.
     for i, a in enumerate(t):
         for j, b in enumerate(t):
-            v = kernel(a, b)
+            v = kernel(np.atleast_2d(a), np.atleast_2d(b))
             assert np.allclose(k1[i, j], v), \
                 "Python matrix fails (ndim = {2})\n{0} should be {1}" \
                 .format(k1[i, j], v, kernel.ndim)
@@ -48,13 +48,13 @@ def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-7):
     assert np.allclose(k1, k2), (k1, k2)
 
     # Check the gradients.
-    g1 = kernel.grad(t[:, None], t[None, :])
+    g1 = kernel.grad(t, t)
     for i in range(len(kernel)):
         # Compute the centered finite difference approximation to the gradient.
         kernel[i] += eps
-        kp = kernel(t[:, None], t[None, :])
+        kp = kernel(t, t)
         kernel[i] -= 2*eps
-        km = kernel(t[:, None], t[None, :])
+        km = kernel(t, t)
         kernel[i] += eps
         g0 = 0.5 * (kp - km) / eps
         assert np.allclose(g1[i], g0), \
