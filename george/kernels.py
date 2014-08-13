@@ -226,12 +226,10 @@ class ConstantKernel(Kernel):
         super(ConstantKernel, self).__init__(value, ndim=ndim)
 
     def __call__(self, x1, x2):
-        return (self.pars[0] ** 2 +
-                np.sum(np.zeros_like(x1[:, None] - x2[None, :]), axis=-1))
+        return self.pars[0] ** 2 + np.zeros((len(x1), len(x2)))
 
     def grad(self, x1, x2):
-        x = np.sum(np.zeros_like(x1[:, None] - x2[None, :]), axis=-1)
-        return 2 * self.pars[0] ** 2 + np.zeros(np.append(1, x.shape))
+        return 2 * self.pars[0] ** 2 + np.zeros((1, len(x1), len(x2)))
 
 
 class WhiteKernel(Kernel):
