@@ -33,6 +33,7 @@ Basic Kernels
     :members:
 
 .. autoclass:: george.kernels.ConstantKernel
+.. autoclass:: george.kernels.WhiteKernel
 .. autoclass:: george.kernels.DotProductKernel
 
 
