@@ -260,7 +260,7 @@ class GP(object):
 
         return g
 
-    def predict(self, y, t):
+    def predict(self, y, t, mean_only=False):
         """
         Compute the conditional predictive distribution of the model.
 
@@ -285,6 +285,8 @@ class GP(object):
         # Compute the predictive mean.
         Kxs = self.kernel(xs, self._x)
         mu = np.dot(Kxs, alpha) + self.mean(xs)
+        if mean_only:
+            return mu
 
         # Compute the predictive covariance.
         cov = self.kernel(xs, xs)
