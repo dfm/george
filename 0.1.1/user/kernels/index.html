@@ -200,6 +200,23 @@ kernel.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="george.kernels.WhiteKernel">
+<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">WhiteKernel</tt><big>(</big><em>value</em>, <em>ndim=1</em><big>)</big><a class="headerlink" href="#george.kernels.WhiteKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>This kernel returns constant along the diagonal.</p>
+<div class="math">
+\[k(\mathbf{x}_i,\,\mathbf{x}_j) = c^2 \, \delta_{ij}\]</div>
+<p>where <span class="math">\(c\)</span> is the parameter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> &#8211; The constant value <span class="math">\(c\)</span> in the above equation.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
 <dt id="george.kernels.DotProductKernel">
 <em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">DotProductKernel</tt><big>(</big><em>ndim=1</em><big>)</big><a class="headerlink" href="#george.kernels.DotProductKernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The dot-product kernel takes the form</p>
