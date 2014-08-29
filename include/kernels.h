@@ -2,6 +2,7 @@
 #define _GEORGE_KERNELS_H_
 
 #include <cmath>
+#include <cfloat>
 #include <vector>
 
 using std::vector;
@@ -47,7 +48,7 @@ protected:
 class Operator : public Kernel {
 public:
     Operator (const unsigned int ndim, Kernel* k1, Kernel* k2)
-        : kernel1_(k1), kernel2_(k2), Kernel(ndim) {};
+        : Kernel(ndim), kernel1_(k1), kernel2_(k2) {};
     ~Operator () {
         delete kernel1_;
         delete kernel2_;
@@ -112,6 +113,81 @@ public:
 
 
 //
+// BASIC KERNELS
+//
+
+class ConstantKernel : public Kernel {
+public:
+    ConstantKernel (const unsigned int ndim) : Kernel(ndim) {};
+    ConstantKernel (const unsigned int ndim, const double value)
+        : Kernel(ndim), value_(value) {};
+
+    double value (const double* x1, const double* x2) const {
+        return value_;
+    };
+    void gradient (const double* x1, const double* x2, double* grad) const {
+        grad[0] = 1.0;
+    };
+
+    unsigned int size () const { return 1; }
+    void set_parameter (const unsigned int i, const double value) {
+        value_ = value;
+    };
+    double get_parameter (const unsigned int i) const { return value_; };
+
+private:
+    double value_;
+};
+
+class WhiteKernel : public Kernel {
+public:
+    WhiteKernel (const unsigned int ndim) : Kernel(ndim) {};
+
+    double _switch (const double* x1, const double* x2) const {
+        unsigned int i, n = this->get_ndim();
+        double d, r2 = 0.0;
+        for (i = 0; i < n; ++i) {
+            d = x1[i] - x2[i];
+            r2 += d * d;
+        }
+        if (r2 < DBL_EPSILON) return 1.0;
+        return 0.0;
+    };
+
+    double value (const double* x1, const double* x2) const {
+        return value_ * _switch(x1, x2);
+    };
+
+    void gradient (const double* x1, const double* x2, double* grad) const {
+        grad[0] = _switch(x1, x2);
+    };
+
+    unsigned int size () const { return 1; }
+    void set_parameter (const unsigned int i, const double value) {
+        value_ = value;
+    };
+    double get_parameter (const unsigned int i) const { return value_; };
+
+private:
+    double value_;
+};
+
+class DotProductKernel : public Kernel {
+public:
+    DotProductKernel (const unsigned int ndim) : Kernel(ndim) {};
+
+    double value (const double* x1, const double* x2) const {
+        unsigned int i, ndim = this->get_ndim();
+        double val = 0.0;
+        for (i = 0; i < ndim; ++i) val += x1[i] * x2[i];
+        return val;
+    };
+    void gradient (const double* x1, const double* x2, double* grad) const {};
+    unsigned int size () const { return 0; }
+};
+
+
+//
 // RADIAL KERNELS
 //
 
@@ -154,6 +230,19 @@ protected:
 };
 
 template <typename M>
+class ExpKernel : public RadialKernel<M> {
+public:
+    ExpKernel (const long ndim, M* metric) : RadialKernel<M>(ndim, metric) {};
+    double value (const double* x1, const double* x2) const {
+        return exp(-sqrt(this->get_squared_distance(x1, x2)));
+    };
+    double get_radial_gradient (double r2) const {
+        double r = sqrt(r2);
+        return -0.5 * exp(-r) / r;
+    };
+};
+
+template <typename M>
 class ExpSquaredKernel : public RadialKernel<M> {
 public:
     ExpSquaredKernel (const long ndim, M* metric)
@@ -164,19 +253,36 @@ public:
     double get_radial_gradient (double r2) const {
         return -0.5 * exp(-0.5 * r2);
     };
-
 };
 
 template <typename M>
-class ExpKernel : public RadialKernel<M> {
+class Matern32Kernel : public RadialKernel<M> {
 public:
-    ExpKernel (const long ndim, M* metric) : RadialKernel<M>(ndim, metric) {};
+    Matern32Kernel (const long ndim, M* metric)
+        : RadialKernel<M>(ndim, metric) {};
     double value (const double* x1, const double* x2) const {
-        return exp(-sqrt(this->get_squared_distance(x1, x2)));
+        double r = sqrt(3 * this->get_squared_distance(x1, x2));
+        return (1 + r) * exp(-r);
     };
     double get_radial_gradient (double r2) const {
-        double r = sqrt(r2);
-        return -0.5 * exp(-r) / r;
+        double r = sqrt(3 * r2);
+        return -3 * 0.5 * exp(-r);
+    };
+};
+
+template <typename M>
+class Matern52Kernel : public RadialKernel<M> {
+public:
+    Matern52Kernel (const long ndim, M* metric)
+        : RadialKernel<M>(ndim, metric) {};
+    double value (const double* x1, const double* x2) const {
+        double r2 = 5 * this->get_squared_distance(x1, x2),
+               r = sqrt(r2);
+        return (1 + r + r2 / 3.0) * exp(-r);
+    };
+    double get_radial_gradient (double r2) const {
+        double r = sqrt(5 * r2);
+        return -5 * (1 + r) * exp(-r) / 6.0;
     };
 };
 

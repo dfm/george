@@ -109,6 +109,7 @@ class build_ext(_build_ext):
 if __name__ == "__main__":
     import sys
     import numpy
+    from Cython.Build import cythonize
 
     # Publish the library to PyPI.
     if "publish" in sys.argv[-1]:
@@ -123,7 +124,7 @@ if __name__ == "__main__":
         "include",
         numpy.get_include(),
     ]
-    ext = Extension("george._george", sources=["george/_george.cc"],
+    ext = Extension("george._kernels", sources=["george/_kernels.pyx"],
                     libraries=libraries, include_dirs=include_dirs)
 
     # Hackishly inject a constant into builtins to enable importing of the
@@ -143,7 +144,7 @@ if __name__ == "__main__":
         url="https://github.com/dfm/george",
         license="MIT",
         packages=["george", "george.testing"],
-        ext_modules=[ext],
+        ext_modules=cythonize([ext]),
         description="Blazingly fast Gaussian Processes for regression.",
         long_description=open("README.rst").read(),
         package_data={"": ["README.rst", "LICENSE",

@@ -7,9 +7,9 @@ try:
 except NameError:
     __GEORGE_SETUP__ = False
 
-if not __GEORGE_SETUP__:
-    __all__ = ["kernels", "GP", "HODLRGP"]
+# if not __GEORGE_SETUP__:
+#     __all__ = ["kernels", "GP", "HODLRGP"]
 
-    from . import kernels
-    from .basic import GP
-    from .hodlr import HODLRGP
+#     from . import kernels
+#     from .basic import GP
+#     from .hodlr import HODLRGP

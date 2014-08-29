@@ -11,3 +11,4 @@ dist
 build
 python/george/__init__.py
 .coverage
+george/*.cpp
