@@ -28,6 +28,12 @@ public:
         return r2 / vector_[0];
     };
 
+    double gradient (const double* x1, const double* x2, double* grad) const {
+        double r2 = get_squared_distance(x1, x2);
+        grad[0] = -r2 / vector_[0];
+        return r2;
+    };
+
     // Parameter vector spec.
     unsigned int size () const { return 1; };
     const double* get_vector () const {
@@ -58,6 +64,18 @@ public:
         for (i = 0; i < ndim_; ++i) {
             d = x1[i] - x2[i];
             r2 += d * d / vector_[i];
+        }
+        return r2;
+    };
+
+    double gradient (const double* x1, const double* x2, double* grad) const {
+        int i;
+        double d, r2 = 0.0;
+        for (i = 0; i < ndim_; ++i) {
+            d = x1[i] - x2[i];
+            d = d * d / vector_[i];
+            r2 += d;
+            grad[i] = -d / vector_[i];
         }
         return r2;
     };
