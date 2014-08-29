@@ -36,11 +36,11 @@ public:
 
     // Parameter vector spec.
     unsigned int size () const { return 1; };
-    const double* get_vector () const {
-        return &(vector_[0]);
+    void set_parameter (const unsigned int i, const double value) {
+        vector_[i] = value;
     };
-    void set_vector (const double* vector) {
-        vector_[0] = vector[0];
+    double get_parameter (const unsigned int i) const {
+        return vector_[i];
     };
 
 private:
@@ -55,7 +55,8 @@ public:
     AxisAlignedMetric (const unsigned int ndim, const double* scales)
         : ndim_(ndim), vector_(ndim)
     {
-        set_vector(scales);
+        unsigned int i;
+        for (i = 0; i < ndim; ++i) set_parameter(i, scales[0]);
     };
 
     double get_squared_distance (const double* x1, const double* x2) const {
@@ -82,12 +83,11 @@ public:
 
     // Parameter vector spec.
     unsigned int size () const { return ndim_; };
-    const double* get_vector () const {
-        return &(vector_[0]);
+    void set_parameter (const unsigned int i, const double value) {
+        vector_[i] = value;
     };
-    void set_vector (const double* vector) {
-        int i;
-        for (i = 0; i < ndim_; ++i) vector_[i] = vector[i];
+    double get_parameter (const unsigned int i) const {
+        return vector_[i];
     };
 
 private:
