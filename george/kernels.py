@@ -112,18 +112,18 @@ class Kernel(object):
         return self.__mul__(b)
 
     def value(self, x1, x2=None):
-        x1 = np.array(x1, order="C", copy=False)
+        x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
             return self.kernel.value_symmetric(x1)
-        x2 = np.array(x2, order="C", copy=False)
+        x2 = np.ascontiguousarray(x2, dtype=np.float64)
         return self.kernel.value_general(x1, x2)
 
     def gradient(self, x1, x2=None):
-        x1 = np.array(x1, order="C", copy=False)
+        x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
             g = self.kernel.gradient_symmetric(x1)
         else:
-            x2 = np.array(x2, order="C", copy=False)
+            x2 = np.ascontiguousarray(x2, dtype=np.float64)
             g = self.kernel.gradient_general(x1, x2)
         return g * self.vector_gradient[None, None, :]
 

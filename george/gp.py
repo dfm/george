@@ -150,14 +150,19 @@ class GP(object):
             :func:`parse_samples`. (default: ``True``)
 
         """
-        # Parse the input coordinates.
+        # Parse the input coordinates and ensure the right memory layout.
         self._x, self.inds = self.parse_samples(x, sort)
+        self._x = np.ascontiguousarray(self._x, dtype=np.float64)
         try:
             self._yerr = float(yerr) * np.ones(len(x))
         except TypeError:
             self._yerr = self._check_dimensions(yerr)[self.inds]
+        self._yerr = np.ascontiguousarray(self._yerr, dtype=np.float64)
+
+        # Set up and pre-compute the solver.
         self.solver = self.solver_type(self.kernel, **(self.solver_kwargs))
         self.solver.compute(self._x, self._yerr, **kwargs)
+
         self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
                               + self.solver.log_determinant)
         self.computed = True
@@ -198,13 +203,14 @@ class GP(object):
             failure. (default: ``False``)
 
         """
-        r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
+        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
+                                 - self.mean(self._x), dtype=np.float64)
         if not self.recompute(quiet=quiet):
             return -np.inf
         ll = self._const - 0.5 * float(np.dot(r, self.solver.apply_inverse(r)))
         return ll if np.isfinite(ll) else -np.inf
 
-    def grad_lnlikelihood(self, y, dims=None, quiet=False):
+    def grad_lnlikelihood(self, y, quiet=False):
         """
         Compute the gradient of the ln-likelihood function as a function of
         the kernel parameters.
@@ -213,31 +219,24 @@ class GP(object):
             The list of observations at coordinates ``x`` provided to the
             :func:`compute` function.
 
-        :param dims: (optional)
-            If you only want to compute the gradient in some dimensions,
-            list them here.
-
         :param quiet:
             If ``True`` return a gradient of zero instead of raising an
             exception when there is an invalid kernel or linear algebra
             failure. (default: ``False``)
 
         """
-        # By default, compute the gradient in all dimensions.
-        if dims is None:
-            dims = np.ones(len(self.kernel), dtype=bool)
-
         # Make sure that the model is computed and try to recompute it if it's
         # dirty.
         if not self.recompute(quiet=quiet):
-            return np.zeros_like(dims, dtype=float)
+            return np.zeros(len(self.kernel), dtype=float)
 
         # Parse the input sample list.
-        r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
+        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
+                                 - self.mean(self._x), dtype=np.float64)
 
         # Pre-compute some factors.
         alpha = self.solver.apply_inverse(r)
-        Kg = self.kernel.gradient(self._x)[dims]
+        Kg = self.kernel.gradient(self._x)
 
         # Loop over dimensions and compute the gradient in each one.
         g = np.empty(len(Kg))
@@ -399,7 +398,7 @@ class GP(object):
 
         def grad_nll(pars):
             self.kernel[dims] = pars
-            return -self.grad_lnlikelihood(y, dims=dims, quiet=True)
+            return -self.grad_lnlikelihood(y, quiet=True)[dims]
 
         # Run the optimization.
         p0 = self.kernel.vector[dims]
