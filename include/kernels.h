@@ -329,6 +329,67 @@ private:
     double alpha_;
 };
 
+
+//
+// PERIODIC KERNELS
+//
+
+class CosineKernel : public Kernel {
+public:
+    CosineKernel (const unsigned int ndim, const unsigned int dim)
+        : Kernel(ndim), dim_(dim) {};
+
+    double value (const double* x1, const double* x2) const {
+        return cos(2 * M_PI * (x1[dim_] - x2[dim_]) / period_);
+    };
+    void gradient (const double* x1, const double* x2, double* grad) const {
+        double dx = 2 * M_PI * (x1[dim_] - x2[dim_]) / period_;
+        grad[0] = dx * sin(dx) / period_;
+    };
+
+    unsigned int size () const { return 1; }
+    void set_parameter (const unsigned int i, const double value) {
+        period_ = value;
+    };
+    double get_parameter (const unsigned int i) const { return period_; };
+
+private:
+    unsigned int dim_;
+    double period_;
+};
+
+class ExpSine2Kernel : public Kernel {
+public:
+    ExpSine2Kernel (const unsigned int ndim, const unsigned int dim)
+        : Kernel(ndim), dim_(dim) {};
+
+    double value (const double* x1, const double* x2) const {
+        double s = sin(M_PI * (x1[dim_] - x2[dim_]) / period_);
+        return exp(-gamma_ * s * s);
+    };
+    void gradient (const double* x1, const double* x2, double* grad) const {
+        double arg = M_PI * (x1[dim_] - x2[dim_]) / period_,
+               s = sin(arg), c = cos(arg), s2 = s * s, A = exp(-gamma_ * s2);
+
+        grad[0] = -s2 * A;
+        grad[1] = 2 * gamma_ * arg * c * s * A / period_;
+    };
+
+    unsigned int size () const { return 2; }
+    void set_parameter (const unsigned int i, const double value) {
+        if (i == 0) gamma_ = value;
+        else period_ = value;
+    };
+    double get_parameter (const unsigned int i) const {
+        if (i == 0) return gamma_;
+        return period_;
+    }
+
+private:
+    unsigned int dim_;
+    double gamma_, period_;
+};
+
 }; // namespace kernels
 }; // namespace george
 

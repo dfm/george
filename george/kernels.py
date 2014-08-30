@@ -359,19 +359,7 @@ class Matern52Kernel(RadialKernel):
 
 class RationalQuadraticKernel(RadialKernel):
     r"""
-    The Matern-5/2 kernel is a :class:`RadialKernel` where the value at a
-    given radius :math:`r^2` is given by:
-
-    .. math::
-
-        k(r^2) = \left( 1+ \frac{r^2}{2\,\alpha} \right )^{-\alpha}
-
-    :param alpha:
-        The shape parameter :math:`\alpha`.
-
-    :param metric:
-        The custom metric specified as described in the :class:`RadialKernel`
-        description.
+    TODO: document this kernel.
 
     """
     kernel_type = 7
@@ -379,16 +367,6 @@ class RationalQuadraticKernel(RadialKernel):
     def __init__(self, alpha, metric, ndim=1, **kwargs):
         super(RationalQuadraticKernel, self).__init__(metric, extra=[alpha],
                                                       ndim=ndim, **kwargs)
-
-    def get_value(self, dx):
-        a = self.pars[0]
-        return (1.0 + 0.5 * dx / a) ** (-a)
-
-    def get_grad(self, dx):
-        a = self.pars[0]
-        t1 = 1 + 0.5 * dx / a
-        t2 = 2 * a + dx
-        return -0.5 * t1**(-a-1), t1 ** (-a) * (dx - t2 * np.log(t1)) / t2 * a
 
 
 class CosineKernel(Kernel):
@@ -414,20 +392,10 @@ class CosineKernel(Kernel):
     """
     kernel_type = 8
 
-    def __init__(self, period, ndim=1):
+    def __init__(self, period, ndim=1, dim=0):
         super(CosineKernel, self).__init__(period, ndim=ndim)
-
-    def __call__(self, x1, x2):
-        return np.cos(self._omega * np.sqrt(np.sum((x1[:, None]
-                                                    - x2[None, :]) ** 2,
-                                                   axis=-1)))
-
-    def grad(self, x1, x2, itwopi=1.0/(2*np.pi)):
-        x = np.sqrt(np.sum((x1[:, None] - x2[None, :]) ** 2, axis=-1))
-        g = np.empty(np.append(1, x.shape))
-        s = [0] + [slice(None)] * len(x.shape)
-        g[s] = x * np.sin(self._omega * x) * self._omega
-        return g
+        assert dim < self.ndim, "Invalid dimension"
+        self.dim = dim
 
 
 class ExpSine2Kernel(Kernel):
@@ -461,33 +429,7 @@ class ExpSine2Kernel(Kernel):
     """
     kernel_type = 9
 
-    def __init__(self, gamma, period, ndim=1):
+    def __init__(self, gamma, period, ndim=1, dim=0):
         super(ExpSine2Kernel, self).__init__(gamma, period, ndim=ndim)
-
-    def __call__(self, x1, x2):
-        d = x1[:, None] - x2[None, :]
-        s = np.sin(self._omega * np.sqrt(np.sum(d ** 2, axis=-1)))
-        return np.exp(-self.pars[0] * s**2)
-
-    def grad(self, x1, x2):
-        # Pre-compute some factors.
-        d = x1[:, None] - x2[None, :]
-        x = np.sqrt(np.sum(d ** 2, axis=-1))
-        sx = np.sin(self._omega * x)
-        cx = np.cos(self._omega * x)
-        A2 = sx*sx
-        a = self.pars[0]
-        f = np.exp(-a * A2)
-
-        # Build the output array.
-        g = np.empty(np.append(2, x.shape))
-        s = [0] + [slice(None)] * len(x.shape)
-
-        # Compute the scale derivative.
-        g[s] = -f * A2 * self.pars[0]
-
-        # Compute the period derivative.
-        s[0] = 1
-        g[s] = 2 * f * a * sx * cx * x * self._omega
-
-        return g
+        assert dim < self.ndim, "Invalid dimension"
+        self.dim = dim

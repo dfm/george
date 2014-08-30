@@ -65,6 +65,13 @@ cdef extern from "kernels.h" namespace "george::kernels":
     cdef cppclass RationalQuadraticKernel[M](Kernel):
         RationalQuadraticKernel(const unsigned int ndim, M* metric)
 
+    # Periodic kernels.
+    cdef cppclass CosineKernel(Kernel):
+        CosineKernel(const unsigned int ndim, const unsigned int dim)
+
+    cdef cppclass ExpSine2Kernel(Kernel):
+        ExpSine2Kernel(const unsigned int ndim, const unsigned int dim)
+
 
 cdef class CythonKernel:
 
@@ -265,6 +272,12 @@ cdef Kernel* build_kernel(kernel_spec) except *:
                 new AxisAlignedMetric(ndim))
         else:
             raise NotImplementedError("The general metric isn't implemented")
+
+    elif kernel_spec.kernel_type == 8:
+        kernel = new CosineKernel(ndim, kernel_spec.dim)
+
+    elif kernel_spec.kernel_type == 9:
+        kernel = new ExpSine2Kernel(ndim, kernel_spec.dim)
 
     else:
         raise TypeError("Unknown kernel: {0}".format(

@@ -6,12 +6,12 @@ from __future__ import division, print_function, absolute_import
 __all__ = [
     "test_constant", "test_white", "test_dot_prod",
 
-    # "test_exp", "test_exp_squared", "test_rbf", "test_matern32",
-    # "test_matern52", "test_rational_quadratic",
+    "test_exp", "test_exp_squared", "test_rbf", "test_matern32",
+    "test_matern52", "test_rational_quadratic",
 
     # "test_cosine", "test_exp_sine2",
 
-    # "test_combine",
+    "test_combine",
 ]
 
 import numpy as np
@@ -126,16 +126,18 @@ def test_rational_quadratic():
 # PERIODIC KERNELS
 #
 
-# def test_cosine():
-#     do_kernel_t(kernels.CosineKernel(1.0))
-#     do_kernel_t(kernels.CosineKernel(0.5, 2))
-#     do_kernel_t(kernels.CosineKernel(0.75, 5))
+def test_cosine():
+    do_kernel_t(kernels.CosineKernel(1.0))
+    do_kernel_t(kernels.CosineKernel(0.5, ndim=2))
+    do_kernel_t(kernels.CosineKernel(0.5, ndim=2, dim=1))
+    do_kernel_t(kernels.CosineKernel(0.75, ndim=5, dim=3))
 
 
-# def test_exp_sine2():
-#     do_kernel_t(kernels.ExpSine2Kernel(0.4, 1.0))
-#     do_kernel_t(kernels.ExpSine2Kernel(12.0, 0.5, 2))
-#     do_kernel_t(kernels.ExpSine2Kernel(13.7, 0.75, 5))
+def test_exp_sine2():
+    do_kernel_t(kernels.ExpSine2Kernel(0.4, 1.0))
+    do_kernel_t(kernels.ExpSine2Kernel(12., 0.5, ndim=2))
+    do_kernel_t(kernels.ExpSine2Kernel(17., 0.5, ndim=2, dim=1))
+    do_kernel_t(kernels.ExpSine2Kernel(13.7, 0.75, ndim=5, dim=3))
 
 
 #
@@ -143,5 +145,5 @@ def test_rational_quadratic():
 #
 
 def test_combine():
-    # do_kernel_t(12 * kernels.ExpSine2Kernel(0.4, 1.0, ndim=5) + 0.1)
+    do_kernel_t(12 * kernels.ExpSine2Kernel(0.4, 1.0, ndim=5) + 0.1)
     do_kernel_t(12 * kernels.ExpSquaredKernel(0.4, ndim=3) + 0.1)
