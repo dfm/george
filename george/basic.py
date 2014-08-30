@@ -13,6 +13,7 @@ import numpy as np
 import scipy.optimize as op
 from scipy.linalg import cholesky, cho_solve, LinAlgError
 
+from .core import BasicSolver
 from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 
@@ -36,10 +37,12 @@ class GP(object):
 
     """
 
-    def __init__(self, kernel, mean=None):
+    def __init__(self, kernel, mean=None, solver=BasicSolver):
         self.kernel = kernel
         self._computed = False
         self.mean = mean
+
+        self.solver = solver(self.kernel)
 
     @property
     def mean(self):
@@ -156,19 +159,9 @@ class GP(object):
             self._yerr = float(yerr) * np.ones(len(x))
         except TypeError:
             self._yerr = self._check_dimensions(yerr)[self.inds]
-        self._do_compute(**kwargs)
-
-    def _do_compute(self, _scale=0.5*np.log(2*np.pi)):
-        # Compute the kernel matrix.
-        K = self.kernel(self._x, self._x)
-        K[np.diag_indices_from(K)] += self._yerr ** 2
-
-        # Factor the matrix and compute the log-determinant.
-        factor, _ = self._factor = (cholesky(K, overwrite_a=True,
-                                             lower=False), False)
-        self._const = -(np.sum(np.log(np.diag(factor))) + _scale*len(self._x))
-
-        # Save the computed state.
+        self.solver.compute(self._x, self._yerr, **kwargs)
+        self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
+                              + self.solver.log_determinant)
         self.computed = True
 
     def recompute(self, quiet=False, **kwargs):
@@ -192,9 +185,6 @@ class GP(object):
                 raise
         return True
 
-    def _compute_lnlike(self, r):
-        return self._const - 0.5*np.dot(r.T, cho_solve(self._factor, r))
-
     def lnlikelihood(self, y, quiet=False):
         """
         Compute the ln-likelihood of a set of observations under the Gaussian
@@ -213,7 +203,9 @@ class GP(object):
         if not self.recompute(quiet=quiet):
             return -np.inf
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
-        ll = self._compute_lnlike(r)
+
+        ll = self._const - 0.5 * np.dot(r, self.solver.apply_inverse(r))
+
         return ll if np.isfinite(ll) else -np.inf
 
     def grad_lnlikelihood(self, y, dims=None, quiet=False):
@@ -248,14 +240,14 @@ class GP(object):
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
 
         # Pre-compute some factors.
-        alpha = cho_solve(self._factor, r)
-        Kg = self.kernel.grad(self._x, self._x)[dims]
+        alpha = self.solver.apply_inverse(r)
+        Kg = self.kernel.gradient(self._x)[dims]
 
         # Loop over dimensions and compute the gradient in each one.
         g = np.empty(len(Kg))
         for i, k in enumerate(Kg):
             d = sum(map(lambda r: np.dot(alpha, r), alpha[:, None] * k))
-            d -= np.sum(np.diag(cho_solve(self._factor, k)))
+            d -= np.sum(np.diag(self.solver.apply_inverse(k, in_place=True)))
             g[i] = 0.5 * d
 
         return g
@@ -280,17 +272,17 @@ class GP(object):
         self.recompute()
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
         xs, i = self.parse_samples(t, False)
-        alpha = cho_solve(self._factor, r)
+        alpha = self.solver.apply_inverse(r)
 
         # Compute the predictive mean.
-        Kxs = self.kernel(xs, self._x)
+        Kxs = self.kernel.value(xs, self._x)
         mu = np.dot(Kxs, alpha) + self.mean(xs)
         if mean_only:
             return mu
 
         # Compute the predictive covariance.
-        cov = self.kernel(xs, xs)
-        cov -= np.dot(Kxs, cho_solve(self._factor, Kxs.T))
+        cov = self.kernel.value(xs, xs)
+        cov -= np.dot(Kxs, self.solver.apply_inverse(Kxs.T, in_place=True))
 
         return mu, cov
 

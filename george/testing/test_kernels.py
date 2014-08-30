@@ -9,7 +9,7 @@ __all__ = [
     "test_exp", "test_exp_squared", "test_rbf", "test_matern32",
     "test_matern52", "test_rational_quadratic",
 
-    # "test_cosine", "test_exp_sine2",
+    "test_cosine", "test_exp_sine2",
 
     "test_combine",
 ]
