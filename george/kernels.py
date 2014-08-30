@@ -143,6 +143,7 @@ class _operator(Kernel):
         self.k2 = k2
         self.ndim = k1.ndim
         self._dirty = True
+        self._kernel = None
 
     def lnprior(self):
         return self.k1.lnprior() + self.k2.lnprior()
