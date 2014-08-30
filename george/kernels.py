@@ -144,6 +144,9 @@ class _operator(Kernel):
         self.ndim = k1.ndim
         self._dirty = True
 
+    def lnprior(self):
+        return self.k1.lnprior() + self.k2.lnprior()
+
     @property
     def dirty(self):
         return self._dirty or self.k1.dirty or self.k2.dirty

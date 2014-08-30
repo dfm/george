@@ -7,7 +7,7 @@ __all__ = ["test_tutorial"]
 import numpy as np
 
 from .. import kernels
-from ..basic import GP
+from ..gp import GP
 
 
 def test_tutorial():
