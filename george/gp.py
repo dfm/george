@@ -207,7 +207,7 @@ class GP(object):
                                  - self.mean(self._x), dtype=np.float64)
         if not self.recompute(quiet=quiet):
             return -np.inf
-        ll = self._const - 0.5 * float(np.dot(r, self.solver.apply_inverse(r)))
+        ll = self._const - 0.5 * np.dot(r, self.solver.apply_inverse(r))
         return ll if np.isfinite(ll) else -np.inf
 
     def grad_lnlikelihood(self, y, quiet=False):

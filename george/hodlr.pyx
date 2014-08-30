@@ -74,7 +74,7 @@ cdef class HODLRSolver:
         # Do the standard solve.
         cdef np.ndarray[DTYPE_t, ndim=2] alpha = np.empty_like(y, dtype=DTYPE)
         self.solver.apply_inverse(n, nrhs, <double*>y.data, <double*>alpha.data)
-        return alpha
+        return alpha.reshape(y0.shape)
 
     def apply_sqrt(self, y0):
         raise NotImplementedError("The sqrt function isn't available in "
