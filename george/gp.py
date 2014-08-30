@@ -236,7 +236,8 @@ class GP(object):
 
         # Pre-compute some factors.
         alpha = self.solver.apply_inverse(r)
-        Kg = self.kernel.gradient(self._x)
+        Kg = np.ascontiguousarray(self.kernel.gradient(self._x).T,
+                                  dtype=np.float64)
 
         # Loop over dimensions and compute the gradient in each one.
         g = np.empty(len(Kg))

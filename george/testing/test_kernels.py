@@ -50,7 +50,7 @@ def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-7):
         kernel[i] += eps
         g0 = 0.5 * (kp - km) / eps
         assert np.allclose(g1[:, :, i], g0), \
-            "Python gradient computation failed in dimension {0}".format(i)
+            "Gradient computation failed in dimension {0}".format(i)
 
 
 #
