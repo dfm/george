@@ -40,7 +40,7 @@ install:
     - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
     - source activate test
 
-    - conda install --yes numpy=$NUMPY_VERSION scipy nose pip
+    - conda install --yes numpy=$NUMPY_VERSION scipy nose pip Cython
 
     - python setup.py build_ext --inplace
 

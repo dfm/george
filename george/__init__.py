@@ -8,8 +8,8 @@ except NameError:
     __GEORGE_SETUP__ = False
 
 if not __GEORGE_SETUP__:
-    __all__ = ["kernels", "GP", "HODLRGP"]
+    __all__ = ["kernels", "GP", "BasicSolver"]
 
     from . import kernels
-    # from .basic import GP
-    # from .hodlr import HODLRGP
+    from .gp import GP
+    from .core import BasicSolver

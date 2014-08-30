@@ -4,14 +4,9 @@ from __future__ import division, print_function
 
 __all__ = ["GP"]
 
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
-
 import numpy as np
 import scipy.optimize as op
-from scipy.linalg import cholesky, cho_solve, LinAlgError
+from scipy.linalg import LinAlgError
 
 from .core import BasicSolver
 from .utils import multivariate_gaussian_samples, nd_sort_samples
@@ -41,7 +36,6 @@ class GP(object):
         self.kernel = kernel
         self._computed = False
         self.mean = mean
-
         self.solver = solver(self.kernel)
 
     @property
@@ -281,7 +275,7 @@ class GP(object):
             return mu
 
         # Compute the predictive covariance.
-        cov = self.kernel.value(xs, xs)
+        cov = self.kernel.value(xs)
         cov -= np.dot(Kxs, self.solver.apply_inverse(Kxs.T, in_place=True))
 
         return mu, cov
@@ -329,7 +323,7 @@ class GP(object):
             n, _ = self._x.shape
 
             # Generate samples using the precomputed factorization.
-            samples = np.dot(np.random.randn(size, n), self._factor[0])
+            samples = self.solver.apply_sqrt(np.random.randn(size, n))
             samples += self.mean(self._x)
 
             # Reorder the samples correctly.
@@ -350,7 +344,7 @@ class GP(object):
 
         """
         r, _ = self.parse_samples(t, False)
-        return self.kernel(r, r)
+        return self.kernel.value(r)
 
     def optimize(self, x, y, yerr=TINY, sort=True, dims=None, verbose=True,
                  **kwargs):
