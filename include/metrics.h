@@ -41,7 +41,7 @@ public:
     IsotropicMetric (const unsigned int ndim) : Metric(ndim, 1) {};
 
     double get_squared_distance (const double* x1, const double* x2) const {
-        int i;
+        unsigned int i;
         double d, r2 = 0.0;
         for (i = 0; i < ndim_; ++i) {
             d = x1[i] - x2[i];
@@ -63,7 +63,7 @@ public:
     AxisAlignedMetric (const unsigned int ndim) : Metric(ndim, ndim) {};
 
     double get_squared_distance (const double* x1, const double* x2) const {
-        int i;
+        unsigned int i;
         double d, r2 = 0.0;
         for (i = 0; i < ndim_; ++i) {
             d = x1[i] - x2[i];
@@ -73,7 +73,7 @@ public:
     };
 
     double gradient (const double* x1, const double* x2, double* grad) const {
-        int i;
+        unsigned int i;
         double d, r2 = 0.0;
         for (i = 0; i < ndim_; ++i) {
             d = x1[i] - x2[i];
