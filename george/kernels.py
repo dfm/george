@@ -5,7 +5,7 @@ from __future__ import division, print_function
 __all__ = [
     "Sum", "Product", "Kernel",
     "ConstantKernel", "WhiteKernel", "DotProductKernel",
-    "RadialKernel", "ExpKernel", "ExpSquaredKernel", "RBFKernel",
+    "RadialKernel", "ExpKernel", "ExpSquaredKernel",
     "CosineKernel", "ExpSine2Kernel",
     "Matern32Kernel", "Matern52Kernel",
 ]
@@ -259,7 +259,7 @@ class RadialKernel(Kernel):
     """
     is_radial = True
 
-    def __init__(self, metric, ndim=1, extra=[]):
+    def __init__(self, metric, ndim=1, dim=-1, extra=[]):
         self.isotropic = False
         self.axis_aligned = False
         try:
@@ -278,6 +278,10 @@ class RadialKernel(Kernel):
         else:
             # If we get here then the kernel is isotropic.
             self.isotropic = True
+
+        if dim >= 0:
+            assert self.isotropic, "A 1-D kernel should also be isotropic"
+        self.dim = dim
 
         super(RadialKernel, self).__init__(*(np.append(extra, metric)),
                                            ndim=ndim)
@@ -315,13 +319,6 @@ class ExpSquaredKernel(RadialKernel):
 
     """
     kernel_type = 4
-
-
-class RBFKernel(ExpSquaredKernel):
-    r"""
-    An alias for :class:`ExpSquaredKernel`.
-
-    """
 
 
 class Matern32Kernel(RadialKernel):

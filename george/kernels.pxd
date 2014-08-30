@@ -13,6 +13,9 @@ cdef extern from "metrics.h" namespace "george::metrics":
     cdef cppclass Metric:
         pass
 
+    cdef cppclass OneDMetric(Metric):
+        OneDMetric(const unsigned int ndim, const unsigned int dim)
+
     cdef cppclass IsotropicMetric(Metric):
         IsotropicMetric(const unsigned int ndim)
 
@@ -111,7 +114,10 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
         kernel = new DotProductKernel(ndim)
 
     elif kernel_spec.kernel_type == 3:
-        if kernel_spec.isotropic:
+        if kernel_spec.dim >= 0:
+            kernel = new ExpKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
             kernel = new ExpKernel[IsotropicMetric](ndim,
                 new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
@@ -121,7 +127,10 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
             raise NotImplementedError("The general metric isn't implemented")
 
     elif kernel_spec.kernel_type == 4:
-        if kernel_spec.isotropic:
+        if kernel_spec.dim >= 0:
+            kernel = new ExpSquaredKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
             kernel = new ExpSquaredKernel[IsotropicMetric](ndim,
                 new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
@@ -131,7 +140,10 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
             raise NotImplementedError("The general metric isn't implemented")
 
     elif kernel_spec.kernel_type == 5:
-        if kernel_spec.isotropic:
+        if kernel_spec.dim >= 0:
+            kernel = new Matern32Kernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
             kernel = new Matern32Kernel[IsotropicMetric](ndim,
                 new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
@@ -141,7 +153,10 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
             raise NotImplementedError("The general metric isn't implemented")
 
     elif kernel_spec.kernel_type == 6:
-        if kernel_spec.isotropic:
+        if kernel_spec.dim >= 0:
+            kernel = new Matern52Kernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
             kernel = new Matern52Kernel[IsotropicMetric](ndim,
                 new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
@@ -151,7 +166,10 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
             raise NotImplementedError("The general metric isn't implemented")
 
     elif kernel_spec.kernel_type == 7:
-        if kernel_spec.isotropic:
+        if kernel_spec.dim >= 0:
+            kernel = new RationalQuadraticKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
             kernel = new RationalQuadraticKernel[IsotropicMetric](ndim,
                 new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:

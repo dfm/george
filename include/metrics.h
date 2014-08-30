@@ -35,6 +35,27 @@ protected:
     vector<double> vector_;
 };
 
+class OneDMetric : public Metric {
+public:
+
+    OneDMetric (const unsigned int ndim, const unsigned int dim)
+        : Metric(ndim, 1), dim_(dim) {};
+
+    double get_squared_distance (const double* x1, const double* x2) const {
+        double d = x1[dim_] - x2[dim_];
+        return d * d / this->vector_[0];
+    };
+
+    double gradient (const double* x1, const double* x2, double* grad) const {
+        double r2 = get_squared_distance(x1, x2);
+        grad[0] = -r2 / this->vector_[0];
+        return r2;
+    };
+
+private:
+    unsigned int dim_;
+};
+
 class IsotropicMetric : public Metric {
 public:
 

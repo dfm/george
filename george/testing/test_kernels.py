@@ -6,7 +6,7 @@ from __future__ import division, print_function, absolute_import
 __all__ = [
     "test_constant", "test_white", "test_dot_prod",
 
-    "test_exp", "test_exp_squared", "test_rbf", "test_matern32",
+    "test_exp", "test_exp_squared", "test_matern32",
     "test_matern52", "test_rational_quadratic",
 
     "test_cosine", "test_exp_sine2",
@@ -95,6 +95,9 @@ def do_cov_t(kernel_type, extra=None):
     else:
         assert False, "This test should fail"
 
+    kernel = build_kernel(1.0, ndim=3, dim=2)
+    do_kernel_t(kernel)
+
 
 def test_exp():
     do_cov_t(kernels.ExpKernel)
@@ -102,10 +105,6 @@ def test_exp():
 
 def test_exp_squared():
     do_cov_t(kernels.ExpSquaredKernel)
-
-
-def test_rbf():
-    do_cov_t(kernels.RBFKernel)
 
 
 def test_matern32():
