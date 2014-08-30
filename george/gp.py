@@ -8,7 +8,7 @@ import numpy as np
 import scipy.optimize as op
 from scipy.linalg import LinAlgError
 
-from .core import BasicSolver
+from .basic import BasicSolver
 from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 

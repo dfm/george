@@ -15,6 +15,10 @@ using george::kernels::Kernel;
 
 namespace george {
 
+// Eigen is column major and numpy is row major. Barf.
+typedef Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
+                          Eigen::RowMajor> > RowMajorMap;
+
 class HODLRSolverMatrix : public HODLR_Matrix {
 public:
     HODLRSolverMatrix (Kernel* kernel)
@@ -22,7 +26,7 @@ public:
     {
         stride_ = kernel_->get_ndim();
     };
-    void set_values (double* v) {
+    void set_values (const double* v) {
         t_ = v;
     };
     double get_Matrix_Entry (const unsigned i, const unsigned j) {
@@ -32,17 +36,17 @@ public:
 private:
     Kernel* kernel_;
     unsigned int stride_;
-    double* t_;
+    const double* t_;
 };
 
-class HODLRSolver {
+class Solver {
 
 public:
 
     //
     // Allocation and deallocation.
     //
-    HODLRSolver (Kernel* kernel, unsigned nLeaf = 10, double tol = 1e-10)
+    Solver (Kernel* kernel, unsigned nLeaf = 10, double tol = 1e-10)
         : tol_(tol), nleaf_(nLeaf), kernel_(kernel)
     {
         matrix_ = new HODLRSolverMatrix(kernel_);
@@ -50,7 +54,7 @@ public:
         status_ = SOLVER_OK;
         computed_ = 0;
     };
-    ~HODLRSolver () {
+    ~Solver () {
         if (solver_ != NULL) delete solver_;
         delete matrix_;
     };
@@ -99,34 +103,14 @@ public:
         return status_;
     };
 
-    //
-    // Compute the log-likelihood
-    //
-    double log_likelihood (VectorXd y)
-    {
-        // Make sure that things have been properly computed.
-        if (!computed_ || status_ != SOLVER_OK) {
-            status_ = USAGE_ERROR;
-            return -INFINITY;
-        }
-
-        // Check the dimensions.
-        if (y.rows() != x_.rows()) {
-            status_ = DIMENSION_MISMATCH;
-            return -INFINITY;
-        }
-
-        // Compute the log-likelihood.
-        return -0.5 * (logdet_ + y.dot(compute_alpha(y)));
-    };
-
-    //
-    // Compute the ``alpha`` vector for a given RHS.
-    //
-    VectorXd compute_alpha (MatrixXd y) {
-        MatrixXd alpha(y.rows(), 1);
-        solver_->solve(y, alpha);
-        return alpha;
+    void apply_inverse (const unsigned int n, const unsigned int nrhs,
+                        double* b, double* out) {
+        unsigned int i, j;
+        MatrixXd b_vec = RowMajorMap(b, n, nrhs), alpha(n, nrhs);
+        solver_->solve(b_vec, alpha);
+        for (i = 0; i < n; ++i)
+            for (j = 0; j < nrhs; ++j)
+                out[i*nrhs+j] = alpha(i, j);
     };
 
 private:

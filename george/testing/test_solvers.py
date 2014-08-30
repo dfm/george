@@ -7,7 +7,8 @@ __all__ = ["test_basic_solver"]
 import numpy as np
 
 from .. import kernels
-from ..core.basic import BasicSolver
+from ..basic import BasicSolver
+from ..hodlr import HODLRSolver
 
 
 def _test_solver(Solver, N=100, seed=1234):
@@ -36,3 +37,7 @@ def _test_solver(Solver, N=100, seed=1234):
 
 def test_basic_solver(**kwargs):
     _test_solver(BasicSolver, **kwargs)
+
+
+def test_hodlr_solver(**kwargs):
+    _test_solver(HODLRSolver, **kwargs)

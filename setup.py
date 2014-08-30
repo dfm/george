@@ -124,8 +124,11 @@ if __name__ == "__main__":
         "include",
         numpy.get_include(),
     ]
-    ext = Extension("george._kernels", sources=["george/_kernels.pyx"],
-                    libraries=libraries, include_dirs=include_dirs)
+
+    kern_ext = Extension("george._kernels", sources=["george/_kernels.pyx"],
+                         libraries=libraries, include_dirs=include_dirs)
+    hodlr_ext = Extension("george.hodlr", sources=["george/hodlr.pyx"],
+                          libraries=libraries, include_dirs=include_dirs)
 
     # Hackishly inject a constant into builtins to enable importing of the
     # package before the library is built.
@@ -144,7 +147,7 @@ if __name__ == "__main__":
         url="https://github.com/dfm/george",
         license="MIT",
         packages=["george", "george.testing"],
-        ext_modules=cythonize([ext]),
+        ext_modules=cythonize([kern_ext, hodlr_ext]),
         description="Blazingly fast Gaussian Processes for regression.",
         long_description=open("README.rst").read(),
         package_data={"": ["README.rst", "LICENSE",

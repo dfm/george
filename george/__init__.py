@@ -12,4 +12,4 @@ if not __GEORGE_SETUP__:
 
     from . import kernels
     from .gp import GP
-    from .core import BasicSolver
+    from .basic import BasicSolver
