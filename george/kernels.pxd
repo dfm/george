@@ -1,9 +1,6 @@
 # distutils: language = c++
 from __future__ import division
 
-cimport cython
-cimport kernels
-
 import numpy as np
 cimport numpy as np
 
@@ -75,13 +72,13 @@ cdef extern from "kernels.h" namespace "george::kernels":
         ExpSine2Kernel(const unsigned int ndim, const unsigned int dim)
 
 
-cdef inline kernels.Kernel* parse_kernel(kernel_spec) except *:
+cdef inline Kernel* parse_kernel(kernel_spec) except *:
     if not hasattr(kernel_spec, "is_kernel"):
         raise TypeError("Invalid kernel")
 
     # Deal with operators first.
-    cdef kernels.Kernel* k1
-    cdef kernels.Kernel* k2
+    cdef Kernel* k1
+    cdef Kernel* k2
     cdef unsigned int n1, n2
     if not kernel_spec.is_kernel:
         k1 = parse_kernel(kernel_spec.k1)
@@ -92,9 +89,9 @@ cdef inline kernels.Kernel* parse_kernel(kernel_spec) except *:
             raise ValueError("Dimension mismatch")
 
         if kernel_spec.operator_type == 0:
-            return new kernels.Sum(n1, k1, k2)
+            return new Sum(n1, k1, k2)
         elif kernel_spec.operator_type == 1:
-            return new kernels.Product(n1, k1, k2)
+            return new Product(n1, k1, k2)
         else:
             raise TypeError("Unknown operator: {0}".format(
                 kernel_spec.__class__.__name__))
@@ -103,71 +100,71 @@ cdef inline kernels.Kernel* parse_kernel(kernel_spec) except *:
     cdef unsigned int ndim = kernel_spec.ndim
     cdef np.ndarray[DTYPE_t, ndim=1] pars = kernel_spec.pars
 
-    cdef kernels.Kernel* kernel
+    cdef Kernel* kernel
     if kernel_spec.kernel_type == 0:
-        kernel = new kernels.ConstantKernel(ndim)
+        kernel = new ConstantKernel(ndim)
 
     elif kernel_spec.kernel_type == 1:
-        kernel = new kernels.WhiteKernel(ndim)
+        kernel = new WhiteKernel(ndim)
 
     elif kernel_spec.kernel_type == 2:
-        kernel = new kernels.DotProductKernel(ndim)
+        kernel = new DotProductKernel(ndim)
 
     elif kernel_spec.kernel_type == 3:
         if kernel_spec.isotropic:
-            kernel = new kernels.ExpKernel[kernels.IsotropicMetric](ndim,
-                new kernels.IsotropicMetric(ndim))
+            kernel = new ExpKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
-            kernel = new kernels.ExpKernel[kernels.AxisAlignedMetric](ndim,
-                new kernels.AxisAlignedMetric(ndim))
+            kernel = new ExpKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
         else:
             raise NotImplementedError("The general metric isn't implemented")
 
     elif kernel_spec.kernel_type == 4:
         if kernel_spec.isotropic:
-            kernel = new kernels.ExpSquaredKernel[kernels.IsotropicMetric](ndim,
-                new kernels.IsotropicMetric(ndim))
+            kernel = new ExpSquaredKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
-            kernel = new kernels.ExpSquaredKernel[kernels.AxisAlignedMetric](ndim,
-                new kernels.AxisAlignedMetric(ndim))
+            kernel = new ExpSquaredKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
         else:
             raise NotImplementedError("The general metric isn't implemented")
 
     elif kernel_spec.kernel_type == 5:
         if kernel_spec.isotropic:
-            kernel = new kernels.Matern32Kernel[kernels.IsotropicMetric](ndim,
-                new kernels.IsotropicMetric(ndim))
+            kernel = new Matern32Kernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
-            kernel = new kernels.Matern32Kernel[kernels.AxisAlignedMetric](ndim,
-                new kernels.AxisAlignedMetric(ndim))
+            kernel = new Matern32Kernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
         else:
             raise NotImplementedError("The general metric isn't implemented")
 
     elif kernel_spec.kernel_type == 6:
         if kernel_spec.isotropic:
-            kernel = new kernels.Matern52Kernel[kernels.IsotropicMetric](ndim,
-                new kernels.IsotropicMetric(ndim))
+            kernel = new Matern52Kernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
-            kernel = new kernels.Matern52Kernel[kernels.AxisAlignedMetric](ndim,
-                new kernels.AxisAlignedMetric(ndim))
+            kernel = new Matern52Kernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
         else:
             raise NotImplementedError("The general metric isn't implemented")
 
     elif kernel_spec.kernel_type == 7:
         if kernel_spec.isotropic:
-            kernel = new kernels.RationalQuadraticKernel[kernels.IsotropicMetric](ndim,
-                new kernels.IsotropicMetric(ndim))
+            kernel = new RationalQuadraticKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
-            kernel = new kernels.RationalQuadraticKernel[kernels.AxisAlignedMetric](ndim,
-                new kernels.AxisAlignedMetric(ndim))
+            kernel = new RationalQuadraticKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
         else:
             raise NotImplementedError("The general metric isn't implemented")
 
     elif kernel_spec.kernel_type == 8:
-        kernel = new kernels.CosineKernel(ndim, kernel_spec.dim)
+        kernel = new CosineKernel(ndim, kernel_spec.dim)
 
     elif kernel_spec.kernel_type == 9:
-        kernel = new kernels.ExpSine2Kernel(ndim, kernel_spec.dim)
+        kernel = new ExpSine2Kernel(ndim, kernel_spec.dim)
 
     else:
         raise TypeError("Unknown kernel: {0}".format(
