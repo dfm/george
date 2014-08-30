@@ -62,6 +62,9 @@ cdef extern from "kernels.h" namespace "george::kernels":
     cdef cppclass Matern52Kernel[M](Kernel):
         Matern52Kernel(const unsigned int ndim, M* metric)
 
+    cdef cppclass RationalQuadraticKernel[M](Kernel):
+        RationalQuadraticKernel(const unsigned int ndim, M* metric)
+
 
 cdef class CythonKernel:
 
@@ -249,6 +252,16 @@ cdef Kernel* build_kernel(kernel_spec) except *:
                 new IsotropicMetric(ndim))
         elif kernel_spec.axis_aligned:
             kernel = new Matern52Kernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
+        else:
+            raise NotImplementedError("The general metric isn't implemented")
+
+    elif kernel_spec.kernel_type == 7:
+        if kernel_spec.isotropic:
+            kernel = new RationalQuadraticKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
+        elif kernel_spec.axis_aligned:
+            kernel = new RationalQuadraticKernel[AxisAlignedMetric](ndim,
                 new AxisAlignedMetric(ndim))
         else:
             raise NotImplementedError("The general metric isn't implemented")

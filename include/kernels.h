@@ -209,11 +209,17 @@ public:
     };
 
     virtual void gradient (const double* x1, const double* x2, double* grad) const {
+        metric_gradient(x1, x2, grad);
+    };
+
+    double metric_gradient (const double* x1, const double* x2, double* grad) const {
         int i, n = metric_->size();
         double r2 = metric_->gradient(x1, x2, grad),
                kg = this->get_radial_gradient(r2);
         for (i = 0; i < n; ++i) grad[i] *= kg;
+        return r2;
     };
+
 
     // Parameter vector spec.
     unsigned int size () const { return metric_->size(); };
@@ -284,6 +290,41 @@ public:
         double r = sqrt(5 * r2);
         return -5 * (1 + r) * exp(-r) / 6.0;
     };
+};
+
+template <typename M>
+class RationalQuadraticKernel : public RadialKernel<M> {
+public:
+    RationalQuadraticKernel (const long ndim, M* metric)
+        : RadialKernel<M>(ndim, metric) {};
+
+    double value (const double* x1, const double* x2) const {
+        double r2 = this->get_squared_distance(x1, x2);
+        return pow(1 + 0.5 * r2 / alpha_, -alpha_);
+    };
+    double get_radial_gradient (double r2) const {
+        return -0.5 * pow(1 + 0.5 * r2 / alpha_, -alpha_-1);
+    };
+
+    void gradient (const double* x1, const double* x2, double* grad) const {
+        double r2 = this->metric_gradient(x1, x2, &(grad[1])),
+               t1 = 1.0 + 0.5 * r2 / alpha_,
+               t2 = 2.0 * alpha_ * t1;
+        grad[0] = pow(t1, -alpha_) * (r2 / t2 - log(t1));
+    };
+
+    unsigned int size () const { return this->metric_->size() + 1; };
+    void set_parameter (const unsigned int i, const double value) {
+        if (i == 0) alpha_ = value;
+        else this->metric_->set_parameter(i - 1, value);
+    };
+    double get_parameter (const unsigned int i) const {
+        if (i == 0) return alpha_;
+        return this->metric_->get_parameter(i - 1);
+    };
+
+private:
+    double alpha_;
 };
 
 }; // namespace kernels
