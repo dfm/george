@@ -19,7 +19,7 @@ public:
         return 0.0;
     };
     virtual void gradient (const double* x1, const double* x2, double* grad) const {
-        int i;
+        unsigned int i;
         for (i = 0; i < this->size(); ++i) grad[i] = 0.0;
     };
 

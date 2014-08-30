@@ -101,6 +101,8 @@ class build_ext(_build_ext):
 
         # Update the extension's include directories.
         ext.include_dirs += [eigen_include, hodlr_include]
+        ext.extra_compile_args += ["-Wno-unused-function",
+                                   "-Wno-uninitialized"]
 
         # Run the standard build procedure.
         _build_ext.build_extension(self, ext)

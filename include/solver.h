@@ -78,7 +78,7 @@ public:
 
         // Compute the diagonal elements.
         VectorXd diag(n);
-        for (int i = 0; i < n; ++i) {
+        for (unsigned int i = 0; i < n; ++i) {
             diag[i] = yerr[i]*yerr[i];
             diag[i] += kernel_->value(&(x[i*ndim]), &(x[i*ndim]));
         }
