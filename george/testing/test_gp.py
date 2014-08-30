@@ -34,7 +34,8 @@ def _test_gradient(seed=123, N=100, ndim=2, eps=1.32e-4, solver=BasicSolver):
         kernel[i] += eps
         grad = 0.5 * (lp - lm) / eps
         assert np.abs(grad - grad0[i]) < 2 * eps, \
-            "Gradient computation failed in dimension {0}".format(i)
+            "Gradient computation failed in dimension {0} ({1})\n{2}" \
+            .format(i, solver.__name__, np.abs(grad - grad0[i]))
 
 
 def test_gradient(**kwargs):
