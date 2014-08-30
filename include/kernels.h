@@ -244,6 +244,8 @@ public:
     };
     double get_radial_gradient (double r2) const {
         double r = sqrt(r2);
+        if (r < DBL_EPSILON)
+            return 0.0;
         return -0.5 * exp(-r) / r;
     };
 };

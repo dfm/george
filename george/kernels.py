@@ -257,6 +257,8 @@ class RadialKernel(Kernel):
     is_radial = True
 
     def __init__(self, metric, ndim=1, extra=[]):
+        self.isotropic = False
+        self.axis_aligned = False
         try:
             float(metric)
 
