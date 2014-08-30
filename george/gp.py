@@ -198,7 +198,7 @@ class GP(object):
             return -np.inf
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
 
-        ll = self._const - 0.5 * np.dot(r, self.solver.apply_inverse(r))
+        ll = self._const - 0.5 * float(np.dot(r, self.solver.apply_inverse(r)))
 
         return ll if np.isfinite(ll) else -np.inf
 
