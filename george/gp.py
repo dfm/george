@@ -32,11 +32,14 @@ class GP(object):
 
     """
 
-    def __init__(self, kernel, mean=None, solver=BasicSolver):
+    def __init__(self, kernel, mean=None, solver=BasicSolver, **kwargs):
         self.kernel = kernel
         self._computed = False
         self.mean = mean
-        self.solver = solver(self.kernel)
+
+        self.solver_type = solver
+        self.solver_kwargs = kwargs
+        self.solver = None
 
     @property
     def mean(self):
@@ -153,6 +156,7 @@ class GP(object):
             self._yerr = float(yerr) * np.ones(len(x))
         except TypeError:
             self._yerr = self._check_dimensions(yerr)[self.inds]
+        self.solver = self.solver_type(self.kernel, **(self.solver_kwargs))
         self.solver.compute(self._x, self._yerr, **kwargs)
         self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
                               + self.solver.log_determinant)
@@ -164,7 +168,7 @@ class GP(object):
         the kernel parameters change and the kernel is labeled as ``dirty``.
 
         """
-        if not self.computed:
+        if self.kernel.dirty or not self.computed:
             if not (hasattr(self, "_x") and hasattr(self, "_yerr")):
                 raise RuntimeError("You need to compute the model first")
             try:
@@ -194,12 +198,10 @@ class GP(object):
             failure. (default: ``False``)
 
         """
+        r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
         if not self.recompute(quiet=quiet):
             return -np.inf
-        r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
-
         ll = self._const - 0.5 * float(np.dot(r, self.solver.apply_inverse(r)))
-
         return ll if np.isfinite(ll) else -np.inf
 
     def grad_lnlikelihood(self, y, dims=None, quiet=False):
