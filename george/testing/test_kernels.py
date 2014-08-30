@@ -4,6 +4,8 @@
 from __future__ import division, print_function, absolute_import
 
 __all__ = [
+    "test_dtype",
+
     "test_constant", "test_white", "test_dot_prod",
 
     "test_exp", "test_exp_squared", "test_matern32",
@@ -17,6 +19,16 @@ __all__ = [
 import numpy as np
 
 from .. import kernels
+from ..gp import GP
+
+
+def test_dtype(seed=123):
+    np.random.seed(seed)
+    kernel = 0.1 * kernels.ExpSquaredKernel(1.5)
+    kernel.pars = [1, 2]
+    gp = GP(kernel)
+    x = np.random.rand(100)
+    gp.compute(x, 1e-2)
 
 
 def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-7):

@@ -81,7 +81,7 @@ class Kernel(object):
 
     @pars.setter
     def pars(self, v):
-        self._pars = np.array(v)
+        self._pars = np.array(v, dtype=np.float64, order="C")
         self.dirty = True
 
     def __getitem__(self, i):
