@@ -7,31 +7,34 @@
 #include <HODLR_Matrix.hpp>
 
 #include "constants.h"
+#include "kernels.h"
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
+using george::kernels::Kernel;
 
 namespace george {
 
-template <typename K>
 class HODLRSolverMatrix : public HODLR_Matrix {
-
 public:
-
-    HODLRSolverMatrix (K* kernel) : kernel_(kernel) {};
-    void set_values (MatrixXd v) { t_ = v; };
+    HODLRSolverMatrix (Kernel* kernel)
+        : kernel_(kernel)
+    {
+        stride_ = kernel_->get_ndim();
+    };
+    void set_values (double* v) {
+        t_ = v;
+    };
     double get_Matrix_Entry (const unsigned i, const unsigned j) {
-        return kernel_->evaluate (t_.row(i), t_.row(j));
+        return kernel_->value(&(t_[i*stride_]), &(t_[j*stride_]));
     };
 
 private:
-
-    K* kernel_;
-    MatrixXd t_;
-
+    Kernel* kernel_;
+    unsigned int stride_;
+    double* t_;
 };
 
-template <typename K>
 class HODLRSolver {
 
 public:
@@ -39,10 +42,10 @@ public:
     //
     // Allocation and deallocation.
     //
-    HODLRSolver (K* kernel, unsigned nLeaf = 10, double tol = 1e-10)
+    HODLRSolver (Kernel* kernel, unsigned nLeaf = 10, double tol = 1e-10)
         : tol_(tol), nleaf_(nLeaf), kernel_(kernel)
     {
-        matrix_ = new HODLRSolverMatrix<K> (kernel_);
+        matrix_ = new HODLRSolverMatrix(kernel_);
         solver_ = NULL;
         status_ = SOLVER_OK;
         computed_ = 0;
@@ -53,45 +56,35 @@ public:
     };
 
     //
-    // Flag accessors.
+    // Accessors.
     //
     int get_status () const { return status_; };
     int get_computed () const { return computed_; };
-
-    //
-    // Get the dimensions.
-    //
-    int get_dimension () const {
-        if (computed_) return x_.rows();
-        return -1;
-    };
+    double get_log_determinant () const { return logdet_; };
 
     //
     // Pre-compute and factorize the kernel matrix.
     //
-    int compute (const MatrixXd x, const VectorXd& yerr, unsigned int seed) {
-        // Check the dimensions.
-        int n = x.rows();
-        if (yerr.rows() != n) {
-            status_ = DIMENSION_MISMATCH;
-            return status_;
-        }
+    int compute (const unsigned int n, const double* x, const double* yerr,
+                 unsigned int seed) {
+        unsigned int ndim = kernel_->get_ndim();
 
         // It's not computed until it's computed...
         computed_ = 0;
 
         // Compute the diagonal elements.
         VectorXd diag(n);
-        for (int i = 0; i < n; ++i)
-            diag[i] = yerr[i]*yerr[i] +
-                      kernel_->evaluate(x.row(i), x.row(i));
+        for (int i = 0; i < n; ++i) {
+            diag[i] = yerr[i]*yerr[i];
+            diag[i] += kernel_->value(&(x[i*ndim]), &(x[i*ndim]));
+        }
 
         // Set the time points for the kernel.
-        matrix_->set_values (x);
+        matrix_->set_values(x);
 
         // Set up the solver object.
         if (solver_ != NULL) delete solver_;
-        solver_ = new HODLR_Tree<HODLRSolverMatrix<K> > (matrix_, n, nleaf_);
+        solver_ = new HODLR_Tree<HODLRSolverMatrix> (matrix_, n, nleaf_);
         solver_->assemble_Matrix(diag, tol_, 's', seed);
 
         // Factorize the matrix.
@@ -99,10 +92,6 @@ public:
 
         // Extract the log-determinant.
         solver_->compute_Determinant(logdet_);
-        logdet_ += n * log(2 * M_PI);
-
-        // Save the data for later use.
-        x_ = x;
 
         // Update the bookkeeping flags.
         computed_ = 1;
@@ -140,46 +129,14 @@ public:
         return alpha;
     };
 
-    //
-    // Get the mean conditional prediction.
-    //
-    void predict (const VectorXd& y, const MatrixXd& t, VectorXd& mu, MatrixXd& cov) {
-        int n = y.rows(), nt = t.rows(), ndim = t.cols();
-        if (n != x_.rows() || ndim != x_.cols()) {
-            status_ = DIMENSION_MISMATCH;
-            return;
-        }
-
-        // Compute the cross kernel matrix.
-        MatrixXd k (nt, n);
-        for (int i = 0; i < nt; ++i)
-            for (int j = 0; j < n; ++j)
-                k(i, j) = kernel_->evaluate (t.row(i), x_.row(j));
-
-        // Compute the mean prediction.
-        mu = k * compute_alpha(y);
-
-        // Compute the predictive covariance.
-        cov = MatrixXd (nt, nt);
-        for (int i = 0; i < nt; ++i)
-            for (int j = 0; j < nt; ++j)
-                cov(i, j) = kernel_->evaluate (t.row(i), t.row(j));
-        MatrixXd v(nt, nt),
-                 kt = k.transpose();
-        solver_->solve(kt, v);
-        cov -= k * v;
-    };
-
 private:
-
     double logdet_, tol_;
     unsigned nleaf_;
     int status_, computed_;
-    K* kernel_;
-    HODLRSolverMatrix<K>* matrix_;
-    HODLR_Tree<HODLRSolverMatrix<K> >* solver_;
+    Kernel* kernel_;
+    HODLRSolverMatrix* matrix_;
+    HODLR_Tree<HODLRSolverMatrix>* solver_;
     MatrixXd x_;
-
 };
 
 };
