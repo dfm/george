@@ -4,6 +4,7 @@ from __future__ import division
 cimport cython
 cimport kernels
 
+import cPickle as pickle
 import numpy as np
 cimport numpy as np
 
@@ -11,12 +12,21 @@ DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t
 
 
+def _rebuild(kernel_spec):
+    return CythonKernel(kernel_spec)
+
+
 cdef class CythonKernel:
 
     cdef kernels.Kernel* kernel
+    cdef object kernel_spec
 
     def __cinit__(self, kernel_spec):
+        self.kernel_spec = kernel_spec
         self.kernel = kernels.parse_kernel(kernel_spec)
+
+    def __reduce__(self):
+        return _rebuild, (self.kernel_spec, )
 
     def __dealloc__(self):
         del self.kernel

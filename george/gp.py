@@ -63,7 +63,11 @@ class GP(object):
         Has the processes been computed since the last update of the kernel?
 
         """
-        return self._computed and not self.kernel.dirty
+        return (
+            self._computed
+            and self.solver.computed
+            and not self.kernel.dirty
+        )
 
     @computed.setter
     def computed(self, v):

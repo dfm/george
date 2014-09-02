@@ -2,7 +2,6 @@
 
 import os
 import sys
-import sphinx_rtd_theme
 
 d = os.path.dirname
 sys.path.insert(0, d(d(os.path.abspath(__file__))))
@@ -28,8 +27,14 @@ release = george.__version__
 
 exclude_patterns = ["_build"]
 pygments_style = "sphinx"
-html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+# Readthedocs.
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
+if not on_rtd:
+    import sphinx_rtd_theme
+    html_theme = "sphinx_rtd_theme"
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
 htmp_theme_options = dict(
     analytics_id="analytics_id",
 )

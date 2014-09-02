@@ -12,6 +12,7 @@ class BasicSolver(object):
 
     def __init__(self, kernel):
         self.kernel = kernel
+        self.computed = False
 
     def compute(self, x, yerr):
         # Compute the kernel matrix.
@@ -21,6 +22,7 @@ class BasicSolver(object):
         # Factor the matrix and compute the log-determinant.
         self._factor = (cholesky(K, overwrite_a=True, lower=False), False)
         self.log_determinant = 2 * np.sum(np.log(np.diag(self._factor[0])))
+        self.computed = True
 
     def apply_inverse(self, y, in_place=False):
         return cho_solve(self._factor, y, overwrite_b=in_place)

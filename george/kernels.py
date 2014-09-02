@@ -51,6 +51,11 @@ class Kernel(object):
         self.dirty = True
         self._kernel = None
 
+    def __getstate__(self):
+        odict = self.__dict__.copy()
+        odict["_kernel"] = None
+        return odict
+
     @property
     def kernel(self):
         if self.dirty or self._kernel is None:

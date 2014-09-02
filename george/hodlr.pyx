@@ -16,18 +16,33 @@ cdef extern from "solver.h" namespace "george":
     cdef cppclass Solver:
         Solver(kernels.Kernel*, unsigned int, double)
         int compute (const unsigned int, const double*, const double*, unsigned int)
+        int get_computed () const
         double get_log_determinant () const
         void apply_inverse (const unsigned int, const unsigned int, double*, double*)
 
 
+def _rebuild(kernel_spec, nleaf, tol):
+    return HODLRSolver(kernel_spec, nleaf=nleaf, tol=tol, rebuild=True)
+
+
 cdef class HODLRSolver:
 
+    cdef object kernel_spec
     cdef kernels.Kernel* kernel
     cdef Solver* solver
+    cdef unsigned int nleaf
+    cdef double tol
 
-    def __cinit__(self, kernel_spec, unsigned int nleaf=100, double tol=1e-12):
+    def __cinit__(self, kernel_spec, unsigned int nleaf=100, double tol=1e-12,
+                  rebuild=False):
+        self.kernel_spec = kernel_spec
         self.kernel = kernels.parse_kernel(kernel_spec)
         self.solver = new Solver(self.kernel, nleaf, tol)
+        self.nleaf = nleaf
+        self.tol = tol
+
+    def __reduce__(self):
+        return _rebuild, (self.kernel_spec, self.nleaf, self.tol)
 
     def __dealloc__(self):
         del self.solver
@@ -54,6 +69,10 @@ cdef class HODLRSolver:
     property log_determinant:
         def __get__(self):
             return self.solver.get_log_determinant()
+
+    property computed:
+        def __get__(self):
+            return bool(self.solver.get_computed())
 
     def apply_inverse(self, y0, in_place=False):
         # Coerce the input array into the correct format.
