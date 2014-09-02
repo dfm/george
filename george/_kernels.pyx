@@ -4,7 +4,6 @@ from __future__ import division
 cimport cython
 cimport kernels
 
-import cPickle as pickle
 import numpy as np
 cimport numpy as np
 
