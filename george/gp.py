@@ -240,15 +240,13 @@ class GP(object):
 
         # Pre-compute some factors.
         alpha = self.solver.apply_inverse(r)
+        K_inv = self.solver.apply_inverse(np.eye(alpha.size), in_place=True)
         Kg = np.ascontiguousarray(self.kernel.gradient(self._x).T,
                                   dtype=np.float64)
 
-        # Loop over dimensions and compute the gradient in each one.
-        g = np.empty(len(Kg))
-        for i, k in enumerate(Kg):
-            d = sum(map(lambda r: np.dot(alpha, r), alpha[:, None] * k))
-            d -= np.sum(np.diag(self.solver.apply_inverse(k, in_place=True)))
-            g[i] = 0.5 * d
+        # Calculate the gradient.
+        A = np.outer(alpha, alpha) - K_inv
+        g = 0.5 * np.einsum('ij,kji', A, Kg)
 
         return g
 
