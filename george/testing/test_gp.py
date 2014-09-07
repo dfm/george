@@ -41,4 +41,3 @@ def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-4, solver=BasicSolver):
 def test_gradient(**kwargs):
     _test_gradient(solver=BasicSolver, **kwargs)
     _test_gradient(solver=HODLRSolver, **kwargs)
-    assert 0
