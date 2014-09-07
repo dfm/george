@@ -241,50 +241,11 @@ class GP(object):
         # Pre-compute some factors.
         alpha = self.solver.apply_inverse(r)
         K_inv = self.solver.apply_inverse(np.eye(alpha.size), in_place=True)
-        Kg = np.ascontiguousarray(self.kernel.gradient(self._x).T,
-                                  dtype=np.float64)
+        Kg = self.kernel.gradient(self._x)
 
         # Calculate the gradient.
         A = np.outer(alpha, alpha) - K_inv
-        g = 0.5 * np.einsum('ij,kji', A, Kg)
-
-        return g
-
-    def grad_lnlikelihood_slowly(self, y, quiet=False):
-        """
-        Compute the gradient of the ln-likelihood function as a function of
-        the kernel parameters.
-
-        :param y: ``(nsamples,)``
-            The list of observations at coordinates ``x`` provided to the
-            :func:`compute` function.
-
-        :param quiet:
-            If ``True`` return a gradient of zero instead of raising an
-            exception when there is an invalid kernel or linear algebra
-            failure. (default: ``False``)
-
-        """
-        # Make sure that the model is computed and try to recompute it if it's
-        # dirty.
-        if not self.recompute(quiet=quiet):
-            return np.zeros(len(self.kernel), dtype=float)
-
-        # Parse the input sample list.
-        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self.mean(self._x), dtype=np.float64)
-
-        # Pre-compute some factors.
-        alpha = self.solver.apply_inverse(r)
-        Kg = np.ascontiguousarray(self.kernel.gradient(self._x).T,
-                                  dtype=np.float64)
-
-        # Loop over dimensions and compute the gradient in each one.
-        g = np.empty(len(Kg))
-        for i, k in enumerate(Kg):
-            d = sum(map(lambda r: np.dot(alpha, r), alpha[:, None] * k))
-            d -= np.sum(np.diag(self.solver.apply_inverse(k, in_place=True)))
-            g[i] = 0.5 * d
+        g = 0.5 * np.einsum('ijk,ij', Kg, A)
 
         return g
 

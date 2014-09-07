@@ -9,7 +9,7 @@ import numpy as np
 from .. import kernels, GP, BasicSolver, HODLRSolver
 
 
-def _test_gradient(seed=123, N=100, ndim=2, eps=1.32e-4, solver=BasicSolver):
+def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-4, solver=BasicSolver):
     np.random.seed(seed)
 
     # Set up the solver.
@@ -41,3 +41,4 @@ def _test_gradient(seed=123, N=100, ndim=2, eps=1.32e-4, solver=BasicSolver):
 def test_gradient(**kwargs):
     _test_gradient(solver=BasicSolver, **kwargs)
     _test_gradient(solver=HODLRSolver, **kwargs)
+    assert 0
