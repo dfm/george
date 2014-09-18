@@ -39,6 +39,11 @@
 \newcommand{\todo}[3]{{\color{#2} \emph{#1}: #3}}
 \newcommand{\dfmtodo}[1]{\todo{DFM}{red}{#1}}
 
+\newcommand{\params}{{\ensuremath{\boldsymbol{\theta}}}}
+\newcommand{\data}{{\ensuremath{\boldsymbol{D}}}}
+\newcommand{\hyperpar}{{\ensuremath{\alpha}}}
+\newcommand{\hyperpars}{{\ensuremath{\boldsymbol{\hyperpar}}}}
+
 \begin{document}
 
 \title{%
@@ -158,79 +163,192 @@ We compare the performance of our model to other industry standard techniques
 when applied to signals injected into \emph{real \kepler\ light curves} in
 \sect{parameters}.
 
-\section{What to do if your model is wrong}
-\sectlabel{corr-noise}
+\section{Parameter estimation}
+\sectlabel{parameter-est}
 
-Correlated noise is ubiquitous when analyzing real data taken using real
-instruments.
-The effects of correlated noise on our inferences can vary dramatically and
-there are many examples in the astrophysics literature where results have been
-substantially improved when the noise is correctly modeled (\dfmtodo{CITE}).
-In this section, we will demonstrate with a simple but realistic example the
-effect that correlated noise can have on our inferred results.
+A common data analysis problem is the estimation of a set of physical
+parameters \params\ conditioned on observations \data.
+Fundamentally, this procedure involves computing a \emph{likelihood function}
+$p(\data\,|\,\params)$, the probability of the observations given a specific
+setting of the parameters.
+After we have chosen a form for the likelihood function, we can use a
+non-linear optimization algorithm (gradient descent, BFGS, \etc) to find the
+setting of the parameters $\params^*$ that maximizes this likelihood, the
+``maximum likelihood'' result.
+Alternatively, we could chose a \emph{prior} on the parameters $p(\params)$
+and determine the shape of the posterior probability function
+$p(\params\,|\,\data) \propto p(\data\,|\,\params)\,p(\params)$ using a
+numerical technique like Markov Chain Monte Carlo (MCMC; CITE).
 
-\paragraph{The problem}
-
-For the demonstration in this section, we have generated some synthetic data
-from a known model and added some correlated noise.
-The model is a Gaussian feature superimposed on a constant background:
-\begin{eqnarray}\eqlabel{demo-base-model}
-f_\bvec{\theta}(x) &=& a\,\exp\left(-\frac{[x - x_0]^2}{2\,w^2}\right) + b
+There is much discussion in the literature of numerical methods for solving
+these inference problems (CITE) but the results will only be robust when the
+likelihood function provides a reasonable description of the data.
+The standard assumption is to assert that the data are independent
+measurements with uncorrelated Gaussian uncertainties.
+Under this assumption, the (log-)likelihood function becomes
+\begin{eqnarray}\eqlabel{gauss-lnlike}
+\ln p (\data\,|\,\params) &=&
+-\frac{1}{2} \, \sum_{n=1}^N \left [
+    \left(\frac{y_n - f_\params(\bvec{x}_n)}{{\sigma_n}^2}\right)^2
+    + \log (2\,\pi\,{\sigma_n}^2)\right ] \quad.
 \end{eqnarray}
-where the amplitude $a$, the location $x_0$, the width $w$, and the background
-level $b$ are the parameters \bvec{\theta}.
+where the observations $\{y_n\}_{n=1}^N$ were made at the (possibly
+multidimensional) coordinates $\{x_n\}_{n=1}^N$ with Gaussian uncertainties
+$\{\sigma_n\}_{n=1}^N$, and $f_\params(\bvec{x})$ is the \emph{mean model}
+evaluated at the same coordinates.
+This function $f_\params(\bvec{x})$ is the term that is normally referred to
+as ``the model'' in astronomy and we're normally interested in learning the
+parameters \params\ that specify that function.
+In some other fields, the word ``model'' also refers to the chosen form of the
+likelihood and prior functions.
+To differentiate these two definitions, in this \paper, we will refer to the
+astronomer's model as the ``mean model'' and the more general object as the
+``probabilistic model''.
+
+Recall that the key assumption in \eq{gauss-lnlike} is that noise on each
+measurement is uncorrelated with the other data points.
+This will, of course, only be an approximation to the true scenario because
+the presence of correlated noise is ubiquitous when analyzing real data taken
+using real instruments.
+In many cases, this approximation is justified but in the era of precision
+astronomy, there are many datasets where the probabilistic model given by
+\eq{gauss-lnlike} is too rigid and the resulting inferences are precise but
+biased.
+In fact, there are examples in the astrophysics literature where results
+improved substantially when a more flexible noise model was used (CITE).
+
+Another important point that we will return two below is that correlated noise
+can also be seen as a problem with the \emph{calibration} of the data.
+\dfmtodo{Expand on this\ldots}
+
+To motivate our discussion, let's start by considering a toy problem where the
+effects of correlated noise are significant.
+
+\paragraph{A toy problem}
+For the demonstration in this section, we have generated some synthetic data
+from a known mean model and added some correlated noise.
+The mean model is a Gaussian feature:
+\begin{eqnarray}\eqlabel{demo-base-model}
+f_\bvec{\theta}(x) &=& a\,\exp\left(-\frac{[x - x_0]^2}{2\,w^2}\right)
+\end{eqnarray}
+where the amplitude $a$, the location $x_0$, and the width $w$ are the
+parameters \params.
 Since these data are synthetic, we know the true parameters
-$\bvec{\theta}_\mathrm{t}$ but we will run our inference assuming that
+$\params_\mathrm{true}$ but we will run our inference assuming that
 these are unknown and compare our results to the truth.
 
-The synthetic dataset has $K$ scalar observations $\{y_k\}_{k=1}^K$ observed
-at independent coordinates $\{x_k\}_{k=1}^K$ with uncertainties
-$\{\sigma_k\}_{k=1}^K$.
-These quoted uncertainties are meant to be estimates of the independent
-component of the noise.
-This independent component is a quantity that can often be robustly estimated
-using an understanding of the measurement device, \etc\ (\dfmtodo{add some
-examples}).
-If we look at the data plotted in \dfmtodo{SOMEFIGURE}, we can easily see that
-the error bars don't sufficiently capture all the residuals away from the
-data.
+In the same notation as we used above, synthetic dataset has $N$ scalar
+observations $\{y_n\}_{n=1}^N$ observed at input coordinates $\{x_n\}_{n=1}^N$
+with uncertainties $\{\sigma_n\}_{n=1}^N$.
+These given uncertainties are estimates of the \emph{independent} component of
+the noise.
+This component is a quantity that can often be robustly estimated using an
+understanding of the measurement device, \etc\ (\dfmtodo{add some examples}).
+If we look at the data plotted in \dfmtodo{SOMEFIGURE}, we can see that the
+error bars don't sufficiently capture all the residuals between the model and
+the data.
 This is essentially a problem with the \emph{calibration} of the data and
-we will discuss two techniques for dealing with these calibration issues.
+there are a few methods that we could use for fitting the model to the data
+under this effect.
+The most commonly used method is to ``correct'' or ``de-trend'' the data in
+advance by robustly estimating a calibration vector and transforming the
+observations to account for this function.
+Alternatively, we can simultaneously infer the calibration and the parameters
+of the mean model $f_\params(x)$.
+This second method is more conservative because the inferences include any
+uncertainties in the calibration level.
+
+Below, we will discuss two models for the calibration.
+The first is a parametric technique where we choose a specific (parametric)
+function for the calibration and in the second method, we model this effect
+non-parametrically as structure in the correlated noise.
 
 \paragraph{Parametric calibration}
-
-One option would be to model these excess residuals \emph{parametrically}
-with, for example, a polynomial.
-This amounts to changing the generative model in \eq{demo-base-model} to
+A commonly used technique for fitting data with calibration issues is to
+choose a specific (generally simple) functional form for the calibration
+$q_\hyperpars(x)$ parameterized by the parameters \hyperpars.
+For example, one might chose to model the long-term trends in the data as the
+polynomial
+\begin{eqnarray}
+q_\hyperpars(x) &=& \hyperpar_0 + \hyperpar_1\,x + \hyperpar_2\,x^2 + \cdots
+\quad.
+\end{eqnarray}
+Under this assumption, the mean model from \eq{demo-base-model} becomes
 \begin{eqnarray}\eqlabel{demo-poly-model}
 f_{\bvec{\theta},\bvec{\alpha}}(x) &=&
-    a\,\exp\left(-\frac{[x - x_0]^2}{2\,w^2}\right) + b
+    a\,\exp\left(-\frac{[x - x_0]^2}{2\,w^2}\right)
     + q_\bvec{\alpha} (x)
 \end{eqnarray}
-where the calibration function could be something like
+and we can plug this function into \eq{gauss-lnlike} and run our choice of
+inference procedure to find the best fit values for both \params\ and
+\hyperpars.
+
+In this toy problem, let's choose a linear model (with two parameters) for
+$q_\bvec{\alpha}$ and run MCMC on the full parameter set:
 \begin{eqnarray}
-q_\bvec{\alpha} &=& \alpha_1\,x + \alpha_2\,x^2 + \cdots
+\{\params,\,\hyperpars\} &=& (a,\,x_0,\,w,\,\hyperpar_0,\,\hyperpar_1)
 \end{eqnarray}
-and fitting for the extra parameters $\bvec{\alpha}$.
-We choose a linear model for $q_\bvec{\alpha}$ and run MCMC on the full
-parameter set:
-\begin{eqnarray}
-\{\bvec{\theta},\,\bvec{\alpha}\} &=& (a,\,x_0,\,w,\,b,\,\alpha_1) \quad.
-\end{eqnarray}
+to get an estimate of the full marginalized posterior PDFs for the parameters
+$a$, $x_0$, and $w$.
 \dfmtodo{SOMEFIGURE} shows the results of this inference and the marginalized
 posterior constraints on the parameters of interest.
 \dfmtodo{Describe/make this figure.}
 
-\paragraph{Non-parametric calibration}
+Obviously this model doesn't work in this case.
 
-The calibration model that we propose in \eq{demo-poly-model} is extremely
-rigid and it might be useful for a problem where we have strong prior
-knowledge about defects in the device.
-A more common situation is where we don't have a good parametric model but we
-do have some intuition about the covariances in the measurements---the
-systematic effects at points close in time or on the detector should be more
-correlated than points at further distances.
-To make a non-parametric model like this, we can resort to Gaussian processes.
+\paragraph{Correlated noise}
+Instead, we can model the calibration issues as the result of correlated noise.
+This model has the same number of parameters as the previous calibration model
+but it is flexible enough to capture the detailed correlation structure in
+noise and, as you'll see, it enables less biased inferences.
+Instead of modifying the mean model as we did in \eq{demo-poly-model}, we'll
+generalize the probabilistic model from \eq{gauss-lnlike}.
+We'll discuss the formal motivation for this technique below but for now,
+let's start by rewriting \eq{gauss-lnlike} as a matrix equation
+\begin{eqnarray}\eqlabel{simple-gp-lnlike}
+\ln p (\data\,|\,\params) &=&
+-\frac{1}{2}\,\left[\bvec{y}-\bvec{f}_\params(\bvec{x})\right]^\mathrm{T}\,
+    C^{-1} \, \left [\bvec{y} - \bvec{f}_\params(\bvec{x}) \right ]
+-\frac{1}{2}\,\ln\det C - \frac{N}{2}\,\ln 2\,\pi
+\end{eqnarray}
+where the observations have been stacked into a vector
+\begin{eqnarray}
+\bvec{y} &=& \left ( \begin{array}{cccc}
+y_1 & y_2 & \cdots & y_N
+\end{array} \right )^\mathrm{T}
+\end{eqnarray}
+and similarly, for the mean model,
+\begin{eqnarray}
+\bvec{f}_\params(\bvec{x}) &=& \left ( \begin{array}{cccc}
+f_\params(x_1) & f_\params(x_2) & \cdots & f_\params(x_N)
+\end{array} \right )^\mathrm{T} \quad.
+\end{eqnarray}
+In \eq{simple-gp-lnlike}, the matrix $C$ is the diagonal
+\begin{eqnarray}
+C &=& \left (\begin{array}{cccc}
+\sigma_1^2 & 0 & & 0 \\
+0 & \sigma_2^2 & & 0 \\
+& & \ddots & \\
+0 & 0 & 0 & \sigma_N^2
+\end{array}\right )
+\end{eqnarray}
+and, therefore,
+\begin{eqnarray}
+\ln\det C &=& \sum_{n=1}^{N} \ln {\sigma_n}^2 \quad.
+\end{eqnarray}
+
+Now we can incorporate correlated noise into this model by introducing some
+off-diagonal elements into $C$.
+If we were to allow this covariance to be completely free, we would need to
+introduce $N\,(N/2-1)$ new parameters, one for each free element in the
+symmetric matrix $C$.
+Instead, we can choose a parametric form for the elements of the matrix so
+that the covariance between the points $x_i$ and $x_j$ is given by
+\begin{eqnarray}
+C_{ij} &=& \delta_{ij}\,\sigma_i^2 + k_\hyperpars(x_i,\,x_j) \quad.
+\end{eqnarray}
+
+
 
 \section{Gaussian processes for regression}\sectlabel{gps}
 
