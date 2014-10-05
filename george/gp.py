@@ -269,7 +269,7 @@ class GP(object):
         self.recompute()
         r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
         xs, i = self.parse_samples(t, False)
-        alpha = self.solver.apply_inverse(r)
+        alpha = self.solver.apply_inverse(r, in_place=True)
 
         # Compute the predictive mean.
         Kxs = self.kernel.value(xs, self._x)
