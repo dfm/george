@@ -41,3 +41,40 @@ def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-4, solver=BasicSolver):
 def test_gradient(**kwargs):
     _test_gradient(solver=BasicSolver, **kwargs)
     _test_gradient(solver=HODLRSolver, **kwargs)
+
+
+def _test_prediction(solver=BasicSolver):
+    """Basic sanity checks for GP regression."""
+
+    kernel = kernels.ExpSquaredKernel(1.0)
+    gp = GP(kernel, solver=solver)
+
+    x = np.array((-1, 0, 1))
+    gp.compute(x)
+
+    y = x/x.std()
+    mu, cov = gp.predict(y, x)
+
+    assert np.allclose(y, mu), \
+        "GP must predict noise-free training data exactly ({}).\n{}" \
+        .format(solver.__name__, np.transpose((y, mu)))
+
+    assert np.all(cov > -1e-15), \
+        "Covariance matrix must be nonnegative ({}).\n{}" \
+        .format(solver.__name__, cov)
+
+    var = np.diag(cov)
+    assert np.allclose(var, 0), \
+        "Variance must vanish at noise-free training points ({}).\n{}" \
+        .format(solver.__name__, var)
+
+    t = np.array((-.5, .3, 1.2))
+    var = np.diag(gp.predict(y, t)[1])
+    assert np.all(var > 0), \
+        "Variance must be positive away from training points ({}).\n{}" \
+        .format(solver.__name__, var)
+
+
+def test_prediction(**kwargs):
+    _test_prediction(solver=BasicSolver, **kwargs)
+    _test_prediction(solver=HODLRSolver, **kwargs)
