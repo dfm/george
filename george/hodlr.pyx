@@ -88,7 +88,7 @@ cdef class HODLRSolver:
         # Do an in-place solve if requested.
         if in_place:
             self.solver.apply_inverse(n, nrhs, <double*>y.data, <double*>y.data)
-            return y
+            return y.reshape(y0.shape)
 
         # Do the standard solve.
         cdef np.ndarray[DTYPE_t, ndim=2] alpha = np.empty_like(y, dtype=DTYPE)
