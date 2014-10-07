@@ -56,8 +56,8 @@ def _test_prediction(solver=BasicSolver):
     mu, cov = gp.predict(y, x)
 
     assert np.allclose(y, mu), \
-        "GP must predict noise-free training data exactly ({}).\n{}" \
-        .format(solver.__name__, np.transpose((y, mu)))
+        "GP must predict noise-free training data exactly ({0})." \
+        .format(solver.__name__)
 
     assert np.all(cov > -1e-15), \
         "Covariance matrix must be nonnegative ({}).\n{}" \
