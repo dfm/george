@@ -279,7 +279,7 @@ class GP(object):
 
         # Compute the predictive covariance.
         cov = self.kernel.value(xs)
-        cov -= np.dot(Kxs, self.solver.apply_inverse(Kxs.T, in_place=True))
+        cov -= np.dot(Kxs, self.solver.apply_inverse(Kxs.T, in_place=False))
 
         return mu, cov
 
