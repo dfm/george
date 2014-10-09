@@ -2,7 +2,7 @@
 
 from __future__ import division, print_function
 
-__all__ = ["test_gradient"]
+__all__ = ["test_gradient", "test_prediction"]
 
 import numpy as np
 
