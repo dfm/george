@@ -35,6 +35,8 @@ class GP(object):
     def __init__(self, kernel, mean=None, solver=BasicSolver, **kwargs):
         self.kernel = kernel
         self._computed = False
+        self._alpha = None
+        self._y = None
         self.mean = mean
 
         self.solver_type = solver
@@ -132,6 +134,19 @@ class GP(object):
         if len(y) != n:
             raise ValueError("Dimension mismatch")
         return y
+
+    def _compute_alpha(self, y):
+        # Recalculate alpha only if y is not the same as the previous y.
+        try:
+            recompute_alpha = not np.allclose(y, self._y)
+        except (TypeError, ValueError):
+            recompute_alpha = True
+
+        if recompute_alpha:
+            self._y = y
+            r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
+                                    - self.mean(self._x), dtype=np.float64)
+            self._alpha = self.solver.apply_inverse(r, in_place=True)
 
     def compute(self, x, yerr=TINY, sort=True, **kwargs):
         """
@@ -234,17 +249,14 @@ class GP(object):
         if not self.recompute(quiet=quiet):
             return np.zeros(len(self.kernel), dtype=float)
 
-        # Parse the input sample list.
-        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self.mean(self._x), dtype=np.float64)
-
         # Pre-compute some factors.
-        alpha = self.solver.apply_inverse(r)
-        K_inv = self.solver.apply_inverse(np.eye(alpha.size), in_place=True)
+        self._compute_alpha(y)
+        K_inv = self.solver.apply_inverse(np.eye(self._alpha.size),
+                                          in_place=True)
         Kg = self.kernel.gradient(self._x)
 
         # Calculate the gradient.
-        A = np.outer(alpha, alpha) - K_inv
+        A = np.outer(self._alpha, self._alpha) - K_inv
         g = 0.5 * np.einsum('ijk,ij', Kg, A)
 
         return g
@@ -267,13 +279,12 @@ class GP(object):
 
         """
         self.recompute()
-        r = self._check_dimensions(y)[self.inds] - self.mean(self._x)
+        self._compute_alpha(y)
         xs, i = self.parse_samples(t, False)
-        alpha = self.solver.apply_inverse(r, in_place=True)
 
         # Compute the predictive mean.
         Kxs = self.kernel.value(xs, self._x)
-        mu = np.dot(Kxs, alpha) + self.mean(xs)
+        mu = np.dot(Kxs, self._alpha) + self.mean(xs)
         if mean_only:
             return mu
 
