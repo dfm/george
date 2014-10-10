@@ -8,11 +8,15 @@ __all__ = [
     "RadialKernel", "ExpKernel", "ExpSquaredKernel",
     "CosineKernel", "ExpSine2Kernel",
     "Matern32Kernel", "Matern52Kernel",
+
+    "PythonKernel",
 ]
 
 import numpy as np
+from functools import partial
 
 from ._kernels import CythonKernel
+from .utils import numerical_gradient
 
 
 class Kernel(object):
@@ -439,3 +443,50 @@ class ExpSine2Kernel(Kernel):
         super(ExpSine2Kernel, self).__init__(gamma, period, ndim=ndim)
         assert dim < self.ndim, "Invalid dimension"
         self.dim = dim
+
+
+class PythonKernel(Kernel):
+    r"""
+    A custom kernel evaluated in Python. The gradient is optionally evaluated
+    numerically. For big problems, this type of kernel will probably be
+    unbearably slow because each evaluation is done point-wise. Unfortunately,
+    the only way to implement.
+
+    :param f:
+        A callable that evaluates the kernel function given arguments
+        ``(x1, x2, p)`` where ``x1`` and ``x2`` are numpy array defining the
+        coordinates of the samples and ``p`` is the numpy array giving the
+        current settings of the parameters.
+
+    :param g: (optional)
+        A function with the same calling parameters as ``f`` but it should
+        return the numpy array with the gradient of the kernel function. If
+        this function isn't given then the gradient is evaluated using
+        centered finite difference.
+
+    :param pars: (optional)
+        The initial list of parameter values. If this isn't provided then the
+        kernel is assumed to have no parameters.
+
+    :param dx: (optional)
+        The step size used for the gradient computation when using finite
+        difference.
+
+    """
+
+    kernel_type = -2
+
+    def __init__(self, f, g=None, pars=[], dx=1.1234e-6, ndim=1):
+        super(PythonKernel, self).__init__(*pars, ndim=ndim)
+        self.size = len(self.pars)
+        self.f = f
+        self.g = self._wrap_grad(f, g, dx=dx)
+
+    def _wrap_grad(self, f, g, dx=1.234e-6):
+        if g is not None:
+            grad = g
+        else:
+            def grad(x1, x2, p):
+                g = numerical_gradient(partial(f, x1, x2), p, dx=dx)
+                return g
+        return grad

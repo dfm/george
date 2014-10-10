@@ -23,6 +23,10 @@ incorporating a custom kernel.
 the number of input dimensions for your problem.
 
 
+Implementation Details
+----------------------
+
+
 .. _basic-kernels:
 
 Basic Kernels

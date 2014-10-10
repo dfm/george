@@ -54,3 +54,15 @@ def nd_sort_samples(samples):
     # Compute the distances.
     d, i = tree.query(samples[0], k=len(samples))
     return i
+
+
+def numerical_gradient(f, x, dx=1.234e-6):
+    g = np.empty_like(x, dtype=float)
+    for i in range(len(g)):
+        x[i] += dx
+        fp = f(x)
+        x[i] -= 2*dx
+        fm = f(x)
+        x[i] += dx
+        g[i] = 0.5 * (fp - fm) / dx
+    return g
