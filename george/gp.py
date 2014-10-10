@@ -137,7 +137,7 @@ class GP(object):
 
     def _compute_alpha(self, y):
         # Recalculate alpha only if y is not the same as the previous y.
-        if not np.array_equiv(y, self._y):
+        if self._alpha is None or not np.array_equiv(y, self._y):
             self._y = y
             r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
                                      - self.mean(self._x), dtype=np.float64)
@@ -180,6 +180,8 @@ class GP(object):
         self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
                               + self.solver.log_determinant)
         self.computed = True
+
+        self._alpha = None
 
     def recompute(self, quiet=False, **kwargs):
         """

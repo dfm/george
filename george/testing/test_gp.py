@@ -94,11 +94,20 @@ def test_repeated_prediction_cache():
     y = x/x.std()
     mu0, mu1 = (gp.predict(y, t, mean_only=True) for _ in range(2))
     assert np.array_equal(mu0, mu1), \
-        "Identical training data must give identical predictions \
-        (problem with GP cache)."
+        "Identical training data must give identical predictions " \
+        "(problem with GP cache)."
 
     y2 = 2*y
     mu2 = gp.predict(y2, t, mean_only=True)
     assert not np.array_equal(mu0, mu2), \
-        "Different training data must give different predictions \
-        (problem with GP cache)."
+        "Different training data must give different predictions " \
+        "(problem with GP cache)."
+
+    a0 = gp._alpha
+    gp.kernel[0] += 0.1
+    gp.recompute()
+    gp._compute_alpha(y2)
+    a1 = gp._alpha
+    assert not np.allclose(a0, a1), \
+        "Different kernel parameters must give different alphas " \
+        "(problem with GP cache)."
