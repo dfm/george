@@ -145,7 +145,7 @@ class GP(object):
         if recompute_alpha:
             self._y = y
             r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                    - self.mean(self._x), dtype=np.float64)
+                                     - self.mean(self._x), dtype=np.float64)
             self._alpha = self.solver.apply_inverse(r, in_place=True)
 
     def compute(self, x, yerr=TINY, sort=True, **kwargs):
