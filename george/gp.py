@@ -137,12 +137,7 @@ class GP(object):
 
     def _compute_alpha(self, y):
         # Recalculate alpha only if y is not the same as the previous y.
-        try:
-            recompute_alpha = not np.allclose(y, self._y)
-        except (TypeError, ValueError):
-            recompute_alpha = True
-
-        if recompute_alpha:
+        if not np.array_equiv(y, self._y):
             self._y = y
             r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
                                      - self.mean(self._x), dtype=np.float64)
