@@ -78,3 +78,25 @@ def _test_prediction(solver=BasicSolver):
 def test_prediction(**kwargs):
     _test_prediction(solver=BasicSolver, **kwargs)
     _test_prediction(solver=HODLRSolver, **kwargs)
+
+
+def test_repeated_prediction_cache():
+    kernel = kernels.ExpSquaredKernel(1.0)
+    gp = GP(kernel)
+
+    x = np.array((-1, 0, 1))
+    gp.compute(x)
+
+    t = np.array((-.5, .3, 1.2))
+
+    y = x/x.std()
+    mu0, mu1 = (gp.predict(y, t, mean_only=True) for _ in range(2))
+    assert np.array_equal(mu0, mu1), \
+        "Identical training data must give identical predictions \
+        (problem with GP cache)."
+
+    y2 = 2*y
+    mu2 = gp.predict(y2, t, mean_only=True)
+    assert not np.array_equal(mu0, mu2), \
+        "Different training data must give different predictions \
+        (problem with GP cache)."
