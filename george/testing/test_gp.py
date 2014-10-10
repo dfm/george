@@ -2,7 +2,9 @@
 
 from __future__ import division, print_function
 
-__all__ = ["test_gradient", "test_prediction"]
+__all__ = [
+    "test_gradient", "test_prediction", "test_repeated_prediction_cache"
+]
 
 import numpy as np
 
