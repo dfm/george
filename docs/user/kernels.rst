@@ -26,6 +26,8 @@ the number of input dimensions for your problem.
 Implementation Details
 ----------------------
 
+It's worth understanding how the kernels are implemented in
+
 
 .. _basic-kernels:
 
@@ -49,7 +51,6 @@ Radial Kernels
 .. autoclass:: george.kernels.RadialKernel
 .. autoclass:: george.kernels.ExpKernel
 .. autoclass:: george.kernels.ExpSquaredKernel
-.. autoclass:: george.kernels.RBFKernel
 .. autoclass:: george.kernels.Matern32Kernel
 .. autoclass:: george.kernels.Matern52Kernel
 
@@ -102,4 +103,10 @@ addition:
 Implementing New Kernels
 ------------------------
 
-*Coming soon*
+Implementing custom kernels in George is a bit of a pain in the current
+version. For now, the only way to do it is with the :class:`PythonKernel`
+where you provide a Python function that computes the value of the kernel
+function at *a single pair of training points*.
+
+.. autoclass:: george.kernels.PythonKernel
+    :members:

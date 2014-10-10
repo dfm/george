@@ -450,7 +450,8 @@ class PythonKernel(Kernel):
     A custom kernel evaluated in Python. The gradient is optionally evaluated
     numerically. For big problems, this type of kernel will probably be
     unbearably slow because each evaluation is done point-wise. Unfortunately,
-    the only way to implement.
+    this is the only way to implement custom kernels without re-compiling
+    George. Hopefully we can solve this in the future!
 
     :param f:
         A callable that evaluates the kernel function given arguments
@@ -476,7 +477,7 @@ class PythonKernel(Kernel):
 
     kernel_type = -2
 
-    def __init__(self, f, g=None, pars=[], dx=1.1234e-6, ndim=1):
+    def __init__(self, f, g=None, pars=(), dx=1.234e-6, ndim=1):
         super(PythonKernel, self).__init__(*pars, ndim=ndim)
         self.size = len(self.pars)
         self.f = f
