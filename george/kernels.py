@@ -260,7 +260,21 @@ class DotProductKernel(Kernel):
 
 class RadialKernel(Kernel):
     r"""
-    TODO: document this kernel.
+    This kernel (and more importantly) computes the distance between two
+    samples in an arbitrary metric and applies a radial function to this
+    distance.
+
+    :param metric:
+        The specification of the metric. This can be a ``float``, in which
+        case the metric is considered isotropic with the variance in each
+        dimension given by the value of ``metric``. Alternatively, ``metric``
+        can be a list of variances for each dimension. In this case, it should
+        have length ``ndim``. The fully general (not axis-aligned) metric
+        hasn't been implemented yet but it's on the to do list!
+
+    :param dim: (optional)
+        If provided, this will apply the kernel in only the specified
+        dimension.
 
     """
     is_radial = True
