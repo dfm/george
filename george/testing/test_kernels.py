@@ -13,6 +13,8 @@ __all__ = [
     "test_cosine", "test_exp_sine2",
 
     "test_combine",
+
+    "test_custom", "test_custom_numerical",
 ]
 
 import numpy as np
@@ -55,6 +57,36 @@ def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-7):
 #
 # BASIC KERNELS
 #
+
+def test_custom():
+    def f(x1, x2, p):
+        return np.exp(-0.5 * np.dot(x1, x2) / p[0])
+
+    def g(x1, x2, p):
+        arg = 0.5 * np.dot(x1, x2) / p[0]
+        return np.exp(-arg) * arg / p[0]
+
+    def wrong_g(x1, x2, p):
+        arg = 0.5 * np.dot(x1, x2) / p[0]
+        return 10 * np.exp(-arg) * arg / p[0]
+
+    do_kernel_t(kernels.PythonKernel(f, g, pars=[0.5]))
+    do_kernel_t(kernels.PythonKernel(f, g, pars=[0.1]))
+
+    try:
+        do_kernel_t(kernels.PythonKernel(f, wrong_g, pars=[0.5]))
+    except AssertionError:
+        pass
+    else:
+        assert False, "This test should fail"
+
+
+def test_custom_numerical():
+    def f(x1, x2, p):
+        return np.exp(-0.5 * np.dot(x1, x2) / p[0])
+    do_kernel_t(kernels.PythonKernel(f, pars=[0.5]))
+    do_kernel_t(kernels.PythonKernel(f, pars=[10.0]))
+
 
 def test_constant():
     do_kernel_t(kernels.ConstantKernel(0.1))

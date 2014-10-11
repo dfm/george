@@ -31,6 +31,18 @@ cdef extern from "kernels.h" namespace "george::kernels":
         unsigned int size () const
         void set_vector (const double*)
 
+    cdef cppclass CustomKernel(Kernel):
+        CustomKernel(const unsigned int ndim, const unsigned int size,
+                     void* meta,
+                     double (*f) (const double* pars, const unsigned int size,
+                                  void* meta,
+                                  const double* x1, const double* x2,
+                                  const unsigned int ndim),
+                     void (*g) (const double* pars, const unsigned int size,
+                                void* meta,
+                                const double* x1, const double* x2,
+                                const unsigned int ndim, double* grad))
+
     # Operators.
     cdef cppclass Operator(Kernel):
         pass
@@ -75,6 +87,45 @@ cdef extern from "kernels.h" namespace "george::kernels":
         ExpSine2Kernel(const unsigned int ndim, const unsigned int dim)
 
 
+cdef inline double eval_python_kernel (const double* pars,
+                                       const unsigned int size, void* meta,
+                                       const double* x1, const double* x2,
+                                       const unsigned int ndim) except *:
+    # Build the arguments for calling the function.
+    cdef np.npy_intp shape[1]
+    shape[0] = <np.npy_intp>ndim
+    x1_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>x1)
+    x2_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>x2)
+
+    shape[0] = <np.npy_intp>size
+    pars_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>pars)
+
+    # Call the Python function and return the value.
+    cdef object self = <object>meta
+    return self.f(x1_arr, x2_arr, pars_arr)
+
+
+cdef inline void eval_python_kernel_grad (const double* pars,
+                                          const unsigned int size,
+                                          void* meta,
+                                          const double* x1, const double* x2,
+                                          const unsigned int ndim, double* grad) except *:
+    # Build the arguments for calling the function.
+    cdef np.npy_intp shape[1]
+    shape[0] = <np.npy_intp>ndim
+    x1_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>x1)
+    x2_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>x2)
+
+    shape[0] = <np.npy_intp>size
+    pars_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>pars)
+
+    # Call the Python function and update the gradient values in place.
+    cdef object self = <object>meta
+    cdef np.ndarray[DTYPE_t, ndim=1] grad_arr = \
+        np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>grad)
+    grad_arr[:] = self.g(x1_arr, x2_arr, pars_arr)
+
+
 cdef inline Kernel* parse_kernel(kernel_spec) except *:
     if not hasattr(kernel_spec, "is_kernel"):
         raise TypeError("Invalid kernel")
@@ -104,7 +155,12 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
     cdef np.ndarray[DTYPE_t, ndim=1] pars = kernel_spec.pars
 
     cdef Kernel* kernel
-    if kernel_spec.kernel_type == 0:
+
+    if kernel_spec.kernel_type == -2:
+        kernel = new CustomKernel(ndim, kernel_spec.size, <void*>kernel_spec,
+                                  &eval_python_kernel, &eval_python_kernel_grad)
+
+    elif kernel_spec.kernel_type == 0:
         kernel = new ConstantKernel(ndim)
 
     elif kernel_spec.kernel_type == 1:

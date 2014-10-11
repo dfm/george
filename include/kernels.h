@@ -41,6 +41,59 @@ protected:
 };
 
 
+class CustomKernel : public Kernel {
+public:
+    CustomKernel (const unsigned int ndim, const unsigned int size, void* meta,
+                  double (*f) (const double* pars, const unsigned int size,
+                               void* meta,
+                               const double* x1, const double* x2,
+                               const unsigned int ndim),
+                  void (*g) (const double* pars, const unsigned int size,
+                             void* meta,
+                             const double* x1, const double* x2,
+                             const unsigned int ndim, double* grad))
+        : Kernel(ndim), size_(size), meta_(meta), f_(f), g_(g)
+    {
+        parameters_ = new double[size];
+    };
+    ~CustomKernel () {
+        delete parameters_;
+    };
+
+    // Call the external functions.
+    double value (const double* x1, const double* x2) const {
+        return f_(parameters_, size_, meta_, x1, x2, this->get_ndim());
+    };
+    void gradient (const double* x1, const double* x2, double* grad) const {
+        g_(parameters_, size_, meta_, x1, x2, this->get_ndim(), grad);
+    };
+
+    // Parameters.
+    unsigned int size () const { return size_; }
+    void set_parameter (const unsigned int i, const double value) {
+        parameters_[i] = value;
+    };
+    double get_parameter (const unsigned int i) const {
+        return parameters_[i];
+    };
+
+protected:
+    double* parameters_;
+    unsigned int ndim_, size_;
+
+    // Metadata needed for this function.
+    void* meta_;
+
+    // The function and gradient pointers.
+    double (*f_) (const double* pars, const unsigned int size, void* meta,
+                  const double* x1, const double* x2,
+                  const unsigned int ndim);
+    void (*g_) (const double* pars, const unsigned int size, void* meta,
+                const double* x1, const double* x2,
+                const unsigned int ndim, double* grad);
+};
+
+
 //
 // OPERATORS
 //

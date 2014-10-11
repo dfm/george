@@ -6,6 +6,7 @@ cimport kernels
 
 import numpy as np
 cimport numpy as np
+np.import_array()
 
 DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t

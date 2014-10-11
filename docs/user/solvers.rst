@@ -21,15 +21,15 @@ This solver is built using Sivaram Amambikasaran's `HODLR library
 `here <http://arxiv.org/abs/1403.6015>`_.
 
 
-Basic Solver
-------------
+.. Basic Solver
+.. ------------
 
-.. autoclass:: george.GP
-   :inherited-members:
+.. .. autoclass:: george.GP
+..    :inherited-members:
 
 
-HODLR Solver
-------------
+.. HODLR Solver
+.. ------------
 
-.. autoclass:: george.HODLRGP
-   :inherited-members:
+.. .. autoclass:: george.HODLRGP
+..    :inherited-members:
