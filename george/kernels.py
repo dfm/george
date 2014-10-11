@@ -445,10 +445,9 @@ class ExpSine2Kernel(Kernel):
         The period :math:`P` of the oscillation (in the same units as
         :math:`\mathbf{x}`).
 
-    **Note:**
-    A shortcoming of this kernel is that it currently only accepts a single
-    period and scale so it's not very applicable to problems with input
-    dimension larger than one.
+    :param dim: (optional)
+        The dimension along which this kernel should apply. By default, this
+        will be the zero-th axis.
 
     """
     kernel_type = 9
