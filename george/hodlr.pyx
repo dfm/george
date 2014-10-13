@@ -22,7 +22,7 @@ cdef extern from "solver.h" namespace "george":
 
 
 def _rebuild(kernel_spec, nleaf, tol):
-    return HODLRSolver(kernel_spec, nleaf=nleaf, tol=tol, rebuild=True)
+    return HODLRSolver(kernel_spec, nleaf=nleaf, tol=tol)
 
 
 cdef class HODLRSolver:
