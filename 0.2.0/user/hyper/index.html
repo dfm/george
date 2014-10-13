@@ -29,7 +29,7 @@
 
   
     <link rel="top" title="George 0.2.0 documentation" href="../../"/>
-        <link rel="next" title="Kernels" href="../kernels/"/>
+        <link rel="next" title="The GP object" href="../gp/"/>
         <link rel="prev" title="Tutorial: model fitting with correlated noise" href="../model/"/> 
 
   
@@ -76,6 +76,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#sampling-marginalization">Sampling &amp; Marginalization</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../kernels/#implementation-details">Implementation Details</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../kernels/#basic-kernels">Basic Kernels</a></li>
@@ -182,9 +183,9 @@ as the hyperparameters for now):</p>
 objective function.
 The two standard functions (as described in Chapter 5 of R&amp;W) are the
 marginalized ln-likelihood and the cross validation likelihood.
-George implements the former in the <tt class="xref py py-func docutils literal"><span class="pre">GP.lnlikelihood()</span></tt> function and the
+George implements the former in the <a class="reference internal" href="../gp/#george.GP.lnlikelihood" title="george.GP.lnlikelihood"><tt class="xref py py-func docutils literal"><span class="pre">GP.lnlikelihood()</span></tt></a> function and the
 gradient with respect to the hyperparameters in the
-<tt class="xref py py-func docutils literal"><span class="pre">GP.grad_lnlikelihood()</span></tt> function:</p>
+<a class="reference internal" href="../gp/#george.GP.grad_lnlikelihood" title="george.GP.grad_lnlikelihood"><tt class="xref py py-func docutils literal"><span class="pre">GP.grad_lnlikelihood()</span></tt></a> function:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
 <span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
 <span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
@@ -298,7 +299,7 @@ To do this, we&#8217;ll use the <a class="reference external" href="http://dan.i
 </div>
 <p>In this function, we&#8217;ve applied a prior on every parameter that is uniform in
 the natural log between -10 and 10.
-The <tt class="docutils literal"><span class="pre">quiet</span></tt> argument in the call to <tt class="xref py py-func docutils literal"><span class="pre">GP.lnlikelihood()</span></tt> means that that
+The <tt class="docutils literal"><span class="pre">quiet</span></tt> argument in the call to <a class="reference internal" href="../gp/#george.GP.lnlikelihood" title="george.GP.lnlikelihood"><tt class="xref py py-func docutils literal"><span class="pre">GP.lnlikelihood()</span></tt></a> means that that
 function will return <tt class="docutils literal"><span class="pre">-numpy.inf</span></tt> if the kernel is invalid or if there are
 any linear algebra errors (otherwise it would raise an exception).</p>
 <p>Then, we run the sampler (this will probably take a while to run if you want
@@ -357,7 +358,7 @@ account.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../kernels/" class="btn btn-neutral float-right" title="Kernels"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../gp/" class="btn btn-neutral float-right" title="The GP object"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../model/" class="btn btn-neutral" title="Tutorial: model fitting with correlated noise"><span class="fa fa-arrow-circle-left"></span> Previous</a>

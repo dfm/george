@@ -75,6 +75,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../user/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../user/kernels/#implementation-details">Implementation Details</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user/kernels/#basic-kernels">Basic Kernels</a></li>
@@ -137,8 +138,10 @@
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
@@ -189,6 +192,10 @@
 
       <dd><dl>
         
+  <dt><a href="../user/gp/#george.GP.compute">(george.GP method)</a>
+  </dt>
+
+        
   <dt><a href="../user/solvers/#george.HODLRSolver.compute">(george.HODLRSolver method)</a>
   </dt>
 
@@ -198,6 +205,10 @@
   </dt>
 
       <dd><dl>
+        
+  <dt><a href="../user/gp/#george.GP.computed">(george.GP attribute)</a>
+  </dt>
+
         
   <dt><a href="../user/solvers/#george.HODLRSolver.computed">(george.HODLRSolver attribute)</a>
   </dt>
@@ -250,13 +261,25 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="../user/solvers/#module-george">george (module)</a>, <a href="../user/hyper/#module-george">[1]</a>
+  <dt><a href="../user/gp/#module-george">george (module)</a>, <a href="../user/solvers/#module-george">[1]</a>, <a href="../user/hyper/#module-george">[2]</a>
+  </dt>
+
+      
+  <dt><a href="../user/kernels/#module-george.kernels">george.kernels (module)</a>
+  </dt>
+
+      
+  <dt><a href="../user/gp/#george.GP.get_matrix">get_matrix() (george.GP method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="../user/kernels/#module-george.kernels">george.kernels (module)</a>
+  <dt><a href="../user/gp/#george.GP">GP (class in george)</a>
+  </dt>
+
+      
+  <dt><a href="../user/gp/#george.GP.grad_lnlikelihood">grad_lnlikelihood() (george.GP method)</a>
   </dt>
 
   </dl></td>
@@ -284,6 +307,12 @@
 
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.lnlikelihood">lnlikelihood() (george.GP method)</a>
+  </dt>
+
+  </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="../user/solvers/#george.BasicSolver.log_determinant">log_determinant (george.BasicSolver attribute)</a>
@@ -314,8 +343,28 @@
   </dl></td>
 </tr></table>
 
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.optimize">optimize() (george.GP method)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.parse_samples">parse_samples() (george.GP method)</a>
+  </dt>
+
+      
+  <dt><a href="../user/gp/#george.GP.predict">predict() (george.GP method)</a>
+  </dt>
+
+  </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="../user/kernels/#george.kernels.PythonKernel">PythonKernel (class in george.kernels)</a>
@@ -329,6 +378,28 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="../user/kernels/#george.kernels.RadialKernel">RadialKernel (class in george.kernels)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.recompute">recompute() (george.GP method)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.sample">sample() (george.GP method)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.sample_conditional">sample_conditional() (george.GP method)</a>
   </dt>
 
   </dl></td>
