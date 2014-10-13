@@ -20,6 +20,7 @@ User Guide
    user/quickstart
    user/model
    user/hyper
+   user/gp
    user/kernels
    user/solvers
 

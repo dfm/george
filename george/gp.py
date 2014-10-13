@@ -30,6 +30,13 @@ class GP(object):
         called with the array of independent coordinates as the only argument.
         (default: ``0.0``)
 
+    :param solver: (optional)
+        The solver to use for linear algebra as documented in :ref:`solvers`.
+
+    :param kwargs: (optional)
+        Any additional arguments are passed directly to the solver's init
+        function.
+
     """
 
     def __init__(self, kernel, mean=None, solver=BasicSolver, **kwargs):
