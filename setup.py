@@ -128,8 +128,8 @@ if __name__ == "__main__":
 
     kern_fn = os.path.join("george", "_kernels")
     hodlr_fn = os.path.join("george", "hodlr")
-    if (os.path.exists(kern_fn + ".pyx") and os.path.exists(hodlr_fn) and
-            os.path.exists(os.path.join("george", "kernels.pxd"))):
+    if (os.path.exists(kern_fn + ".pyx") and os.path.exists(hodlr_fn + ".pyx")
+            and os.path.exists(os.path.join("george", "kernels.pxd"))):
         from Cython.Build import cythonize
         kern_fn += ".pyx"
         hodlr_fn += ".pyx"
