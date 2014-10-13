@@ -1,1 +1,2 @@
-include README.rst LICENSE include/*.h hodlr/header/*.hpp
+include README.rst LICENSE include/*.h hodlr/header/*.hpp george/*.pyx george/*.pxd
+exclude george/*.cpp
