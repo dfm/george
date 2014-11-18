@@ -22,11 +22,69 @@ incorporating a custom kernel.
 **Note:** every kernel takes an optional ``ndim`` keyword that must be set to
 the number of input dimensions for your problem.
 
+.. _implementation:
 
 Implementation Details
 ----------------------
 
-It's worth understanding how the kernels are implemented in
+It's worth understanding how these kernels are implemented.
+Most of the hard work is done at a low level (in C++) and the Python is only a
+thin wrapper to this functionality.
+This makes the code fast and consistent across interfaces but it also means
+that it isn't currently possible to implement new kernel functions efficiently
+without recompiling the code.
+Almost every kernel has hyperparameters that you can set to control its
+behavior and these can be accessed via the ``pars`` property.
+The values in this array are in the same order as you specified them when
+initializing the kernel and, in the case of composite kernels (see
+:ref:`combining-kernels`) the order goes from left to right.
+For example,
+
+.. code-block:: python
+
+    from george import kernels
+
+    k = 2.0 * kernels.Matern32Kernel(5.0)
+    print(k.pars)
+    # array([ 2.,  5.])
+
+
+In general, kernel functions have some—possibly different—natural
+parameterization that can be useful for parameter inference.
+This can be accessed via the ``vector`` property and for most kernels, this
+will be—unless otherwise specified—the natural logarithm of the ``pars``
+array.
+So, for our previous example,
+
+.. code-block:: python
+
+    k = 2.0 * kernels.Matern32Kernel(5.0)
+    print(k.vector)
+    # array([ 0.69314718,  1.60943791])
+
+George is smart about when it recomputes the kernel and it will only do this
+if you change the parameters.
+Therefore, the best way to make changes is by *subscripting* the kernel.
+It's worth noting that subscripting changes the ``vector`` array (not
+``pars``) so following up our previous example, we can do something like
+
+.. code-block:: python
+
+    import numpy as np
+    k = 2.0 * kernels.Matern32Kernel(5.0)
+
+    k[0] = np.log(4.0)
+    print(k.pars)
+    # array([ 4.,  5.])
+
+    k[:] = np.log([6.0, 10.0])
+    print(k.pars)
+    # array([ 6.,  10.])
+
+.. note:: The gradient of each kernel is given with respect to ``vector`` not
+    ``pars``. This means that in most cases the gradient taken in terms of the
+    *logarithm* of the hyperparameters.
+
 
 
 .. _basic-kernels:

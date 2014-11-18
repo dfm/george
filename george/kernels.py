@@ -264,9 +264,9 @@ class DotProductKernel(Kernel):
 
 class RadialKernel(Kernel):
     r"""
-    This kernel (and more importantly) computes the distance between two
-    samples in an arbitrary metric and applies a radial function to this
-    distance.
+    This kernel (and more importantly its subclasses) computes the distance
+    between two samples in an arbitrary metric and applies a radial function
+    to this distance.
 
     :param metric:
         The specification of the metric. This can be a ``float``, in which

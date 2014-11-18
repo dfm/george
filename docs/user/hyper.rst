@@ -63,10 +63,10 @@ as the hyperparameters for now):
 
     from george import kernels
 
-    k1 = 66.0**2 * kernels.ExpSquaredKernel(67.0**2)
-    k2 = 2.4**2 * kernels.ExpSquaredKernel(90**2) * kernels.ExpSine2Kernel(2.0 / 1.3**2, 1.0)
-    k3 = 0.66**2 * kernels.RationalQuadraticKernel(0.78, 1.2**2)
-    k4 = 0.18**2 * kernels.ExpSquaredKernel(1.6**2) + kernels.WhiteKernel(0.19)
+    k1 = 66.0 * kernels.ExpSquaredKernel(67.0**2)
+    k2 = 2.4 * kernels.ExpSquaredKernel(90**2) * kernels.ExpSine2Kernel(2.0 / 1.3**2, 1.0)
+    k3 = 0.66 * kernels.RationalQuadraticKernel(0.78, 1.2**2)
+    k4 = 0.18 * kernels.ExpSquaredKernel(1.6**2) + kernels.WhiteKernel(0.19)
     kernel = k1 + k2 + k3 + k4
 
 
@@ -89,14 +89,51 @@ gradient with respect to the hyperparameters in the
     print(gp.lnlikelihood(y))
     print(gp.grad_lnlikelihood(y))
 
-In general, you'll probably want to write a custom routine for optimizing this
-function because the optimal choice of method seems to be very problem
-dependent but George does come with a simple gradient-based non-linear
-optimization routine that we'll use for this demo:
+The gradient is taken with respect to the ``vector`` property of the kernel so
+this is what you want to fit for.
+For most kernels the vector is actually the *logarithm* of the hyperparameters
+(see the discussion in :ref:`implementation`).
+We'll use a gradient based optimization routine from SciPy to fit this model
+as follows:
 
 .. code-block:: python
 
-    p, results = gp.optimize(t, y)
+    import scipy.optimize as op
+
+    # Define the objective function (negative log-likelihood in this case).
+    def nll(p):
+        # Update the kernel parameters and compute the likelihood.
+        gp.kernel[:] = p
+        ll = gp.lnlikelihood(y, quiet=True)
+
+        # The scipy optimizer doesn't play well with infinities.
+        return -ll if np.isfinite(ll) else 1e25
+
+    # And the gradient of the objective function.
+    def grad_nll(p):
+        # Update the kernel parameters and compute the likelihood.
+        gp.kernel[:] = p
+        return -self.grad_lnlikelihood(y, quiet=True)
+
+    # You need to compute the GP once before starting the optimization.
+    gp.compute(t)
+
+    # Print the initial ln-likelihood.
+    print(gp.lnlikelihood(y))
+
+    # Run the optimization routine.
+    p0 = gp.kernel.vector
+    results = op.minimize(nll, p0, jac=grad_nll)
+
+    # Update the kernel and print the final log-likelihood.
+    gp.kernel[:] = results.x
+    print(gp.lnlikelihood(y))
+
+.. warning:: An optimization code something like this should work on most
+    problems but the results can be very sensitive to your choice of
+    initialization and algorithm. If the results are nonsense, try choosing a
+    better initial guess or try a different value of the ``method`` parameter
+    in ``op.minimize``.
 
 After running this optimization, we find a final ln-likelihood of -100.22
 (slightly better than the result in R&W) and the following parameter values:
