@@ -63,10 +63,10 @@ as the hyperparameters for now):
 
     from george import kernels
 
-    k1 = 66.0 * kernels.ExpSquaredKernel(67.0**2)
-    k2 = 2.4 * kernels.ExpSquaredKernel(90**2) * kernels.ExpSine2Kernel(2.0 / 1.3**2, 1.0)
-    k3 = 0.66 * kernels.RationalQuadraticKernel(0.78, 1.2**2)
-    k4 = 0.18 * kernels.ExpSquaredKernel(1.6**2) + kernels.WhiteKernel(0.19)
+    k1 = 66.0**2 * kernels.ExpSquaredKernel(67.0**2)
+    k2 = 2.4**2 * kernels.ExpSquaredKernel(90**2) * kernels.ExpSine2Kernel(2.0 / 1.3**2, 1.0)
+    k3 = 0.66**2 * kernels.RationalQuadraticKernel(0.78, 1.2**2)
+    k4 = 0.18**2 * kernels.ExpSquaredKernel(1.6**2) + kernels.WhiteKernel(0.19)
     kernel = k1 + k2 + k3 + k4
 
 
@@ -113,7 +113,7 @@ as follows:
     def grad_nll(p):
         # Update the kernel parameters and compute the likelihood.
         gp.kernel[:] = p
-        return -self.grad_lnlikelihood(y, quiet=True)
+        return -gp.grad_lnlikelihood(y, quiet=True)
 
     # You need to compute the GP once before starting the optimization.
     gp.compute(t)
@@ -135,7 +135,7 @@ as follows:
     better initial guess or try a different value of the ``method`` parameter
     in ``op.minimize``.
 
-After running this optimization, we find a final ln-likelihood of -100.22
+After running this optimization, we find a final ln-likelihood of -82.46
 (slightly better than the result in R&W) and the following parameter values:
 
 .. include:: ../_static/hyper/results.txt

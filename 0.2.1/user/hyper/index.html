@@ -170,10 +170,10 @@ k_4(r) &amp;=&amp; \theta_{10}^2 \, \exp \left(-\frac{r^2}{2\,\theta_{11}} \righ
 as the hyperparameters for now):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">george</span> <span class="kn">import</span> <span class="n">kernels</span>
 
-<span class="n">k1</span> <span class="o">=</span> <span class="mf">66.0</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">67.0</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">k2</span> <span class="o">=</span> <span class="mf">2.4</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mi">90</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSine2Kernel</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="mf">1.3</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-<span class="n">k3</span> <span class="o">=</span> <span class="mf">0.66</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">RationalQuadraticKernel</span><span class="p">(</span><span class="mf">0.78</span><span class="p">,</span> <span class="mf">1.2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">k4</span> <span class="o">=</span> <span class="mf">0.18</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">1.6</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">kernels</span><span class="o">.</span><span class="n">WhiteKernel</span><span class="p">(</span><span class="mf">0.19</span><span class="p">)</span>
+<span class="n">k1</span> <span class="o">=</span> <span class="mf">66.0</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">67.0</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">k2</span> <span class="o">=</span> <span class="mf">2.4</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mi">90</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSine2Kernel</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="mf">1.3</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="n">k3</span> <span class="o">=</span> <span class="mf">0.66</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">RationalQuadraticKernel</span><span class="p">(</span><span class="mf">0.78</span><span class="p">,</span> <span class="mf">1.2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">k4</span> <span class="o">=</span> <span class="mf">0.18</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">1.6</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">kernels</span><span class="o">.</span><span class="n">WhiteKernel</span><span class="p">(</span><span class="mf">0.19</span><span class="p">)</span>
 <span class="n">kernel</span> <span class="o">=</span> <span class="n">k1</span> <span class="o">+</span> <span class="n">k2</span> <span class="o">+</span> <span class="n">k3</span> <span class="o">+</span> <span class="n">k4</span>
 </pre></div>
 </div>
@@ -214,7 +214,7 @@ as follows:</p>
 <span class="k">def</span> <span class="nf">grad_nll</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
     <span class="c"># Update the kernel parameters and compute the likelihood.</span>
     <span class="n">gp</span><span class="o">.</span><span class="n">kernel</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">p</span>
-    <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">gp</span><span class="o">.</span><span class="n">grad_lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
 <span class="c"># You need to compute the GP once before starting the optimization.</span>
 <span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
@@ -239,7 +239,7 @@ initialization and algorithm. If the results are nonsense, try choosing a
 better initial guess or try a different value of the <tt class="docutils literal"><span class="pre">method</span></tt> parameter
 in <tt class="docutils literal"><span class="pre">op.minimize</span></tt>.</p>
 </div>
-<p>After running this optimization, we find a final ln-likelihood of -100.22
+<p>After running this optimization, we find a final ln-likelihood of -82.46
 (slightly better than the result in R&amp;W) and the following parameter values:</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -255,23 +255,23 @@ in <tt class="docutils literal"><span class="pre">op.minimize</span></tt>.</p>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td><span class="math">\(\theta_{1}\)</span></td>
-<td>66.10</td>
-<td>66.00</td>
+<td>1183.17</td>
+<td>4356.00</td>
 </tr>
 <tr class="row-odd"><td><span class="math">\(\theta_{2}\)</span></td>
-<td>4488.61</td>
+<td>1740.98</td>
 <td>4489.00</td>
 </tr>
 <tr class="row-even"><td><span class="math">\(\theta_{3}\)</span></td>
-<td>2.16</td>
-<td>2.40</td>
+<td>10.35</td>
+<td>5.76</td>
 </tr>
 <tr class="row-odd"><td><span class="math">\(\theta_{4}\)</span></td>
-<td>8100.55</td>
+<td>40248.23</td>
 <td>8100.00</td>
 </tr>
 <tr class="row-even"><td><span class="math">\(\theta_{5}\)</span></td>
-<td>0.91</td>
+<td>0.99</td>
 <td>1.18</td>
 </tr>
 <tr class="row-odd"><td><span class="math">\(\theta_{6}\)</span></td>
@@ -279,27 +279,27 @@ in <tt class="docutils literal"><span class="pre">op.minimize</span></tt>.</p>
 <td>1.00</td>
 </tr>
 <tr class="row-even"><td><span class="math">\(\theta_{7}\)</span></td>
-<td>0.87</td>
-<td>0.66</td>
+<td>0.04</td>
+<td>0.44</td>
 </tr>
 <tr class="row-odd"><td><span class="math">\(\theta_{8}\)</span></td>
-<td>0.11</td>
+<td>3.48</td>
 <td>0.78</td>
 </tr>
 <tr class="row-even"><td><span class="math">\(\theta_{9}\)</span></td>
-<td>0.20</td>
+<td>0.02</td>
 <td>1.44</td>
 </tr>
 <tr class="row-odd"><td><span class="math">\(\theta_{10}\)</span></td>
-<td>0.11</td>
-<td>0.18</td>
+<td>0.19</td>
+<td>0.03</td>
 </tr>
 <tr class="row-even"><td><span class="math">\(\theta_{11}\)</span></td>
-<td>2.58</td>
+<td>0.95</td>
 <td>2.56</td>
 </tr>
 <tr class="row-odd"><td><span class="math">\(\theta_{12}\)</span></td>
-<td>0.19</td>
+<td>0.03</td>
 <td>0.19</td>
 </tr>
 </tbody>
