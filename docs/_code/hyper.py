@@ -9,6 +9,7 @@ http://www.gaussianprocess.org/gpml/
 from __future__ import division, print_function
 
 import numpy as np
+import scipy.optimize as op
 import statsmodels.api as sm
 import matplotlib.pyplot as pl
 
@@ -41,14 +42,43 @@ k4 = 0.18**2 * kernels.ExpSquaredKernel(1.6**2) + kernels.WhiteKernel(0.19)
 kernel = k1 + k2 + k3 + k4
 
 # Set up the Gaussian process and maximize the marginalized likelihood.
-gp = george.GP(kernel, mean=base)
-p, results = gp.optimize(t, y)
+gp = george.GP(kernel, mean=np.mean(y))
+
+# Define the objective function (negative log-likelihood in this case).
+def nll(p):
+    # Update the kernel parameters and compute the likelihood.
+    gp.kernel[:] = p
+    ll = gp.lnlikelihood(y, quiet=True)
+
+    # The scipy optimizer doesn't play well with infinities.
+    return -ll if np.isfinite(ll) else 1e25
+
+# And the gradient of the objective function.
+def grad_nll(p):
+    # Update the kernel parameters and compute the likelihood.
+    gp.kernel[:] = p
+    return -gp.grad_lnlikelihood(y, quiet=True)
+
+# You need to compute the GP once before starting the optimization.
+gp.compute(t)
+
+# Print the initial ln-likelihood.
+print(gp.lnlikelihood(y))
+
+# Run the optimization routine.
+p0 = gp.kernel.vector
+results = op.minimize(nll, p0, jac=grad_nll)
+
+# Update the kernel and print the final log-likelihood.
+gp.kernel[:] = results.x
+print(results)
+p = gp.kernel.pars
 print("Final parameters: \n", p)
 print("Final marginalized ln-likelihood: {0}".format(gp.lnlikelihood(y)))
 
 # Build the results table.
-rw = [66, 67**2, 2.4, 90**2, 2.0 / 1.3**2, 1.0, 0.66, 0.78, 1.2**2, 0.18,
-      1.6**2, 0.19]
+rw = [66**2, 67**2, 2.4**2, 90**2, 2.0 / 1.3**2, 1.0, 0.66**2, 0.78, 1.2**2,
+      0.18**2, 1.6**2, 0.19]
 labels = map(r":math:`\theta_{{{0}}}`".format, range(1, len(p)+1))
 l = max(map(len, labels))
 rf = "| {{0[0]:{0}s}} | {{0[1]:10.2f}} | {{0[2]:10.2f}} |".format(l).format
@@ -68,5 +98,5 @@ std = np.sqrt(np.diag(cov))
 # Plot the prediction.
 ax.fill_between(x, mu+std, mu-std, color="k", alpha=0.4)
 ax.set_xlim(min(t), 2025.0)
-ax.set_ylim(min(y), 420.0)
+ax.set_ylim(min(y), 400.0)
 fig.savefig("../_static/hyper/figure.png", dpi=150)

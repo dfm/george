@@ -44,7 +44,7 @@ print(time.time() - s)
 
 # Define the probabilistic model.
 def lnprob(p):
-    # Trivial improper prior: uniform in the log.
+    # Trivial prior: uniform in the log.
     if np.any((-10 > p) + (p > 10)):
         return -np.inf
     lnprior = 0.0
