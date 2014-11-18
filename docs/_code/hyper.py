@@ -67,7 +67,7 @@ print(gp.lnlikelihood(y))
 
 # Run the optimization routine.
 p0 = gp.kernel.vector
-results = op.minimize(nll, p0, jac=grad_nll)
+results = op.minimize(nll, p0, jac=grad_nll, method="L-BFGS-B")
 
 # Update the kernel and print the final log-likelihood.
 gp.kernel[:] = results.x
