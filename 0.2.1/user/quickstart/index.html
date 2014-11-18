@@ -1,0 +1,313 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting started &mdash; George 0.2.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="George 0.2.1 documentation" href="../../"/>
+        <link rel="next" title="Tutorial: model fitting with correlated noise" href="../model/"/>
+        <link rel="prev" title="George" href="../../"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../" class="fa fa-home"> George</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-simple-example">A Simple Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Tutorial: model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../hyper/">Tutorial: setting the hyperparameters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kernels/">Kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#implementation-details">Implementation Details</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#basic-kernels">Basic Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#radial-kernels">Radial Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#periodic-kernels">Periodic Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#combining-kernels">Combining Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#implementing-new-kernels">Implementing New Kernels</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../solvers/">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#hodlr-solver">HODLR Solver</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../">George</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../">Docs</a> &raquo;</li>
+      
+    <li>Getting started</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="https://github.com/dfm/george/blob/master/docs/user/quickstart.rst" class="fa fa-github"> Edit on GitHub</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="getting-started">
+<span id="quickstart"></span><h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>You can install the most recent stable version of George using <a class="reference external" href="#stable">PyPI</a> or the development version from <a class="reference external" href="https://github.com/dfm/george">GitHub</a>.</p>
+<div class="section" id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
+<p>Whichever method you choose, you&#8217;ll need to make sure that you first have
+<a class="reference external" href="http://eigen.tuxfamily.org/">Eigen</a> installed.
+On Linux:</p>
+<div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install libeigen3-dev
+</pre></div>
+</div>
+<p>On Mac:</p>
+<div class="highlight-bash"><div class="highlight"><pre>brew install eigen
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Chances are high that George won&#8217;t work on Windows right now because
+it hasn&#8217;t been tested at all but feel free to try it out at your own risk!</p>
+</div>
+<p>You&#8217;ll also need a working scientific Python installation (including <a class="reference external" href="http://www.numpy.org/">NumPy</a> and <a class="reference external" href="http://www.scipy.org/">SciPy</a>).
+I recommend the <a class="reference external" href="http://continuum.io/downloads">Anaconda distribution</a> if
+you don&#8217;t already have your own opinions.</p>
+</div>
+<div class="section" id="stable-version">
+<span id="stable"></span><h3>Stable Version<a class="headerlink" href="#stable-version" title="Permalink to this headline">¶</a></h3>
+<p>The simplest way to install the <a class="reference external" href="https://pypi.python.org/pypi/george">most recent stable version of George</a> is using <a class="reference external" href="http://pip.readthedocs.org/">pip</a>:</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip install george
+</pre></div>
+</div>
+<p>If you installed Eigen in a strange place, specify that location by running
+(sorry to say that it&#8217;s pretty freaking ugly):</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip install george <span class="se">\</span>
+    --global-option<span class="o">=</span>build_ext <span class="se">\</span>
+    --global-option<span class="o">=</span>-I/path/to/eigen3
+</pre></div>
+</div>
+</div>
+<div class="section" id="development-version">
+<span id="dev"></span><h3>Development Version<a class="headerlink" href="#development-version" title="Permalink to this headline">¶</a></h3>
+<p>To get the source for the development version, clone the git repository and
+checkout the required HODLR submodule:</p>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/dfm/george.git
+<span class="nb">cd </span>george
+git submodule init
+git submodule update
+</pre></div>
+</div>
+<p>Then, install the package by running the following command:</p>
+<div class="highlight-bash"><div class="highlight"><pre>python setup.py install
+</pre></div>
+</div>
+<p>If installed Eigen in a non-standard location, you can specify the correct
+path using the install command:</p>
+<div class="highlight-bash"><div class="highlight"><pre>python setup.py build_ext -I/path/to/eigen3 install
+</pre></div>
+</div>
+</div>
+<div class="section" id="testing">
+<h3>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h3>
+<p>To run the unit tests, install <a class="reference external" href="https://nose.readthedocs.org">nose</a> and then
+execute:</p>
+<div class="highlight-bash"><div class="highlight"><pre>nosetests -v george.testing
+</pre></div>
+</div>
+<p>All of the tests should (of course) pass.
+If any of the tests don&#8217;t pass and if you can&#8217;t sort out why, <a class="reference external" href="https://github.com/dfm/george/issues">open an issue
+on GitHub</a>.</p>
+</div>
+</div>
+<div class="section" id="a-simple-example">
+<h2>A Simple Example<a class="headerlink" href="#a-simple-example" title="Permalink to this headline">¶</a></h2>
+<p>The following code generates some fake data (from a sinusoidal model) with
+error bars:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c"># Generate some fake noisy data.</span>
+<span class="n">x</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">yerr</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">yerr</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Then, we&#8217;ll choose a simple kernel function (see <a class="reference internal" href="../kernels/#kernels"><em>Kernels</em></a> for some other
+choices) and compute the log-likelihood of the fake data under a Gaussian
+process model with this kernel:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
+<span class="kn">from</span> <span class="nn">george.kernels</span> <span class="kn">import</span> <span class="n">ExpSquaredKernel</span>
+
+<span class="c"># Set up the Gaussian process.</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+
+<span class="c"># Pre-compute the factorization of the matrix.</span>
+<span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">yerr</span><span class="p">)</span>
+
+<span class="c"># Compute the log likelihood.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Finally, we can compute the predicted values of the function at a fine grid of
+points conditioned on the observed data.
+This prediction will be an <span class="math">\(N_\mathrm{test} \times N_\mathrm{test}\)</span>
+multivariate Gaussian (where <span class="math">\(N_\mathrm{test}\)</span> is the number of points
+in the grid) with mean <tt class="docutils literal"><span class="pre">mu</span></tt> and covariance <tt class="docutils literal"><span class="pre">cov</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+<span class="n">mu</span><span class="p">,</span> <span class="n">cov</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+<span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">cov</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This should result in a constraint that looks something like:</p>
+<img alt="../../_images/conditional.png" src="../../_images/conditional.png" />
+<p>where the points with error bars are the simulated data and the filled gray
+patch is the mean and standard deviation of the prediction.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../model/" class="btn btn-neutral float-right" title="Tutorial: model fitting with correlated noise"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../../" class="btn btn-neutral" title="George"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014 Dan Foreman-Mackey.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../_static/js/analytics.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
