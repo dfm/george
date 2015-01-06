@@ -311,12 +311,12 @@ As before, let's run MCMC on this model:
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob2, args=data)
 
     print("Running first burn-in...")
+    p0, lnp, _ = sampler.run_mcmc(p0, 250)
     p = p0[np.argmax(lnp)]
     sampler.reset()
 
     # Re-sample the walkers near the best walker from the previous burn-in.
     p0 = [p + 1e-8 * np.random.randn(ndim) for i in xrange(nwalkers)]
-    p0, _, _ = sampler.run_mcmc(p0, 250)
 
     print("Running second burn-in...")
     p0, _, _ = sampler.run_mcmc(p0, 250)
