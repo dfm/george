@@ -94,9 +94,6 @@ The following code snippet is a simple implementation of this model in Python
 
     import numpy as np
 
-    # Ensure reproducable results
-    np.random.seed(1234)
-
     def model1(params, t):
         m, b, amp, loc, sig2 = params
         return m*t + b + amp * np.exp(-0.5 * (t - loc) ** 2 / sig2)
@@ -305,7 +302,6 @@ As before, let's run MCMC on this model:
 
     initial = np.array([0, 0, -1.0, 0.1, 0.4])
     ndim = len(initial)
-    nwalkers = 32
     p0 = [np.array(initial) + 1e-8 * np.random.randn(ndim)
           for i in xrange(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob2, args=data)
@@ -354,7 +350,7 @@ First, we can plot the posterior samples on top of the data:
         gp.compute(t, yerr)
 
         # Compute the prediction conditioned on the observations and plot it.
-        m = gp.sample_conditional(y - model2(s, t), x) + model(s[2:], x)
+        m = gp.sample_conditional(y - model2(s, t), x) + model2(s, x)
         pl.plot(x, m, color="#4682b4", alpha=0.3)
 
 This code should produce a figure like:
