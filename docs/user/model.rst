@@ -94,6 +94,9 @@ The following code snippet is a simple implementation of this model in Python
 
     import numpy as np
 
+    # Ensure reproducable results
+    np.random.seed(1234)
+
     def model1(params, t):
         m, b, amp, loc, sig2 = params
         return m*t + b + amp * np.exp(-0.5 * (t - loc) ** 2 / sig2)
