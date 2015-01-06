@@ -359,6 +359,32 @@ probability marginalized over both \params\ and \hyperpars.
 \dfmtodo{We rock.}
 
 
+\section{The formal model}
+\sectlabel{formal}
+
+In the previous section, we introduced the concept of the Gaussian process
+model by example so let's now turn to defining the model more formally.
+The model is that the residuals of your data away from the mean model are
+drawn from a huge $N$-dimensional Gaussian where $N$ is the number of data
+points.
+In other words, the dataset is a single \emph{vector} $\bvec{y}$ realization
+of the Gaussian with the mean vector $\bvec{f}_\params(\bvec{x})$ and
+$N \times N$ covariance matrix $K_\bvec{\alpha}$, parameterized by some
+parameters \bvec{\alpha}:
+\begin{eqnarray}
+\bvec{y} &\sim& \mathcal{N}\left[\bvec{f}_\params(\bvec{x}),\,
+    K_\bvec{\alpha}\right] \quad.
+\end{eqnarray}
+Therefore, the likelihood of these data under this model is the \emph{value}
+of the multivariate Gaussian evaluated at \bvec{y}.
+\begin{eqnarray}\eqlabel{simple-gp-lnlike-2}
+\ln p (\bvec{y}\,|\,\params) &=&
+-\frac{1}{2}\,\left[\bvec{y}-\bvec{f}_\params(\bvec{x})\right]^\mathrm{T}\,
+{K_\bvec{\alpha}}^{-1}\,\left [\bvec{y} - \bvec{f}_\params(\bvec{x})\right ]
+-\frac{1}{2}\,\ln\det K_\bvec{\alpha} - \frac{N}{2}\,\ln 2\,\pi \quad.
+\end{eqnarray}
+
+
 \section{Practical considerations}\sectlabel{practical}
 
 Much of the Gaussian process literature is dedicated to computing predictions

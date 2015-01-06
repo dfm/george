@@ -32,6 +32,7 @@ ax.set_xlabel("year")
 ax.set_ylabel("CO$_2$ in ppm")
 fig.subplots_adjust(left=0.15, bottom=0.2, right=0.99, top=0.95)
 fig.savefig("../_static/hyper/data.png", dpi=150)
+fig.savefig("hyper-data.pdf")
 
 # Initialize the kernel.
 k1 = 66.0**2 * kernels.ExpSquaredKernel(67.0**2)
@@ -100,3 +101,4 @@ ax.fill_between(x, mu+std, mu-std, color="k", alpha=0.4)
 ax.set_xlim(min(t), 2025.0)
 ax.set_ylim(min(y), 400.0)
 fig.savefig("../_static/hyper/figure.png", dpi=150)
+fig.savefig("hyper-figure.pdf", dpi=150)
