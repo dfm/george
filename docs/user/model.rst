@@ -354,7 +354,7 @@ First, we can plot the posterior samples on top of the data:
         gp.compute(t, yerr)
 
         # Compute the prediction conditioned on the observations and plot it.
-        m = gp.sample_conditional(y - model2(s, t), x) + model(s, x)
+        m = gp.sample_conditional(y - model2(s, t), x) + model(s[2:], x)
         pl.plot(x, m, color="#4682b4", alpha=0.3)
 
 This code should produce a figure like:
