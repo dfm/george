@@ -94,6 +94,9 @@ The following code snippet is a simple implementation of this model in Python
 
     import numpy as np
 
+    # Ensure reproducable results
+    np.random.seed(1234)
+
     def model1(params, t):
         m, b, amp, loc, sig2 = params
         return m*t + b + amp * np.exp(-0.5 * (t - loc) ** 2 / sig2)
@@ -132,6 +135,7 @@ both a burn-in and production chain:
 
     initial = np.array([0, 0, -1.0, 0.1, 0.4])
     ndim = len(initial)
+    nwalkers = 32
     p0 = [np.array(initial) + 1e-8 * np.random.randn(ndim)
           for i in xrange(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob1, args=data)
@@ -301,17 +305,18 @@ As before, let's run MCMC on this model:
 
     initial = np.array([0, 0, -1.0, 0.1, 0.4])
     ndim = len(initial)
+    nwalkers = 32
     p0 = [np.array(initial) + 1e-8 * np.random.randn(ndim)
           for i in xrange(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob2, args=data)
 
     print("Running first burn-in...")
+    p0, lnp, _ = sampler.run_mcmc(p0, 250)
     p = p0[np.argmax(lnp)]
     sampler.reset()
 
     # Re-sample the walkers near the best walker from the previous burn-in.
     p0 = [p + 1e-8 * np.random.randn(ndim) for i in xrange(nwalkers)]
-    p0, _, _ = sampler.run_mcmc(p0, 250)
 
     print("Running second burn-in...")
     p0, _, _ = sampler.run_mcmc(p0, 250)
@@ -349,7 +354,7 @@ First, we can plot the posterior samples on top of the data:
         gp.compute(t, yerr)
 
         # Compute the prediction conditioned on the observations and plot it.
-        m = gp.sample_conditional(y - model2(s, t), x) + model(s, x)
+        m = gp.sample_conditional(y - model2(s, t), x) + model(s[2:], x)
         pl.plot(x, m, color="#4682b4", alpha=0.3)
 
 This code should produce a figure like:
