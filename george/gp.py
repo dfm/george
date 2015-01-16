@@ -278,12 +278,13 @@ class GP(object):
 
         :param return_values: ``list`` or ``str``
             The desired return values. Can be a list of strings or a single
-            string. Available options are: 'mean', 'cov' and 'var'.
+            string. Available options are: 'mean', 'cov' and 'var'. 'var' only
+            computes the diagonal elements of the covariance matrix, hence it
+            is faster and requires less memory.
 
         :param mean_only:
             DEPRICATED, if ``True`` overwrites the return values as follows:
                 ``['mean']``
-
 
         Returns a tuple ``(mu, cov, var)`` (dependent on ``return_values``) 
         where
