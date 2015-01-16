@@ -120,10 +120,10 @@ class Kernel(object):
     def __rmul__(self, b):
         return self.__mul__(b)
 
-    def value(self, x1, x2=None):
+    def value(self, x1, x2=None, diag=False):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
-            return self.kernel.value_symmetric(x1)
+            return self.kernel.value_symmetric(x1, diag=diag)
         x2 = np.ascontiguousarray(x2, dtype=np.float64)
         return self.kernel.value_general(x1, x2)
 

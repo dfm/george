@@ -55,7 +55,7 @@ def _test_prediction(solver=BasicSolver):
     gp.compute(x)
 
     y = x/x.std()
-    mu, cov = gp.predict(y, x)
+    mu, cov, var_direct = gp.predict(y, x, return_values=['mean','cov','var'])
 
     assert np.allclose(y, mu), \
         "GP must predict noise-free training data exactly ({0}).\n({1})" \
@@ -70,11 +70,18 @@ def _test_prediction(solver=BasicSolver):
         "Variance must vanish at noise-free training points ({0}).\n{1}" \
         .format(solver.__name__, var)
 
+    assert np.allclose(var, var_direct), \
+            "Variance must be equal to the diagonal of the covariance matrix" \
+            " ({0}).\n       var:{1}\nvar_direct:{2}".format(solver.__name__,
+                    var, var_direct)
+
     t = np.array((-.5, .3, 1.2))
     var = np.diag(gp.predict(y, t)[1])
     assert np.all(var > 0), \
         "Variance must be positive away from training points ({0}).\n{1}" \
         .format(solver.__name__, var)
+
+
 
 
 def test_prediction(**kwargs):

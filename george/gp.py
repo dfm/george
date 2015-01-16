@@ -265,7 +265,7 @@ class GP(object):
 
         return g
 
-    def predict(self, y, t, mean_only=False):
+    def predict(self, y, t, return_values=['mean','cov'], mean_only=False):
         """
         Compute the conditional predictive distribution of the model.
 
@@ -276,28 +276,61 @@ class GP(object):
             The coordinates where the predictive distribution should be
             computed.
 
-        Returns a tuple ``(mu, cov)`` where
+        :param return_values: ``list`` or ``str``
+            The desired return values. Can be a list of strings or a single
+            string. Available options are: 'mean', 'cov' and 'var'.
+
+        :param mean_only:
+            DEPRICATED, if ``True`` overwrites the return values as follows:
+                ``['mean']``
+
+
+        Returns a tuple ``(mu, cov, var)`` (dependent on ``return_values``) 
+        where
 
         * **mu** ``(ntest,)`` is the mean of the predictive distribution, and
         * **cov** ``(ntest, ntest)`` is the predictive covariance.
+        * **var** ``(ntest,)`` is the predictive variances (i.e. diag(cov)).
 
         """
+
+        # overwriting due to legacy kwarg
+        if mean_only:
+            return_values = ['mean']
+
+        # type and sanity checks
+        if isinstance(return_values, str):
+            return_values = [return_values]
+        for retval in return_values:
+            if not retval in ['mean', 'cov', 'var']:
+                raise RuntimeError("Unknown return value '{}'".format(retval))
+
         self.recompute()
         self._compute_alpha(y)
         xs, i = self.parse_samples(t, False)
+        results = list()
+
+        # evaluate the kernel
+        Kxs = self.kernel.value(xs, self._x)
 
         # Compute the predictive mean.
-        Kxs = self.kernel.value(xs, self._x)
-        mu = np.dot(Kxs, self._alpha) + self.mean(xs)
-        if mean_only:
-            return mu
+        if 'mean' in return_values:
+            mu = np.dot(Kxs, self._alpha) + self.mean(xs)
+            results.append(mu)
 
         # Compute the predictive covariance.
         KxsT = np.ascontiguousarray(Kxs.T, dtype=np.float64)
-        cov = self.kernel.value(xs)
-        cov -= np.dot(Kxs, self.solver.apply_inverse(KxsT, in_place=True))
+        if 'cov' in return_values:
+            cov = self.kernel.value(xs)
+            cov -= np.dot(Kxs, self.solver.apply_inverse(KxsT, in_place=True))
+            results.append(cov)
 
-        return mu, cov
+        if 'var' in return_values:
+            var = self.kernel.value(xs, diag=True).squeeze()
+            var -= np.sum(Kxs.T*self.solver.apply_inverse(KxsT, in_place=True),
+                    axis=0)
+            results.append(var)
+        return tuple(results)
 
     def sample_conditional(self, y, t, size=1):
         """

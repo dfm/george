@@ -32,23 +32,31 @@ cdef class CythonKernel:
         del self.kernel
 
     @cython.boundscheck(False)
-    def value_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x):
+    def value_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x, unsigned char diag=False):
         cdef unsigned int n = x.shape[0], ndim = x.shape[1]
         if self.kernel.get_ndim() != ndim:
             raise ValueError("Dimension mismatch")
 
+        cdef unsigned int n2 = n
+        if diag:
+            n2 = 1
+
         # Build the kernel matrix.
         cdef double value
         cdef unsigned int i, j, delta = x.strides[0]
-        cdef np.ndarray[DTYPE_t, ndim=2] k = np.empty((n, n), dtype=DTYPE)
+        cdef np.ndarray[DTYPE_t, ndim=2] k = np.empty((n, n2), dtype=DTYPE)
         for i in range(n):
-            k[i, i] = self.kernel.value(<double*>(x.data + i*delta),
-                                        <double*>(x.data + i*delta))
-            for j in range(i + 1, n):
-                value = self.kernel.value(<double*>(x.data + i*delta),
-                                          <double*>(x.data + j*delta))
-                k[i, j] = value
-                k[j, i] = value
+            if diag:
+                k[i, 0] = self.kernel.value(<double*>(x.data + i*delta),
+                                            <double*>(x.data + i*delta))
+            else:
+                k[i, i] = self.kernel.value(<double*>(x.data + i*delta),
+                                            <double*>(x.data + i*delta))
+                for j in range(i + 1, n):
+                    value = self.kernel.value(<double*>(x.data + i*delta),
+                                              <double*>(x.data + j*delta))
+                    k[i, j] = value
+                    k[j, i] = value
 
         return k
 
