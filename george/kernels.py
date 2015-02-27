@@ -276,6 +276,14 @@ class RadialKernel(Kernel):
         have length ``ndim``. The fully general (not axis-aligned) metric
         hasn't been implemented yet but it's on the to do list!
 
+        Note: the metric scales the square of the distance, :math:`r`, between
+        points such that the following equality holds for a kernel evaluated
+        at two points a distance :math:`r`: apart.
+
+        .. math::
+
+            k(r^2; metric=\lambda) = k(r^2 / \lambda, metric=1)
+
     :param dim: (optional)
         If provided, this will apply the kernel in only the specified
         dimension.
@@ -318,7 +326,7 @@ class ExpKernel(RadialKernel):
 
     .. math::
 
-        k({r_{ij}}) = \exp \left ( -|r| \right )
+        k(r^2) = \exp \left ( -|r| \right )
 
     :param metric:
         The custom metric specified as described in the :class:`RadialKernel`
