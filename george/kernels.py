@@ -430,7 +430,7 @@ class ExpSine2Kernel(Kernel):
     .. math::
 
         k(\mathbf{x}_i,\,\mathbf{x}_j) =
-            \sin \left( -\Gamma\,\sin^2\left[
+            \exp \left( -\Gamma\,\sin^2\left[
                 \frac{\pi}{P}\,\left|x_i-x_j\right|
             \right] \right)
 
