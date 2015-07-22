@@ -128,21 +128,29 @@ if __name__ == "__main__":
 
     kern_fn = os.path.join("george", "_kernels")
     hodlr_fn = os.path.join("george", "hodlr")
+    metrics_fn = os.path.join("george", "_metrics")
     if (os.path.exists(kern_fn + ".pyx") and os.path.exists(hodlr_fn + ".pyx")
-            and os.path.exists(os.path.join("george", "kernels.pxd"))):
+            and os.path.exists(os.path.join("george", "kernels.pxd"))
+            and os.path.exists(metrics_fn + ".pyx")):
         from Cython.Build import cythonize
         kern_fn += ".pyx"
         hodlr_fn += ".pyx"
+        metrics_fn += ".pyx"
     else:
         kern_fn += ".cpp"
         hodlr_fn += ".cpp"
+        metrics_fn += ".cpp"
         cythonize = lambda x: x
 
-    kern_ext = Extension("george._kernels", sources=[kern_fn],
-                         libraries=libraries, include_dirs=include_dirs)
-    hodlr_ext = Extension("george.hodlr", sources=[hodlr_fn],
-                          libraries=libraries, include_dirs=include_dirs)
-    extensions = cythonize([kern_ext, hodlr_ext])
+    metrics_ext = Extension("george._metrics", sources=[metrics_fn],
+                            libraries=libraries, include_dirs=include_dirs)
+    extensions = cythonize([metrics_ext])
+
+    # kern_ext = Extension("george._kernels", sources=[kern_fn],
+    #                      libraries=libraries, include_dirs=include_dirs)
+    # hodlr_ext = Extension("george.hodlr", sources=[hodlr_fn],
+    #                       libraries=libraries, include_dirs=include_dirs)
+    # extensions = cythonize([kern_ext, hodlr_ext])
 
     # Hackishly inject a constant into builtins to enable importing of the
     # package before the library is built.
