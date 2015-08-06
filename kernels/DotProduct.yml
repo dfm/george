@@ -1,0 +1,16 @@
+name: DotProductKernel
+stationary: false
+
+doc: |
+    ummm.
+
+value: |
+    unsigned i, j, n = this->subspace_->get_naxes();
+    double value = 0.0;
+    for (i = 0; i < n; ++i) {
+        j = this->subspace_->get_axis(i);
+        value += x1[j] * x2[j];
+    }
+    return value;
+
+grad: return 0.0;

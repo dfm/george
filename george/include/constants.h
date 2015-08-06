@@ -13,6 +13,9 @@ const int CHOLMOD_ERROR       = 3;
 const int MEMORY_ERROR        = 4;
 const int USAGE_ERROR         = 5;
 
+const int METRIC_OK           = 0;
+const int METRIC_INVALID      = 1;
+
 };
 
 #endif

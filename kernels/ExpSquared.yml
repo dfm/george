@@ -1,0 +1,8 @@
+name: ExpSquaredKernel
+stationary: true
+
+doc: |
+    blahface
+
+value: |
+    return exp(-0.5 * r2);

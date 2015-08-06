@@ -3,20 +3,18 @@
 from __future__ import division, print_function
 
 __all__ = [
-    "Sum", "Product", "Kernel",
-    "ConstantKernel", "WhiteKernel", "DotProductKernel",
-    "RadialKernel", "ExpKernel", "ExpSquaredKernel",
-    "CosineKernel", "ExpSine2Kernel",
-    "Matern32Kernel", "Matern52Kernel",
-
-    "PythonKernel",
+    "Kernel", "Sum", "Product",
+    {%- for spec in specs %}
+    "{{ spec.name }}",
+    {%- endfor %}
 ]
 
 import numpy as np
 from functools import partial
 
-from ._kernels import CythonKernel
 from .utils import numerical_gradient
+from .metrics import Metric, Subspace
+from .cython_kernel import CythonKernel
 
 
 class Kernel(object):
@@ -106,7 +104,7 @@ class Kernel(object):
 
     def __add__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Sum(ConstantKernel(float(b), ndim=self.ndim), self)
+            return Sum(ConstantKernel(value=float(b), ndim=self.ndim), self)
         return Sum(self, b)
 
     def __radd__(self, b):
@@ -114,7 +112,8 @@ class Kernel(object):
 
     def __mul__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Product(ConstantKernel(float(b), ndim=self.ndim), self)
+            return Product(ConstantKernel(value=float(b), ndim=self.ndim),
+                           self)
         return Product(self, b)
 
     def __rmul__(self, b):
@@ -205,61 +204,39 @@ class Product(_operator):
     def __repr__(self):
         return "{0} * {1}".format(self.k1, self.k2)
 
-
-class ConstantKernel(Kernel):
-    r"""
-    This kernel returns the constant
-
-    .. math::
-
-        k(\mathbf{x}_i,\,\mathbf{x}_j) = c
-
-    where :math:`c` is a parameter.
-
-    :param value:
-        The constant value :math:`c` in the above equation.
+{% for spec in specs %}
+class {{ spec.name }} (Kernel):
+    """
+    {{ spec.doc | indent(4) }}
 
     """
-    kernel_type = 0
 
-    def __init__(self, value, ndim=1):
-        super(ConstantKernel, self).__init__(value, ndim=ndim)
+    kernel_type = {{ spec.index }}
+    stationary = {{ spec.stationary }}
+    parameter_names = [{% for p in spec.params -%}"{{ p }}", {% endfor %}]
 
+    def __init__(self,
+                 {% for p in spec.params %}{{ p }}=None,
+                 {% endfor -%}
+                 {% if spec.stationary -%}
+                 metric=1.0,
+                 lower=True,
+                 {% endif -%}
+                 ndim=1,
+                 axes=None):
+        {% for p in spec.params -%}
+        if {{ p }} is None:
+            raise ValueError("missing required parameter '{{ p }}'")
+        self.{{ p }} = {{ p }}
+        {% endfor -%}
 
-class WhiteKernel(Kernel):
-    r"""
-    This kernel returns constant along the diagonal.
+        {% if spec.stationary -%}
+        self.metric = Metric(metric, ndim=ndim, axes=axes, lower=lower)
+        {%- else -%}
+        self.subspace = Subspace(ndim, axes=axes)
+        {%- endif %}
 
-    .. math::
-
-        k(\mathbf{x}_i,\,\mathbf{x}_j) = c \, \delta_{ij}
-
-    where :math:`c` is the parameter.
-
-    :param value:
-        The constant value :math:`c` in the above equation.
-
-    """
-    kernel_type = 1
-
-    def __init__(self, value, ndim=1):
-        super(WhiteKernel, self).__init__(value, ndim=ndim)
-
-
-class DotProductKernel(Kernel):
-    r"""
-    The dot-product kernel takes the form
-
-    .. math::
-
-        k(\mathbf{x}_i,\,\mathbf{x}_j) = \mathbf{x}_i^{\mathrm{T}} \cdot
-                                         \mathbf{x}_j
-
-    """
-    kernel_type = 2
-
-    def __init__(self, ndim=1):
-        super(DotProductKernel, self).__init__(ndim=ndim)
+{% endfor %}
 
 
 class RadialKernel(Kernel):
@@ -309,153 +286,6 @@ class RadialKernel(Kernel):
 
         super(RadialKernel, self).__init__(*(np.append(extra, metric)),
                                            ndim=ndim)
-
-
-class ExpKernel(RadialKernel):
-    r"""
-    The exponential kernel is a :class:`RadialKernel` where the value at a
-    given radius :math:`r^2` is given by:
-
-    .. math::
-
-        k({r_{ij}}) = \exp \left ( -|r| \right )
-
-    :param metric:
-        The custom metric specified as described in the :class:`RadialKernel`
-        description.
-
-    """
-    kernel_type = 3
-
-
-class ExpSquaredKernel(RadialKernel):
-    r"""
-    The exponential-squared kernel is a :class:`RadialKernel` where the value
-    at a given radius :math:`r^2` is given by:
-
-    .. math::
-
-        k(r^2) = \exp \left ( -\frac{r^2}{2} \right )
-
-    :param metric:
-        The custom metric specified as described in the :class:`RadialKernel`
-        description.
-
-    """
-    kernel_type = 4
-
-
-class Matern32Kernel(RadialKernel):
-    r"""
-    The Matern-3/2 kernel is a :class:`RadialKernel` where the value at a
-    given radius :math:`r^2` is given by:
-
-    .. math::
-
-        k(r^2) = \left( 1+\sqrt{3\,r^2} \right)\,
-                 \exp \left (-\sqrt{3\,r^2} \right )
-
-    :param metric:
-        The custom metric specified as described in the :class:`RadialKernel`
-        description.
-
-    """
-    kernel_type = 5
-
-
-class Matern52Kernel(RadialKernel):
-    r"""
-    The Matern-5/2 kernel is a :class:`RadialKernel` where the value at a
-    given radius :math:`r^2` is given by:
-
-    .. math::
-
-        k(r^2) = \left( 1+\sqrt{5\,r^2} + \frac{5\,r^2}{3} \right)\,
-                 \exp \left (-\sqrt{5\,r^2} \right )
-
-    :param metric:
-        The custom metric specified as described in the :class:`RadialKernel`
-        description.
-
-    """
-    kernel_type = 6
-
-
-class RationalQuadraticKernel(RadialKernel):
-    r"""
-    TODO: document this kernel.
-
-    """
-    kernel_type = 7
-
-    def __init__(self, alpha, metric, ndim=1, **kwargs):
-        super(RationalQuadraticKernel, self).__init__(metric, extra=[alpha],
-                                                      ndim=ndim, **kwargs)
-
-
-class CosineKernel(Kernel):
-    r"""
-    The cosine kernel is given by:
-
-    .. math::
-
-        k(\mathbf{x}_i,\,\mathbf{x}_j) =
-            \cos\left(\frac{2\,\pi}{P}\,\left|x_i-x_j\right| \right)
-
-    where :math:`P` is the period.
-
-    :param period:
-        The period :math:`P` of the oscillation (in the same units as
-        :math:`\mathbf{x}`).
-
-    **Note:**
-    A shortcoming of this kernel is that it currently only accepts a single
-    period so it's not very applicable to problems with input dimension larger
-    than one.
-
-    """
-    kernel_type = 8
-
-    def __init__(self, period, ndim=1, dim=0):
-        super(CosineKernel, self).__init__(period, ndim=ndim)
-        assert dim < self.ndim, "Invalid dimension"
-        self.dim = dim
-
-
-class ExpSine2Kernel(Kernel):
-    r"""
-    The exp-sine-squared kernel is used to model stellar rotation and *might*
-    be applicable in some other contexts. It is given by the equation:
-
-    .. math::
-
-        k(\mathbf{x}_i,\,\mathbf{x}_j) =
-            \sin \left( -\Gamma\,\sin^2\left[
-                \frac{\pi}{P}\,\left|x_i-x_j\right|
-            \right] \right)
-
-    where :math:`\Gamma` is the "scale" of the correlation and :math:`P` is
-    the period of the oscillation measured in the same units as
-    :math:`\mathbf{x}`.
-
-    :param gamma:
-        The scale :math:`\Gamma` of the correlations.
-
-    :param period:
-        The period :math:`P` of the oscillation (in the same units as
-        :math:`\mathbf{x}`).
-
-    :param dim: (optional)
-        The dimension along which this kernel should apply. By default, this
-        will be the zero-th axis.
-
-    """
-    kernel_type = 9
-
-    def __init__(self, gamma, period, ndim=1, dim=0):
-        super(ExpSine2Kernel, self).__init__(gamma, period, ndim=ndim)
-        assert dim < self.ndim, "Invalid dimension"
-        self.dim = dim
 
 
 class PythonKernel(Kernel):

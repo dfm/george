@@ -2,7 +2,7 @@
 from __future__ import division
 
 cimport cython
-cimport kernels
+cimport kerneldefs
 
 import numpy as np
 cimport numpy as np
@@ -18,12 +18,12 @@ def _rebuild(kernel_spec):
 
 cdef class CythonKernel:
 
-    cdef kernels.Kernel* kernel
+    cdef kerneldefs.Kernel* kernel
     cdef object kernel_spec
 
     def __cinit__(self, kernel_spec):
         self.kernel_spec = kernel_spec
-        self.kernel = kernels.parse_kernel(kernel_spec)
+        self.kernel = kerneldefs.parse_kernel(kernel_spec)
 
     def __reduce__(self):
         return _rebuild, (self.kernel_spec, )

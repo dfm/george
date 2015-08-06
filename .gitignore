@@ -2,13 +2,15 @@
 *.pyc
 *.o
 *.so
-.syntastic_cpp_config
 *.png
 *.gif
 dist
 *.egg-info
 .syntastic_c_config
+.syntastic_cpp_config
 build
-python/george/__init__.py
 .coverage
 george/*.cpp
+george/kernels.py
+george/kerneldefs.pxd
+george/include/kernels.h

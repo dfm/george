@@ -1,0 +1,22 @@
+name: ConstantKernel
+stationary: false
+params: [value]
+
+doc: |
+    This kernel returns the constant
+
+    .. math::
+
+        k(\mathbf{x}_i,\,\mathbf{x}_j) = c
+
+    where :math:`c` is a parameter.
+
+    :param value:
+        The constant value :math:`c` in the above equation.
+
+value: |
+    return value;
+
+grad:
+    value: |
+        return 1.0;

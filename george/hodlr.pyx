@@ -2,7 +2,7 @@
 from __future__ import division
 
 cimport cython
-cimport kernels
+cimport kerneldefs
 
 import time
 import numpy as np
@@ -14,7 +14,7 @@ ctypedef np.float64_t DTYPE_t
 cdef extern from "solver.h" namespace "george":
 
     cdef cppclass Solver:
-        Solver(kernels.Kernel*, unsigned int, double)
+        Solver(kerneldefs.Kernel*, unsigned int, double)
         int compute (const unsigned int, const double*, const double*, unsigned int)
         int get_computed () const
         double get_log_determinant () const
@@ -49,14 +49,14 @@ cdef class HODLRSolver:
     """
 
     cdef object kernel_spec
-    cdef kernels.Kernel* kernel
+    cdef kerneldefs.Kernel* kernel
     cdef Solver* solver
     cdef unsigned int nleaf
     cdef double tol
 
     def __cinit__(self, kernel_spec, unsigned int nleaf=100, double tol=1e-12):
         self.kernel_spec = kernel_spec
-        self.kernel = kernels.parse_kernel(kernel_spec)
+        self.kernel = kerneldefs.parse_kernel(kernel_spec)
         self.solver = new Solver(self.kernel, nleaf, tol)
         self.nleaf = nleaf
         self.tol = tol

@@ -1,0 +1,37 @@
+name: ExpSine2Kernel
+stationary: true
+params: [gamma, period]
+
+doc: |
+    The exp-sine-squared kernel is used to model stellar rotation and *might*
+    be applicable in some other contexts. It is given by the equation:
+
+    .. math::
+        k(\mathbf{x}_i,\,\mathbf{x}_j) =
+            \exp \left( -\Gamma\,\sin^2\left[
+                \frac{\pi}{P}\,\left|x_i-x_j\right|
+            \right] \right)
+
+    where :math:`\Gamma` is the "scale" of the correlation and :math:`P` is
+    the period of the oscillation measured in the same units as
+    :math:`\mathbf{x}`.
+
+    :param gamma:
+        The scale :math:`\Gamma` of the correlations.
+
+    :param period:
+        The period :math:`P` of the oscillation (in the same units as
+        :math:`\mathbf{x}`).
+
+value: |
+    T s = sin(M_PI * sqrt(r2) / period);
+    return exp(-gamma * s * s);
+
+grad:
+    gamma: |
+        double s = sin(M_PI * sqrt(r2) / period), s2 = s * s;
+        return -s2 * exp(-gamma * s2);
+    period: |
+        double arg = M_PI * sqrt(r2) / period, s = sin(arg), c = cos(arg),
+               A = exp(-gamma * s * s);
+        return 2 * gamma * arg * c * s * A / period;
