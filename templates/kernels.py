@@ -9,6 +9,7 @@ __all__ = [
     {%- endfor %}
 ]
 
+import warnings
 import numpy as np
 from functools import partial
 
@@ -47,9 +48,7 @@ class Kernel(object):
         raise TypeError("Invalid operation")
     __array_priority__ = np.inf
 
-    def __init__(self, *pars, **kwargs):
-        self.ndim = kwargs.get("ndim", 1)
-        self.pars = np.array(pars)
+    def __init__(self):
         self.dirty = True
         self._kernel = None
 
@@ -66,10 +65,14 @@ class Kernel(object):
         return self._kernel
 
     def __repr__(self):
-        return "{0}({1})".format(self.__class__.__name__,
-                                 ", ".join(map("{0}".format,
-                                               self.pars) +
-                                           ["ndim={0}".format(self.ndim)]))
+        params = ["{0}={1}".format(k, getattr(self, k))
+                  for k in self.parameter_names]
+        if self.stationary:
+            params += ["metric={0}".format(self.metric)]
+        else:
+            params += ["ndim={0}".format(self.ndim),
+                       "axes={0}".format(self.axes)]
+        return "{0}({1})".format(self.__class__.__name__, ", ".join(params))
 
     def lnprior(self):
         return 0.0
@@ -84,11 +87,29 @@ class Kernel(object):
 
     @property
     def pars(self):
-        return self._pars
+        return self.params
 
     @pars.setter
-    def pars(self, v):
-        self._pars = np.array(v, dtype=np.float64, order="C")
+    def pars(self, value):
+        self.params = value
+
+    @property
+    def params(self):
+        x = [getattr(self, k) for k in self.parameter_names]
+        try:
+            x += list(self.metric.params)
+        except AttributeError:
+            pass
+        return np.array(x, dtype=np.float64, order="C")
+
+    @params.setter
+    def params(self, values):
+        for k, v in zip(self.parameter_names, values):
+            setattr(self, k, v)
+        try:
+            self.metric.params[:] = values[len(self.parameter_names):]
+        except AttributeError:
+            pass
         self.dirty = True
 
     def __getitem__(self, i):
@@ -100,11 +121,11 @@ class Kernel(object):
         self.vector = vec
 
     def __len__(self):
-        return len(self.pars)
+        return len(self.params)
 
     def __add__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Sum(ConstantKernel(value=float(b), ndim=self.ndim), self)
+            return Sum(ConstantKernel(float(b), ndim=self.ndim), self)
         return Sum(self, b)
 
     def __radd__(self, b):
@@ -112,8 +133,7 @@ class Kernel(object):
 
     def __mul__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Product(ConstantKernel(value=float(b), ndim=self.ndim),
-                           self)
+            return Product(ConstantKernel(float(b), ndim=self.ndim), self)
         return Product(self, b)
 
     def __rmul__(self, b):
@@ -232,61 +252,28 @@ class {{ spec.name }} (Kernel):
 
         {% if spec.stationary -%}
         self.metric = Metric(metric, ndim=ndim, axes=axes, lower=lower)
+        self.ndim = self.metric.ndim
+        self.axes = self.metric.axes
         {%- else -%}
         self.subspace = Subspace(ndim, axes=axes)
+        self.ndim = self.subspace.ndim
+        self.axes = self.subspace.axes
         {%- endif %}
 
+        super({{ spec.name }}, self).__init__()
+
+    {% for param in spec.params %}
+    @property
+    def {{ param }}(self):
+        return self._{{ param }}
+
+    @{{ param }}.setter
+    def {{ param }}(self, value):
+        self._{{ param }} = value
+        self.dirty = True
+    {% endfor %}
+
 {% endfor %}
-
-
-class RadialKernel(Kernel):
-    r"""
-    This kernel (and more importantly its subclasses) computes the distance
-    between two samples in an arbitrary metric and applies a radial function
-    to this distance.
-
-    :param metric:
-        The specification of the metric. This can be a ``float``, in which
-        case the metric is considered isotropic with the variance in each
-        dimension given by the value of ``metric``. Alternatively, ``metric``
-        can be a list of variances for each dimension. In this case, it should
-        have length ``ndim``. The fully general (not axis-aligned) metric
-        hasn't been implemented yet but it's on the to do list!
-
-    :param dim: (optional)
-        If provided, this will apply the kernel in only the specified
-        dimension.
-
-    """
-    is_radial = True
-
-    def __init__(self, metric, ndim=1, dim=-1, extra=[]):
-        self.isotropic = False
-        self.axis_aligned = False
-        try:
-            float(metric)
-
-        except TypeError:
-            metric = np.atleast_1d(metric)
-            if len(metric) == ndim:
-                # The metric is axis aligned.
-                self.axis_aligned = True
-
-            else:
-                raise NotImplementedError("The general metric isn't "
-                                          "implemented")
-
-        else:
-            # If we get here then the kernel is isotropic.
-            self.isotropic = True
-
-        if dim >= 0:
-            assert self.isotropic, "A 1-D kernel should also be isotropic"
-        self.dim = dim
-
-        super(RadialKernel, self).__init__(*(np.append(extra, metric)),
-                                           ndim=ndim)
-
 
 class PythonKernel(Kernel):
     r"""

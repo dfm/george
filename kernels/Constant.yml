@@ -1,6 +1,6 @@
 name: ConstantKernel
 stationary: false
-params: [value]
+params: [constant]
 
 doc: |
     This kernel returns the constant
@@ -15,8 +15,8 @@ doc: |
         The constant value :math:`c` in the above equation.
 
 value: |
-    return value;
+    return constant;
 
 grad:
-    value: |
+    constant: |
         return 1.0;

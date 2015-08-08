@@ -14,5 +14,10 @@ doc: |
         description.
 
 value: |
-    T r = sqrt(3.0 * r2);
+    double r = sqrt(3.0 * r2);
     return (1.0 + r) * exp(-r);
+
+grad:
+    r2: |
+        double r = sqrt(3.0 * r2);
+        return -3.0 * 0.5 * exp(-r);

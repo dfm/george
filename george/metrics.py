@@ -67,4 +67,18 @@ class Metric(object):
                 raise ValueError("invalid metric dimensions")
 
         else:
+            self.metric_type = 0
             self.params = np.atleast_1d(metric)
+
+    def __repr__(self):
+        if self.metric_type == 0:
+            params = ["{0}".format(float(self.params))]
+        elif self.metric_type == 1:
+            params = ["{0}".format(self.params)]
+        elif self.metric_type == 2:
+            x = np.empty((len(self.axes), len(self.axes)))
+            x[np.tril_indices_from(x)] = self.params
+            x[np.triu_indices_from(x)] = self.params
+            params = ["{0}".format(x)]
+        params += ["ndim={0}".format(self.ndim), "axes={0}".format(self.axes)]
+        return "Metric({0})".format(", ".join(params))

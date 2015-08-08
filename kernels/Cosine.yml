@@ -1,0 +1,14 @@
+name: CosineKernel
+stationary: false
+params: [period]
+
+doc: |
+    DOCS
+
+value: |
+    return cos(2 * M_PI * (x1 - x2) / period);
+
+grad:
+    period: |
+        double r = 2 * M_PI / period * (x1 - x2);
+        return r * sin(r) / period;

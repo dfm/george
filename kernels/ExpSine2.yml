@@ -1,5 +1,5 @@
 name: ExpSine2Kernel
-stationary: true
+stationary: false
 params: [gamma, period]
 
 doc: |
@@ -24,14 +24,14 @@ doc: |
         :math:`\mathbf{x}`).
 
 value: |
-    T s = sin(M_PI * sqrt(r2) / period);
+    double s = sin((x1 - x2) * M_PI / period);
     return exp(-gamma * s * s);
 
 grad:
     gamma: |
-        double s = sin(M_PI * sqrt(r2) / period), s2 = s * s;
+        double s = sin(M_PI * (x1 - x2) / period), s2 = s * s;
         return -s2 * exp(-gamma * s2);
     period: |
-        double arg = M_PI * sqrt(r2) / period, s = sin(arg), c = cos(arg),
+        double arg = M_PI * (x1 - x2) / period, s = sin(arg), c = cos(arg),
                A = exp(-gamma * s * s);
         return 2 * gamma * arg * c * s * A / period;

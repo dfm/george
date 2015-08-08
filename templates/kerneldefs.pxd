@@ -172,7 +172,7 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
             metric.set_parameter(i, p)
 
     else:
-        subspace = new Subspace(kernel_spec.ndim, kernel_spec.naxes)
+        subspace = new Subspace(kernel_spec.ndim, len(kernel_spec.axes))
         for i, a in enumerate(kernel_spec.axes):
             subspace.set_axis(i, a)
 

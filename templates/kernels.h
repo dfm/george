@@ -7,10 +7,8 @@
 
 #include "metrics.h"
 #include "subspace.h"
-#include "autodiff.h"
 
 using std::vector;
-using george::autodiff::Jet;
 using george::metrics::Metric;
 using george::subspace::Subspace;
 
@@ -184,12 +182,11 @@ public:
         this->metric_->set_parameter(i - this->size_, value);
     };
 
-    template <typename T>
-    T get_value (
+    double get_value (
             {% for param in spec.params -%}
             double {{ param }},
             {% endfor -%}
-            T r2) {
+            double r2) {
         {{ spec.value | indent(8) }}
     };
 
@@ -212,14 +209,22 @@ public:
     };
     {% endfor -%}
 
+    double radial_gradient (
+            {% for param in spec.params -%}
+            double {{ param }},
+            {% endfor -%}
+            double r2) {
+        {{ spec.grad["r2"] | indent(8) }}
+    };
+
     void gradient (const double* x1, const double* x2, double* grad) {
         unsigned i, n = this->size();
-        double r2 = this->metric_->value(x1, x2);
-        Jet<double> value = this->get_value(
-                {% for param in spec.params -%}
-                this->param_{{ param }}_,
-                {% endfor %}
-                Jet<double>(r2, 1.0));
+        double r2 = this->metric_->value(x1, x2),
+               r2grad = this->radial_gradient(
+                    {% for param in spec.params -%}
+                    this->param_{{ param }}_,
+                    {% endfor %}
+                    r2);
 
         {% for param in spec.params -%}
         grad[{{ loop.index - 1 }}] = {{ param }}_gradient(
@@ -229,7 +234,7 @@ public:
                 r2);
         {% endfor %}
         this->metric_->gradient(x1, x2, &(grad[this->size_]));
-        for (i = this->size_; i < n; ++i) grad[i] *= value.v;
+        for (i = this->size_; i < n; ++i) grad[i] *= r2grad;
     };
 
     unsigned size () const { return this->metric_->size() + this->size_; };
@@ -278,16 +283,22 @@ public:
             {% for param in spec.params -%}
             double {{ param }},
             {% endfor -%}
-            const double* x1, const double* x2) {
+            const double x1, const double x2) {
         {{ spec.value | indent(8) }}
     };
 
     double value (const double* x1, const double* x2) {
-        return this->get_value(
-            {% for param in spec.params -%}
-            this->param_{{ param }}_,
-            {% endfor -%}
-            x1, x2);
+        unsigned i, j, n = this->subspace_->get_naxes();
+        double value = 0.0;
+        for (i = 0; i < n; ++i) {
+            j = this->subspace_->get_axis(i);
+            value += this->get_value(
+                {% for param in spec.params -%}
+                this->param_{{ param }}_,
+                {% endfor -%}
+                x1[j], x2[j]);
+        }
+        return value;
     };
 
     {% for param in spec.params -%}
@@ -295,19 +306,29 @@ public:
             {% for param in spec.params -%}
             double {{ param }},
             {% endfor -%}
-            const double* x1, const double* x2) {
+            const double x1, const double x2) {
         {{ spec.grad[param] | indent(8) }}
     };
     {% endfor -%}
 
     void gradient (const double* x1, const double* x2, double* grad) {
         {% for param in spec.params -%}
-        grad[{{ loop.index - 1 }}] = {{ param }}_gradient(
+        grad[{{ loop.index - 1 }}] = 0.0;
+        {% endfor %}
+
+        {% if spec.params -%}
+        unsigned i, j, n = this->subspace_->get_naxes();
+        for (i = 0; i < n; ++i) {
+            j = this->subspace_->get_axis(i);
+            {% for param in spec.params -%}
+            grad[{{ loop.index - 1 }}] += {{ param }}_gradient(
                 {% for param in spec.params -%}
                 this->param_{{ param }}_,
                 {% endfor -%}
-                x1, x2);
-        {% endfor %}
+                x1[j], x2[j]);
+            {% endfor %}
+        }
+        {% endif %}
     };
 
     unsigned size () const { return this->size_; };

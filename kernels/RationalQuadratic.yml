@@ -1,0 +1,17 @@
+name: RationalQuadraticKernel
+stationary: true
+params: [alpha]
+
+doc: |
+    DOCUMENT ME!
+
+value: |
+    return pow(1 + 0.5 * r2 / alpha, -alpha);
+
+grad:
+    r2: |
+        return -0.5 * pow(1 + 0.5 * r2 / alpha, -alpha-1);
+    alpha: |
+        double t1 = 1.0 + 0.5 * r2 / alpha,
+               t2 = 2.0 * alpha * t1;
+        return pow(t1, -alpha) * (r2 / t2 - log(t1));
