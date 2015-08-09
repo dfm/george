@@ -15,10 +15,11 @@ from functools import partial
 
 from .utils import numerical_gradient
 from .metrics import Metric, Subspace
+from .parameter import ParameterVector
 from .cython_kernel import CythonKernel
 
 
-class Kernel(object):
+class Kernel(ParameterVector):
     """
     The abstract kernel type. Every kernel implemented in George should be
     a subclass of this object.
