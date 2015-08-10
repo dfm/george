@@ -90,7 +90,7 @@ cdef extern from "kernels.h" namespace "george::kernels":
 cdef inline double eval_python_kernel (const double* pars,
                                        const unsigned int size, void* meta,
                                        const double* x1, const double* x2,
-                                       const unsigned int ndim) except *:
+                                       const unsigned int ndim):
     # Build the arguments for calling the function.
     cdef np.npy_intp shape[1]
     shape[0] = <np.npy_intp>ndim
@@ -109,7 +109,7 @@ cdef inline void eval_python_kernel_grad (const double* pars,
                                           const unsigned int size,
                                           void* meta,
                                           const double* x1, const double* x2,
-                                          const unsigned int ndim, double* grad) except *:
+                                          const unsigned int ndim, double* grad):
     # Build the arguments for calling the function.
     cdef np.npy_intp shape[1]
     shape[0] = <np.npy_intp>ndim
