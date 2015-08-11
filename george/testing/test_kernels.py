@@ -145,9 +145,9 @@ def test_matern52():
 
 
 def test_rational_quadratic():
-    do_stationary_t(kernels.RationalQuadraticKernel, alpha=1.0)
-    do_stationary_t(kernels.RationalQuadraticKernel, alpha=0.1)
-    do_stationary_t(kernels.RationalQuadraticKernel, alpha=10.0)
+    do_stationary_t(kernels.RationalQuadraticKernel, ln_alpha=np.log(1.0))
+    do_stationary_t(kernels.RationalQuadraticKernel, ln_alpha=np.log(0.1))
+    do_stationary_t(kernels.RationalQuadraticKernel, ln_alpha=np.log(10.0))
 
 
 #
@@ -165,7 +165,9 @@ def test_exp_sine2():
     do_kernel_t(kernels.ExpSine2Kernel(0.4, 1.0))
     do_kernel_t(kernels.ExpSine2Kernel(12., 0.5, ndim=2))
     do_kernel_t(kernels.ExpSine2Kernel(17., 0.5, ndim=2, axes=1))
-    do_kernel_t(kernels.ExpSine2Kernel(13.7, 0.75, ndim=5, axes=[2, 3]))
+    do_kernel_t(kernels.ExpSine2Kernel(13.7, -0.75, ndim=5, axes=[2, 3]))
+    do_kernel_t(kernels.ExpSine2Kernel(-0.7, 0.75, ndim=5, axes=[2, 3]))
+    do_kernel_t(kernels.ExpSine2Kernel(-10, 0.75))
 
 
 #

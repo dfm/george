@@ -1,6 +1,6 @@
 name: ExpSine2Kernel
 stationary: false
-params: [gamma, period]
+params: [gamma, ln_period]
 
 doc: |
     The exp-sine-squared kernel is a commonly used periodic kernel. Unlike
@@ -16,19 +16,20 @@ doc: |
     :param gamma:
         The scale :math:`\Gamma` of the correlations.
 
-    :param period:
-        The period :math:`P` of the oscillation (in the same units as
-        :math:`\mathbf{x}`).
+    :param ln_period:
+        The logarithm of the period :math:`P` of the oscillation (in the same
+        units as :math:`\mathbf{x}`).
 
 value: |
-    double s = sin((x1 - x2) * M_PI / period);
+    double s = sin((x1 - x2) * M_PI * exp(-ln_period));
     return exp(-gamma * s * s);
 
 grad:
     gamma: |
-        double s = sin(M_PI * (x1 - x2) / period), s2 = s * s;
+        double s = sin(M_PI * (x1 - x2) * exp(-ln_period)), s2 = s * s;
         return -s2 * exp(-gamma * s2);
-    period: |
-        double arg = M_PI * (x1 - x2) / period, s = sin(arg), c = cos(arg),
+    ln_period: |
+        double arg = M_PI * (x1 - x2) * exp(-ln_period),
+               s = sin(arg), c = cos(arg),
                A = exp(-gamma * s * s);
-        return 2 * gamma * arg * c * s * A / period;
+        return 2 * gamma * arg * c * s * A;

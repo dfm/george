@@ -101,7 +101,7 @@ class Kernel(object):
 
     def __add__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Sum(ConstantKernel(float(b), ndim=self.ndim), self)
+            return Sum(ConstantKernel(np.log(float(b)), ndim=self.ndim), self)
         return Sum(self, b)
 
     def __radd__(self, b):
@@ -109,7 +109,8 @@ class Kernel(object):
 
     def __mul__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Product(ConstantKernel(float(b), ndim=self.ndim), self)
+            return Product(ConstantKernel(np.log(float(b)), ndim=self.ndim),
+                                          self)
         return Product(self, b)
 
     def __rmul__(self, b):
