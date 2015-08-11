@@ -1,6 +1,13 @@
 # Much of this script was adapted from astropy/astropy.
 
+sudo: false
+
 language: python
+
+addons:
+    apt:
+        packages:
+            - libeigen3-dev
 
 env:
     global:
@@ -35,8 +42,6 @@ before_install:
     - conda update --yes conda
 
 install:
-    - sudo apt-get install -qq libeigen3-dev
-
     - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
     - source activate test
 
