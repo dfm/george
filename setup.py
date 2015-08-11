@@ -11,6 +11,43 @@ except ImportError:
     from distutils.command.build_ext import build_ext as _build_ext
 
 
+def compile_kernels(fns):
+    import yaml
+    from jinja2 import Template
+
+    template_dir = "templates"
+    output_dir = "george"
+
+    with open(os.path.join(template_dir, "kerneldefs.pxd")) as f:
+        PXD_TEMPLATE = Template(f.read())
+    with open(os.path.join(template_dir, "kernels.h")) as f:
+        CPP_TEMPLATE = Template(f.read())
+    with open(os.path.join(template_dir, "kernels.py")) as f:
+        PYTHON_TEMPLATE = Template(f.read())
+
+    specs = []
+    for i, fn in enumerate(fns):
+        with open(fn, "r") as f:
+            spec = yaml.load(f.read())
+        print("Found kernel '{0}'".format(spec["name"]))
+        spec["index"] = i
+        specs.append(spec)
+    print("Found {0} kernel specifications".format(len(specs)))
+
+    fn = os.path.join(output_dir, "kerneldefs.pxd")
+    with open(fn, "w") as f:
+        print("Saving Cython kernels to '{0}'".format(fn))
+        f.write(PXD_TEMPLATE.render(specs=specs))
+    fn = os.path.join(output_dir, "include", "kernels.h")
+    with open(fn, "w") as f:
+        print("Saving C++ kernels to '{0}'".format(fn))
+        f.write(CPP_TEMPLATE.render(specs=specs))
+    fn = os.path.join(output_dir, "kernels.py")
+    with open(fn, "w") as f:
+        print("Saving Python kernels to '{0}'".format(fn))
+        f.write(PYTHON_TEMPLATE.render(specs=specs))
+
+
 def find_eigen(hint=None):
     """
     Find the location of the Eigen 3 include directory. This will return
@@ -110,6 +147,7 @@ class build_ext(_build_ext):
 
 if __name__ == "__main__":
     import sys
+    import glob
     import numpy
 
     # Publish the library to PyPI.
@@ -126,6 +164,15 @@ if __name__ == "__main__":
         numpy.get_include(),
     ]
 
+    # If the kernel specifications are included (development mode) re-compile
+    # them first.
+    kernel_specs = glob.glob(os.path.join("kernels", "*.yml"))
+    if len(kernel_specs):
+        print("Compiling kernels")
+        compile_kernels(kernel_specs)
+
+    # Check for the Cython source (development mode) and compile it if it
+    # exists.
     kern_fn = os.path.join("george", "cython_kernel")
     hodlr_fn = os.path.join("george", "hodlr")
     if (os.path.exists(kern_fn + ".pyx") and os.path.exists(hodlr_fn + ".pyx")
