@@ -151,8 +151,19 @@ class GP(object):
             self._alpha = self.solver.apply_inverse(r, in_place=True)
 
     def apply_inverse(self, y):
-        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds],
-                                 dtype=np.float64)
+        """
+        Self-consistently apply the inverse of the computed kernel matrix to
+        some vector or matrix of samples. This method subtracts the mean,
+        sorts the samples, then returns the samples in the correct (unsorted)
+        order.
+
+        :param y: ``(nsamples, )`` or ``(nsamples, K)``
+            The vector (or matrix) of sample values.
+
+        """
+        self.recompute(quiet=False)
+        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
+                                 - self.mean(self._x), dtype=np.float64)
         b = np.empty_like(r)
         b[self.inds] = self.solver.apply_inverse(r, in_place=True)
         return b
