@@ -20,8 +20,9 @@ env:
     - NUMPY_VERSION=1.9
 
 install:
-    - pip install -q numpy==$NUMPY_VERSION
-    - pip install -q scipy nose Cython PyYAML jinja2
+    - pip install --upgrade pip
+    - pip install numpy==$NUMPY_VERSION
+    - pip install scipy nose Cython PyYAML jinja2
     - CXX=g++ python setup.py build_ext --inplace
 
 script:
