@@ -2,60 +2,26 @@
 
 sudo: false
 
-language: python
-
 addons:
     apt:
         packages:
             - libeigen3-dev
 
+language: python
+  - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
+  - "3.4"
+  - "pypy"
+
 env:
-    global:
-        - NUMPY_VERSION=1.9
-
-matrix:
-    include:
-        # All the versions of Python.
-        - python: 2.6
-        - python: 2.7
-        - python: 3.3
-        - python: 3.4
-
-        # Old versions of NumPy.
-        - python: 2.6
-          env: NUMPY_VERSION=1.8
-        - python: 2.7
-          env: NUMPY_VERSION=1.8
-        - python: 3.3
-          env: NUMPY_VERSION=1.8
-        - python: 3.4
-          env: NUMPY_VERSION=1.8
-
-        - python: 2.6
-          env: NUMPY_VERSION=1.7
-        - python: 2.7
-          env: NUMPY_VERSION=1.7
-        - python: 3.3
-          env: NUMPY_VERSION=1.7
-
-        - python: 2.6
-          env: NUMPY_VERSION=1.6
-        - python: 2.7
-          env: NUMPY_VERSION=1.6
-
-before_install:
-    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-    - chmod +x miniconda.sh
-    - ./miniconda.sh -b
-    - export PATH=/home/travis/miniconda/bin:$PATH
-    - conda update --yes conda
+    - NUMPY_VERSION=1.8
+    - NUMPY_VERSION=1.9
 
 install:
-    - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
-    - source activate test
-
-    - conda install --yes numpy=$NUMPY_VERSION scipy nose pip Cython PyYAML jinja2
-
+    - pip install -q numpy==$NUMPY_VERSION
+    - pip install -q scipy nose Cython PyYAML jinja2
     - CXX=g++ python setup.py build_ext --inplace
 
 script:
