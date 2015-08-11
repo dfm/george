@@ -10,8 +10,8 @@ kernels that can be combined to build more complex models.
 The standard kernels fall into the following categories:
 
 1. :ref:`basic-kernels` — trivial (constant or parameterless) functions,
-2. :ref:`radial-kernels` — functions that depend only on the radial distance
-   between points in some user-defined metric, and
+2. :ref:`stationary-kernels` — functions that depend only on the radial
+   distance between points in some user-defined metric, and
 3. :ref:`periodic-kernels` — exactly period functions that, when combined with
    a radial kernel, can model quasi-periodic signals.
 
@@ -92,25 +92,20 @@ It's worth noting that subscripting changes the ``vector`` array (not
 Basic Kernels
 -------------
 
-.. autoclass:: george.kernels.Kernel
-    :special-members: __call__
-    :members:
-
 .. autoclass:: george.kernels.ConstantKernel
-.. autoclass:: george.kernels.WhiteKernel
 .. autoclass:: george.kernels.DotProductKernel
 
 
-.. _radial-kernels:
+.. _stationary-kernels:
 
-Radial Kernels
---------------
+Stationary Kernels
+------------------
 
-.. autoclass:: george.kernels.RadialKernel
 .. autoclass:: george.kernels.ExpKernel
 .. autoclass:: george.kernels.ExpSquaredKernel
 .. autoclass:: george.kernels.Matern32Kernel
 .. autoclass:: george.kernels.Matern52Kernel
+.. autoclass:: george.kernels.RationalQuadraticKernel
 
 
 .. _periodic-kernels:

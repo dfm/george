@@ -3,7 +3,18 @@ stationary: false
 params: [period]
 
 doc: |
-    DOCS
+    The simplest periodic kernel. This
+
+    .. math::
+        k(\mathbf{x}_i,\,\mathbf{x}_j) = \cos\left(
+            \frac{2\,\pi\,|x_i - x_j|}{P} \right)
+
+    where the parameter :math:`P` is the period of the oscillation. This
+    kernel should probably always be multiplied be a stationary kernel
+    (e.g. :class:`ExpSquaredKernel`) to allow quasi-periodic variations.
+
+    :param period:
+        The period of the oscillation.
 
 value: |
     return cos(2 * M_PI * (x1 - x2) / period);

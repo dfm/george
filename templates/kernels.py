@@ -24,12 +24,6 @@ class Kernel(ParameterVector):
     The abstract kernel type. Every kernel implemented in George should be
     a subclass of this object.
 
-    :param pars:
-        The hyper-parameters of the kernel.
-
-    :param ndim: (optional)
-        The number of input dimensions of the kernel. (default: ``1``)
-
     """
 
     is_kernel = True
@@ -227,7 +221,7 @@ class Product(_operator):
 
 {% for spec in specs %}
 class {{ spec.name }} (Kernel):
-    """
+    r"""
     {{ spec.doc | indent(4) }}
 
     """

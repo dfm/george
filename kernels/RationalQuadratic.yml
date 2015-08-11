@@ -3,7 +3,15 @@ stationary: true
 params: [alpha]
 
 doc: |
-    DOCUMENT ME!
+    This is equivalent to a "scale mixture" of :class:`ExpSquaredKernel`
+    kernels with different scale lengths drawn from a gamma distribution.
+    See R&W for more info but here's the equation:
+
+    .. math::
+        k(r^2) = \left[1 - \frac{r^2}{2\,\alpha} \right]^\alpha
+
+    :param alpha:
+        The Gamma distribution parameter.
 
 value: |
     return pow(1 + 0.5 * r2 / alpha, -alpha);

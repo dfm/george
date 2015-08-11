@@ -3,18 +3,15 @@ stationary: false
 params: [gamma, period]
 
 doc: |
-    The exp-sine-squared kernel is used to model stellar rotation and *might*
-    be applicable in some other contexts. It is given by the equation:
+    The exp-sine-squared kernel is a commonly used periodic kernel. Unlike
+    the :class:`CosineKernel`, this kernel never has negative covariance
+    which might be useful for your problem. Here's the equation:
 
     .. math::
         k(\mathbf{x}_i,\,\mathbf{x}_j) =
             \exp \left( -\Gamma\,\sin^2\left[
                 \frac{\pi}{P}\,\left|x_i-x_j\right|
             \right] \right)
-
-    where :math:`\Gamma` is the "scale" of the correlation and :math:`P` is
-    the period of the oscillation measured in the same units as
-    :math:`\mathbf{x}`.
 
     :param gamma:
         The scale :math:`\Gamma` of the correlations.

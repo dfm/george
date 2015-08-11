@@ -4,11 +4,8 @@ from __future__ import division, print_function
 
 __all__ = ["Metric", "Subspace"]
 
-import copy
 import numpy as np
 from scipy.linalg import cho_factor
-
-from .parameter import Parameter, ParameterVector
 
 
 class Subspace(object):
@@ -23,20 +20,15 @@ class Subspace(object):
                              .format(self.ndim))
 
 
-class Metric(ParameterVector):
+class Metric(object):
 
     def __init__(self, metric, ndim=None, axes=None, lower=True):
-        try:
-            self.ndim = metric.ndim
-            self.metric_type = metric.metric_type
-            self.axes = metric.axes
-            self.params = metric.params
-            self.parameter_names = metric.parameter_names
-            return
+        if ndim is None:
+            raise ValueError("missing required parameter 'ndim'")
 
-        except AttributeError:
-            if ndim is None:
-                raise ValueError("missing required parameter 'ndim'")
+        # Conform with the modeling protocol.
+        self.parameter_names = []
+        self.raw_parameters = []
 
         # Save the number of dimensions.
         subspace = Subspace(ndim, axes=axes)
@@ -58,7 +50,8 @@ class Metric(ParameterVector):
                 if np.any(metric <= 0.0):
                     raise ValueError("invalid (negative) metric")
                 for i, v in enumerate(metric):
-                    self["m_{0}_{0}".format(i)] = v
+                    self.parameter_names.append("ln(M_{0}_{0})".format(i))
+                    self.raw_parameters.append(v)
 
             elif len(metric.shape) == 2:
                 self.metric_type = 2
@@ -72,14 +65,70 @@ class Metric(ParameterVector):
                     params = metric[np.triu_indices_from(metric)]
 
                 # Save the parameter vector.
-                self.set_parameter_vector(params, raw=True)
+                k = 0
+                for i in range(len(self.axes)):
+                    self.parameter_names.append("ln(L_{0}_{0})".format(i))
+                    self.raw_parameters.append(params[k])
+                    k += 1
+                    for j in range(i+1, len(self.axes)):
+                        self.parameter_names.append("L_{0}_{1}".format(i, j))
+                        self.raw_parameters.append(params[k])
+                        k += 1
 
             else:
                 raise ValueError("invalid metric dimensions")
 
         else:
             self.metric_type = 0
-            self["m_0_0"] = metric
+            self.parameter_names.append("ln(M_0_0)")
+            self.raw_parameters.append(metric)
+
+        self.raw_parameters = np.array(self.raw_parameters)
+        self.unfrozen = np.ones_like(self.raw_parameters, dtype=bool)
+
+    def __len__(self):
+        return np.sum(self.unfrozen)
+
+    def get_parameter_names(self):
+        return [n for i, n in enumerate(self.parameter_names)
+                if self.unfrozen[i]]
+
+    def get_vector(self):
+        if self.metric_type == 2:
+            pass
+
+        else:
+            return np.log(self.raw_parameters[self.unfrozen])
+
+    def set_vector(self, vector):
+        if self.metric_type == 2:
+            pass
+
+        else:
+            self.raw_parameters[self.unfrozen] = np.exp(vector)
+
+    def get_value(self, x1, x2):
+        a, l = self.parameters
+        r2 = (x1 - x2)**2
+        return a * np.exp(-0.5 * r2 / l)
+
+    def get_gradient(self, x1, x2):
+        a, l = self.parameters
+        value = self.get_value(x1, x2)
+        grad = np.array((
+            value,
+            value * (0.5 * (x1 - x2)**2 / l)
+        ))
+        return grad[self.unfrozen]
+
+    def freeze_parameter(self, parameter_name):
+        names = self.get_parameter_names()
+        self.unfrozen[names.index(parameter_name)] = False
+
+    def thaw_parameter(self, parameter_name):
+        names = self.get_parameter_names()
+        self.unfrozen[names.index(parameter_name)] = True
+
 
     def set_parameter_vector(self, vector, raw=False):
         if self.metric_type == 2:
@@ -101,6 +150,19 @@ class Metric(ParameterVector):
             super(Metric, self).set_parameter_vector(vector, raw=raw)
 
     def get_parameter_vector(self, raw=False):
+        """
+        For the general metric, we'll reparameterize the covariance matrix
+        using a Cholesky decomposition.
+
+        .. math::
+            \Sigma = L \cdot L^\mathrm{T}
+
+        and use the values of L (with logarithms of the diagonal).
+
+        Refs: `farr/plotutils <https://github.com/farr/plotutils/blob/master/
+        plotutils/parameterizations.py>`_ and `Stan <http://mc-stan.org/>`_.
+
+        """
         if raw or self.metric_type != 2:
             return super(Metric, self).get_parameter_vector(raw=raw)
 
@@ -139,9 +201,3 @@ class Metric(ParameterVector):
         di = np.diag_indices_from(y)
         y[di] = np.exp(y[di])
         return y
-
-    def log_jacobian(self, x=None):
-        if x is None:
-            x = self.get_parameter_vector()
-
-        pass

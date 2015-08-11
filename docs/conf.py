@@ -6,6 +6,7 @@ import sys
 d = os.path.dirname
 sys.path.insert(0, d(d(os.path.abspath(__file__))))
 import george
+print(george.__file__)
 
 extensions = [
     "sphinx.ext.autodoc",

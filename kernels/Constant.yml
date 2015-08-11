@@ -11,7 +11,7 @@ doc: |
 
     where :math:`c` is a parameter.
 
-    :param value:
+    :param constant:
         The constant value :math:`c` in the above equation.
 
 value: |

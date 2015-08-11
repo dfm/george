@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <vector>
-#include <Eigen/Dense>
 #include "subspace.h"
 #include "constants.h"
 
@@ -74,15 +73,13 @@ public:
             d = x1[j] - x2[j];
             r2 += d*d;
         }
-        return r2 / this->vector_[0];
+        return r2 * exp(-this->vector_[0]);
     };
 
     double gradient (const double* x1, const double* x2, double* grad) {
         unsigned i;
-        double r2 = value(x1, x2),
-               v = -r2 / this->vector_[0];
-        for (i = 0; i < this->subspace_.get_naxes(); ++i)
-            grad[this->subspace_.get_axis(i)] = v;
+        double r2 = this->value(x1, x2);
+        grad[0] = -r2;
         return r2;
     };
 };
@@ -99,7 +96,7 @@ public:
         for (i = 0; i < this->subspace_.get_naxes(); ++i) {
             j = this->subspace_.get_axis(i);
             d = x1[j] - x2[j];
-            r2 += d * d / this->vector_[i];
+            r2 += d * d * exp(-this->vector_[i]);
         }
         return r2;
     };
@@ -110,70 +107,90 @@ public:
         for (i = 0; i < this->subspace_.get_naxes(); ++i) {
             j = this->subspace_.get_axis(i);
             d = x1[j] - x2[j];
-            d = d * d / this->vector_[i];
+            d = d * d * exp(-this->vector_[i]);
             r2 += d;
-            grad[i] = -d / this->vector_[i];
+            grad[i] = -d;
         }
         return r2;
     };
 };
+
+//
+// Warning: Herein lie custom Cholesky functions. Use at your own risk!
+//
+inline void _custom_forward_sub (int n, double* L, double* b) {
+    int i, j, k;
+    for (i = 0, k = 0; i < n; ++i) {
+        for (j = 0; j < i; ++j, ++k)
+            b[i] -= L[k] * b[j];
+        b[i] *= exp(-L[k++]);
+    }
+}
+
+inline void _custom_backward_sub (int n, double* L, double* b) {
+    int i, j, k, k0 = (n + 1) * n / 2;
+    for (i = n - 1; i >= 0; --i) {
+        k = k0 - n + i;
+        for (j = n-1; j > i; --j) {
+            b[i] -= L[k] * b[j];
+            k -= j;
+        }
+        b[i] *= exp(-L[k]);
+    }
+}
 
 class GeneralMetric : public Metric {
 public:
     GeneralMetric (const unsigned ndim, const unsigned naxes)
         : Metric(ndim, naxes, naxes*(naxes+1)/2) {};
 
-    // After the parameters have been changed, the metric matrix needs to be
-    // re-factorized.
-    bool update () {
-        unsigned i, j, k, n = this->subspace_.get_naxes();
-        if (!(this->updated_)) return true;
-        Eigen::MatrixXd A(n, n);
-        for (i = 0, k = 0; i < n; ++i)
-            for (j = i; j < n; ++j, ++k)
-                A(j, i) = this->vector_[k];
-        this->factor_ = A.ldlt();
-        this->updated_ = false;
-        if (this->factor_.info() != Eigen::Success) return false;
-        return true;
-    };
-
     double value (const double* x1, const double* x2) {
         unsigned i, j, n = this->subspace_.get_naxes();
-        update();
-        Eigen::VectorXd r(n);
+        double r2;
+        vector<double> r(n);
         for (i = 0; i < n; ++i) {
             j = this->subspace_.get_axis(i);
-            r(i) = x1[j] - x2[j];
+            r[i] = x1[j] - x2[j];
         }
-        return r.transpose() * this->factor_.solve(r);
+        _custom_forward_sub(n, &(this->vector_[0]), &(r[0]));
+        r2 = 0.0;
+        for (i = 0; i < n; ++i) r2 += r[i] * r[i];
+        return r2;
     };
 
-    // For a matrix A, dA^-1/dt = A^-1 dA/dt A^-1. In this case, we want
-    // d(r A^-1 r)/dA = (A^-1 r)^T (A^-1 r). The off diagonal elements get
+    // For a matrix A, dA^-1/dt = -A^-1 dA/dt A^-1. In this case, we want
+    // d(r A^-1 r)/dA = -(A^-1 r)^T (A^-1 r). The off diagonal elements get
     // multiplied by 2 because a single parameter changes both off diagonal
     // elements.
     double gradient (const double* x1, const double* x2, double* grad) {
         unsigned i, j, k, n = this->subspace_.get_naxes();
-        Eigen::MatrixXd g(n, n);
-        Eigen::VectorXd r(n), Ar(n);
-        update();
+        double r2;
+        vector<double> r(n), Lir(n);
         for (i = 0; i < n; ++i) {
             j = this->subspace_.get_axis(i);
-            r(i) = x1[j] - x2[j];
+            r[i] = x1[j] - x2[j];
         }
-        Ar = this->factor_.solve(r);
-        g = Ar * Ar.transpose();
-        for (i = 0, k = 0; i < n; ++i) {
-            grad[k++] = -g(i, i);
-            for (j = i+1; j < n; ++j)
-                grad[k++] = -2*g(j, i);
-        }
-        return r.transpose() * Ar;
-    };
 
-private:
-    Eigen::LDLT<Eigen::MatrixXd> factor_;
+        // Compute L^{-1} r and save it.
+        _custom_forward_sub(n, &(this->vector_[0]), &(r[0]));
+        for (i = 0; i < n; ++i) Lir[i] = r[i];
+
+        // Compute K^{-1} r.
+        _custom_backward_sub(n, &(this->vector_[0]), &(r[0]));
+
+        // Compute the gradient.
+        for (i = 0, k = 0; i < n; ++i) {
+            grad[k] = -2 * r[i] * Lir[i] * exp(this->vector_[k]);
+            k++;
+            for (j = i+1; j < n; ++j)
+                grad[k++] = -2 * r[j] * Lir[i];
+        }
+
+        // Compute the distance.
+        r2 = 0.0;
+        for (i = 0; i < n; ++i) r2 += Lir[i] * Lir[i];
+        return r2;
+    };
 };
 
 }; // namespace metrics

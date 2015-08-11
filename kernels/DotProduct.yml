@@ -2,9 +2,14 @@ name: DotProductKernel
 stationary: false
 
 doc: |
-    ummm.
+    The linear regression kernel
 
-value: |
-    return x1 * x2;
+    .. math::
+
+        k(\mathbf{x}_i,\,\mathbf{x}_j) = \mathbf{x}_i \cdot \mathbf{x}_j
+
+    with no parameters.
+
+value: return x1 * x2;
 
 grad: return 0.0;
