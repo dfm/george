@@ -54,8 +54,7 @@ install:
     - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
     - source activate test
 
-    - conda install --yes numpy=$NUMPY_VERSION scipy nose pip Cython yaml jinja2
-    - echo `which python`
+    - conda install --yes numpy=$NUMPY_VERSION scipy nose pip Cython PyYAML
 
     - CXX=g++ python setup.py build_ext --inplace
 
