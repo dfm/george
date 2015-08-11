@@ -3,18 +3,6 @@
 from __future__ import division, print_function, absolute_import
 
 __all__ = [
-    "test_dtype",
-
-    "test_constant", "test_white", "test_dot_prod",
-
-    "test_exp", "test_exp_squared", "test_matern32",
-    "test_matern52", "test_rational_quadratic",
-
-    "test_cosine", "test_exp_sine2",
-
-    "test_combine",
-
-    "test_custom", "test_custom_numerical",
 ]
 
 import numpy as np
@@ -32,7 +20,7 @@ def test_dtype(seed=123):
     gp.compute(x, 1e-2)
 
 
-def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-5):
+def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-6):
     """
     Test that both the Python and C++ kernels return the same matrices.
 
@@ -40,15 +28,20 @@ def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-5):
     np.random.seed(seed)
     t1 = np.random.randn(N, kernel.ndim)
 
+    v = kernel.get_vector()
+
     # Check the symmetric gradients.
-    g1 = kernel.gradient(t1)
+    g1 = kernel.get_gradient(t1)
     for i in range(len(kernel)):
         # Compute the centered finite difference approximation to the gradient.
-        kernel[i] += eps
-        kp = kernel.value(t1)
-        kernel[i] -= 2*eps
-        km = kernel.value(t1)
-        kernel[i] += eps
+        v[i] += eps
+        kernel.set_vector(v)
+        kp = kernel.get_value(t1)
+        v[i] -= 2*eps
+        kernel.set_vector(v)
+        km = kernel.get_value(t1)
+        v[i] += eps
+        kernel.set_vector(v)
         g0 = 0.5 * (kp - km) / eps
         assert np.allclose(g1[:, :, i], g0), \
             "Gradient computation failed in dimension {0}".format(i)
@@ -94,12 +87,6 @@ def test_constant():
     do_kernel_t(kernels.ConstantKernel(5.0, 5))
 
 
-# def test_white():
-#     do_kernel_t(kernels.WhiteKernel(0.1))
-#     do_kernel_t(kernels.WhiteKernel(10.0, 2))
-#     do_kernel_t(kernels.WhiteKernel(5.0, 5))
-
-
 def test_dot_prod():
     do_kernel_t(kernels.DotProductKernel())
     do_kernel_t(kernels.DotProductKernel(2))
@@ -107,12 +94,13 @@ def test_dot_prod():
 
 
 #
-# COVARIANCE KERNELS
+# STATIONARY KERNELS
 #
 
-def do_cov_t(kernel_type, **kwargs):
-    def build_kernel(metric, **kwargs):
-        return kernel_type(metric, **kwargs)
+def do_stationary_t(kernel_type, **kwargs):
+    def build_kernel(metric, **more):
+        kws = dict(kwargs, **more)
+        return kernel_type(metric=metric, **kws)
 
     kernel = build_kernel(0.1)
     do_kernel_t(kernel)
@@ -140,50 +128,50 @@ def do_cov_t(kernel_type, **kwargs):
     do_kernel_t(kernel)
 
 
-# def test_exp():
-#     do_cov_t(kernels.ExpKernel)
+def test_exp():
+    do_stationary_t(kernels.ExpKernel)
 
 
 def test_exp_squared():
-    do_cov_t(kernels.ExpSquaredKernel)
+    do_stationary_t(kernels.ExpSquaredKernel)
 
 
-# def test_matern32():
-#     do_cov_t(kernels.Matern32Kernel)
+def test_matern32():
+    do_stationary_t(kernels.Matern32Kernel)
 
 
-# def test_matern52():
-#     do_cov_t(kernels.Matern52Kernel)
+def test_matern52():
+    do_stationary_t(kernels.Matern52Kernel)
 
 
-# def test_rational_quadratic():
-#     do_cov_t(kernels.RationalQuadraticKernel, [1.0])
-#     do_cov_t(kernels.RationalQuadraticKernel, [0.1])
-#     do_cov_t(kernels.RationalQuadraticKernel, [10.0])
+def test_rational_quadratic():
+    do_stationary_t(kernels.RationalQuadraticKernel, alpha=1.0)
+    do_stationary_t(kernels.RationalQuadraticKernel, alpha=0.1)
+    do_stationary_t(kernels.RationalQuadraticKernel, alpha=10.0)
 
 
-# #
-# # PERIODIC KERNELS
-# #
+#
+# PERIODIC KERNELS
+#
 
-# def test_cosine():
-#     do_kernel_t(kernels.CosineKernel(1.0))
-#     do_kernel_t(kernels.CosineKernel(0.5, ndim=2))
-#     do_kernel_t(kernels.CosineKernel(0.5, ndim=2, axes=1))
-#     do_kernel_t(kernels.CosineKernel(0.75, ndim=5, axes=3))
-
-
-# def test_exp_sine2():
-#     do_kernel_t(kernels.ExpSine2Kernel(0.4, 1.0))
-#     do_kernel_t(kernels.ExpSine2Kernel(12., 0.5, ndim=2))
-#     do_kernel_t(kernels.ExpSine2Kernel(17., 0.5, ndim=2, axes=1))
-#     do_kernel_t(kernels.ExpSine2Kernel(13.7, 0.75, ndim=5, axes=3))
+def test_cosine():
+    do_kernel_t(kernels.CosineKernel(1.0))
+    do_kernel_t(kernels.CosineKernel(0.5, ndim=2))
+    do_kernel_t(kernels.CosineKernel(0.5, ndim=2, axes=1))
+    do_kernel_t(kernels.CosineKernel(0.75, ndim=5, axes=[2, 3]))
 
 
-# #
-# # COMBINING KERNELS
-# #
+def test_exp_sine2():
+    do_kernel_t(kernels.ExpSine2Kernel(0.4, 1.0))
+    do_kernel_t(kernels.ExpSine2Kernel(12., 0.5, ndim=2))
+    do_kernel_t(kernels.ExpSine2Kernel(17., 0.5, ndim=2, axes=1))
+    do_kernel_t(kernels.ExpSine2Kernel(13.7, 0.75, ndim=5, axes=[2, 3]))
 
-# def test_combine():
-#     do_kernel_t(12 * kernels.ExpSine2Kernel(0.4, 1.0, ndim=5) + 0.1)
-#     do_kernel_t(12 * kernels.ExpSquaredKernel(0.4, ndim=3) + 0.1)
+
+#
+# COMBINING KERNELS
+#
+
+def test_combine():
+    do_kernel_t(12 * kernels.ExpSine2Kernel(0.4, 1.0, ndim=5) + 0.1)
+    do_kernel_t(12 * kernels.ExpSquaredKernel(0.4, ndim=3) + 0.1)

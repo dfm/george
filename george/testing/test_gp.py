@@ -15,8 +15,7 @@ def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-4, solver=BasicSolver):
     np.random.seed(seed)
 
     # Set up the solver.
-    kernel = (0.1 * kernels.ExpSquaredKernel(0.5, ndim)
-              + kernels.WhiteKernel(1e-8, ndim))
+    kernel = 0.1 * kernels.ExpSquaredKernel(0.5, ndim)
     gp = GP(kernel, solver=solver)
 
     # Sample some data.

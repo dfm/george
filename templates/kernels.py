@@ -56,7 +56,7 @@ class Kernel(object):
 
     def __repr__(self):
         params = ["{0}={1}".format(k, getattr(self, k))
-                  for k in self.parameter_names]
+                  for k in self._parameter_names]
         if self.stationary:
             params += ["metric={0}".format(self.metric)]
         else:
@@ -64,13 +64,21 @@ class Kernel(object):
                        "axes={0}".format(self.axes)]
         return "{0}({1})".format(self.__class__.__name__, ", ".join(params))
 
-    def __getitem__(self, i):
-        return self.vector[i]
+    def __getattr__(self, k):
+        try:
+            i = self._parameter_names.index(k)
+        except ValueError:
+            raise AttributeError("no attribute '{0}'".format(k))
+        return self._parameter_vector[i]
 
-    def __setitem__(self, i, v):
-        vec = self.vector
-        vec[i] = v
-        self.vector = vec
+    def __setattr__(self, k, v):
+        try:
+            i = self._parameter_names.index(k)
+        except ValueError:
+            super(Kernel, self).__setattr__(k, v)
+        else:
+            self._parameter_vector[i] = v
+            self.dirty = True
 
     def __len__(self):
         return len(self.params)
@@ -97,6 +105,13 @@ class Kernel(object):
     _parameter_vector = np.array([])
     _unfrozen = np.array([], dtype=bool)
 
+    @property
+    def unfrozen(self):
+        uf = self._unfrozen
+        if self.stationary:
+            uf = np.append(uf, self.metric.unfrozen)
+        return uf
+
     def __len__(self):
         if self.stationary:
             return np.sum(self._unfrozen) + len(self.metric)
@@ -104,7 +119,7 @@ class Kernel(object):
 
     def get_parameter_names(self):
         n = [n for i, n in enumerate(self._parameter_names)
-             if self._unfrozen[n]]
+             if self._unfrozen[i]]
         if self.stationary:
             n += self.metric.get_parameter_names()
         return n
@@ -122,6 +137,7 @@ class Kernel(object):
         self._parameter_vector[self._unfrozen] = vector[:n]
         if self.stationary:
             self.metric.set_vector(vector[n:])
+        self.dirty = True
 
     def get_value(self, x1, x2=None):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
@@ -143,7 +159,7 @@ class Kernel(object):
         except ValueError:
             self.metric.freeze_parameter(parameter_name)
         else:
-            self.unfrozen[i] = False
+            self._unfrozen[i] = False
 
     def thaw_parameter(self, parameter_name):
         try:
@@ -151,7 +167,7 @@ class Kernel(object):
         except ValueError:
             self.metric.thaw_parameter(parameter_name)
         else:
-            self.unfrozen[i] = True
+            self._unfrozen[i] = True
 
 
 class _operator(Kernel):
@@ -167,9 +183,6 @@ class _operator(Kernel):
         self._dirty = True
         self._kernel = None
 
-    def lnprior(self):
-        return self.k1.lnprior() + self.k2.lnprior()
-
     @property
     def dirty(self):
         return self._dirty or self.k1.dirty or self.k2.dirty
@@ -180,27 +193,47 @@ class _operator(Kernel):
         self.k1.dirty = False
         self.k2.dirty = False
 
+    # Modeling protocol:
     @property
-    def pars(self):
-        return np.append(self.k1.pars, self.k2.pars)
+    def unfrozen(self):
+        return np.append(self.k1.unfrozen, self.k2.unfrozen)
 
-    @pars.setter
-    def pars(self, v):
-        self._dirty = True
-        i = len(self.k1)
-        self.k1.pars = v[:i]
-        self.k2.pars = v[i:]
+    def __len__(self):
+        return len(self.k1) + len(self.k2)
 
-    @property
-    def vector(self):
-        return np.append(self.k1.vector, self.k2.vector)
+    def get_parameter_names(self):
+        return (map("k1:{0}".format, self.k1.get_parameter_names()) +
+                map("k2:{0}".format, self.k2.get_parameter_names()))
 
-    @vector.setter
-    def vector(self, v):
-        self._dirty = True
-        i = len(self.k1)
-        self.k1.vector = v[:i]
-        self.k2.vector = v[i:]
+    def get_vector(self):
+        return np.append(self.k1.get_vector(), self.k2.get_vector())
+
+    def set_vector(self, vector):
+        n = len(self.k1)
+        self.k1.set_vector(vector[:n])
+        self.k2.set_vector(vector[n:])
+
+    def freeze_parameter(self, parameter_name):
+        n = parameter_name.split(":")
+        if len(n) <= 2:
+            raise ValueError("invalid parameter '{0}'".format(parameter_name))
+        if n[0] == "k1":
+            self.k1.freeze_parameter(":".join(n[1:]))
+        elif n[0] == "k2":
+            self.k2.freeze_parameter(":".join(n[1:]))
+        else:
+            raise ValueError("invalid parameter '{0}'".format(parameter_name))
+
+    def thaw_parameter(self, parameter_name):
+        n = parameter_name.split(":")
+        if len(n) <= 2:
+            raise ValueError("invalid parameter '{0}'".format(parameter_name))
+        if n[0] == "k1":
+            self.k1.thaw_parameter(":".join(n[1:]))
+        elif n[0] == "k2":
+            self.k2.thaw_parameter(":".join(n[1:]))
+        else:
+            raise ValueError("invalid parameter '{0}'".format(parameter_name))
 
 
 class Sum(_operator):
@@ -227,17 +260,20 @@ class {{ spec.name }} (Kernel):
 
     kernel_type = {{ spec.index }}
     stationary = {{ spec.stationary }}
-    parameter_names = [{% for p in spec.params -%}"{{ p }}", {% endfor %}]
+    _parameter_names = [{% for p in spec.params -%}"{{ p }}", {% endfor %}]
 
     def __init__(self,
                  {% for p in spec.params %}{{ p }}=None,
                  {% endfor -%}
                  {% if spec.stationary -%}
-                 metric=1.0,
+                 metric=None,
                  lower=True,
                  {% endif -%}
                  ndim=1,
                  axes=None):
+        self._parameter_vector = np.empty({{ spec.params|length }})
+        self._unfrozen = np.ones({{ spec.params|length }}, dtype=bool)
+
         {% for p in spec.params -%}
         if {{ p }} is None:
             raise ValueError("missing required parameter '{{ p }}'")
@@ -245,10 +281,11 @@ class {{ spec.name }} (Kernel):
         {% endfor -%}
 
         {% if spec.stationary -%}
+        if metric is None:
+            raise ValueError("missing required parameter 'metric'")
         self.metric = Metric(metric, ndim=ndim, axes=axes, lower=lower)
         self.ndim = self.metric.ndim
         self.axes = self.metric.axes
-        self.parameter_names += self.metric.get_parameter_names()
         {%- else -%}
         self.subspace = Subspace(ndim, axes=axes)
         self.ndim = self.subspace.ndim
@@ -256,19 +293,8 @@ class {{ spec.name }} (Kernel):
         {%- endif %}
 
         # Common setup.
-        self.unfrozen = np.ones(len(self.parameter_names), dtype=bool)
         self.dirty = True
         self._kernel = None
-    {% for param in spec.params %}
-    @property
-    def {{ param }}(self):
-        return self._{{ param }}
-
-    @{{ param }}.setter
-    def {{ param }}(self, value):
-        self._{{ param }} = value
-        self.dirty = True
-    {% endfor %}
 
 {% endfor %}
 

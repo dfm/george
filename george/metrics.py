@@ -122,9 +122,9 @@ class Metric(object):
 
     def __repr__(self):
         if self.metric_type == 0:
-            params = ["{0}".format(float(self.params))]
+            params = ["{0}".format(float(self.parameters))]
         elif self.metric_type == 1:
-            params = ["{0}".format(self.params)]
+            params = ["{0}".format(self.parameters)]
         elif self.metric_type == 2:
             params = ["{0}".format(self.to_matrix().tolist())]
         params += ["ndim={0}".format(self.ndim), "axes={0}".format(self.axes)]

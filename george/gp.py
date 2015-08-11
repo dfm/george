@@ -257,7 +257,7 @@ class GP(object):
         self._compute_alpha(y)
         K_inv = self.solver.apply_inverse(np.eye(self._alpha.size),
                                           in_place=True)
-        Kg = self.kernel.gradient(self._x)
+        Kg = self.kernel.get_gradient(self._x)
 
         # Calculate the gradient.
         A = np.outer(self._alpha, self._alpha) - K_inv
@@ -287,14 +287,14 @@ class GP(object):
         xs, i = self.parse_samples(t, False)
 
         # Compute the predictive mean.
-        Kxs = self.kernel.value(xs, self._x)
+        Kxs = self.kernel.get_value(xs, self._x)
         mu = np.dot(Kxs, self._alpha) + self.mean(xs)
         if mean_only:
             return mu
 
         # Compute the predictive covariance.
         KxsT = np.ascontiguousarray(Kxs.T, dtype=np.float64)
-        cov = self.kernel.value(xs)
+        cov = self.kernel.get_value(xs)
         cov -= np.dot(Kxs, self.solver.apply_inverse(KxsT, in_place=True))
 
         return mu, cov
@@ -354,7 +354,7 @@ class GP(object):
         cov = self.get_matrix(x)
         return multivariate_gaussian_samples(cov, size, mean=self.mean(x))
 
-    def get_matrix(self, t):
+    def get_matrix(self, x1, x2=None):
         """
         Get the covariance matrix at a given set of independent coordinates.
 
@@ -362,8 +362,11 @@ class GP(object):
             The list of samples.
 
         """
-        r, _ = self.parse_samples(t, False)
-        return self.kernel.value(r)
+        x1, _ = self.parse_samples(x1, False)
+        if x2 is None:
+            return self.kernel.get_value(x1)
+        x2, _ = self.parse_samples(x2, False)
+        return self.kernel.get_value(x1, x2)
 
     def optimize(self, x, y, yerr=TINY, sort=True, dims=None, verbose=True,
                  **kwargs):

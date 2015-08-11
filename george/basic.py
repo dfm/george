@@ -62,7 +62,7 @@ class BasicSolver(object):
 
         """
         # Compute the kernel matrix.
-        K = self.kernel.value(x)
+        K = self.kernel.get_value(x)
         K[np.diag_indices_from(K)] += yerr ** 2
 
         # Factor the matrix and compute the log-determinant.
