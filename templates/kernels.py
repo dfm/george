@@ -15,11 +15,10 @@ from functools import partial
 
 from .utils import numerical_gradient
 from .metrics import Metric, Subspace
-from .parameter import ParameterVector
 from .cython_kernel import CythonKernel
 
 
-class Kernel(ParameterVector):
+class Kernel(object):
     """
     The abstract kernel type. Every kernel implemented in George should be
     a subclass of this object.
@@ -43,10 +42,6 @@ class Kernel(ParameterVector):
         raise TypeError("Invalid operation")
     __array_priority__ = np.inf
 
-    def __init__(self):
-        self.dirty = True
-        self._kernel = None
-
     def __getstate__(self):
         odict = self.__dict__.copy()
         odict["_kernel"] = None
@@ -68,44 +63,6 @@ class Kernel(ParameterVector):
             params += ["ndim={0}".format(self.ndim),
                        "axes={0}".format(self.axes)]
         return "{0}({1})".format(self.__class__.__name__, ", ".join(params))
-
-    def lnprior(self):
-        return 0.0
-
-    @property
-    def vector(self):
-        return np.log(self.pars)
-
-    @vector.setter
-    def vector(self, v):
-        self.pars = np.exp(v)
-
-    @property
-    def pars(self):
-        return self.params
-
-    @pars.setter
-    def pars(self, value):
-        self.params = value
-
-    @property
-    def params(self):
-        x = [getattr(self, k) for k in self.parameter_names]
-        try:
-            x += list(self.metric.params)
-        except AttributeError:
-            pass
-        return np.array(x, dtype=np.float64, order="C")
-
-    @params.setter
-    def params(self, values):
-        for k, v in zip(self.parameter_names, values):
-            setattr(self, k, v)
-        try:
-            self.metric.params[:] = values[len(self.parameter_names):]
-        except AttributeError:
-            pass
-        self.dirty = True
 
     def __getitem__(self, i):
         return self.vector[i]
@@ -134,25 +91,67 @@ class Kernel(ParameterVector):
     def __rmul__(self, b):
         return self.__mul__(b)
 
-    def value(self, x1, x2=None):
+    # Kernels must implement these methods to conform with the modeling
+    # protocol.
+    _parameter_names = []
+    _parameter_vector = np.array([])
+    _unfrozen = np.array([], dtype=bool)
+
+    def __len__(self):
+        if self.stationary:
+            return np.sum(self._unfrozen) + len(self.metric)
+        return np.sum(self._unfrozen)
+
+    def get_parameter_names(self):
+        n = [n for i, n in enumerate(self._parameter_names)
+             if self._unfrozen[n]]
+        if self.stationary:
+            n += self.metric.get_parameter_names()
+        return n
+
+    def get_vector(self):
+        v = self._parameter_vector[self._unfrozen]
+        if self.stationary:
+            v = np.append(v, self.metric.get_vector())
+        return v
+
+    def set_vector(self, vector):
+        if len(self) != len(vector):
+            raise ValueError("dimension mismatch")
+        n = np.sum(self._unfrozen)
+        self._parameter_vector[self._unfrozen] = vector[:n]
+        if self.stationary:
+            self.metric.set_vector(vector[n:])
+
+    def get_value(self, x1, x2=None):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
             return self.kernel.value_symmetric(x1)
         x2 = np.ascontiguousarray(x2, dtype=np.float64)
         return self.kernel.value_general(x1, x2)
 
-    def gradient(self, x1, x2=None):
+    def get_gradient(self, x1, x2=None):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
-            g = self.kernel.gradient_symmetric(x1)
-        else:
-            x2 = np.ascontiguousarray(x2, dtype=np.float64)
-            g = self.kernel.gradient_general(x1, x2)
-        return g * self.vector_gradient[None, None, :]
+            return self.kernel.gradient_symmetric(x1)[:, :, self.unfrozen]
+        x2 = np.ascontiguousarray(x2, dtype=np.float64)
+        return self.kernel.gradient_general(x1, x2)[:, :, self.unfrozen]
 
-    @property
-    def vector_gradient(self):
-        return self.pars
+    def freeze_parameter(self, parameter_name):
+        try:
+            i = self._parameter_names.index(parameter_name)
+        except ValueError:
+            self.metric.freeze_parameter(parameter_name)
+        else:
+            self.unfrozen[i] = False
+
+    def thaw_parameter(self, parameter_name):
+        try:
+            i = self._parameter_names.index(parameter_name)
+        except ValueError:
+            self.metric.thaw_parameter(parameter_name)
+        else:
+            self.unfrozen[i] = True
 
 
 class _operator(Kernel):
@@ -249,14 +248,17 @@ class {{ spec.name }} (Kernel):
         self.metric = Metric(metric, ndim=ndim, axes=axes, lower=lower)
         self.ndim = self.metric.ndim
         self.axes = self.metric.axes
+        self.parameter_names += self.metric.get_parameter_names()
         {%- else -%}
         self.subspace = Subspace(ndim, axes=axes)
         self.ndim = self.subspace.ndim
         self.axes = self.subspace.axes
         {%- endif %}
 
-        super({{ spec.name }}, self).__init__()
-
+        # Common setup.
+        self.unfrozen = np.ones(len(self.parameter_names), dtype=bool)
+        self.dirty = True
+        self._kernel = None
     {% for param in spec.params %}
     @property
     def {{ param }}(self):

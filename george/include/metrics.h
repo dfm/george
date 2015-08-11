@@ -77,7 +77,6 @@ public:
     };
 
     double gradient (const double* x1, const double* x2, double* grad) {
-        unsigned i;
         double r2 = this->value(x1, x2);
         grad[0] = -r2;
         return r2;
@@ -159,9 +158,7 @@ public:
     };
 
     // For a matrix A, dA^-1/dt = -A^-1 dA/dt A^-1. In this case, we want
-    // d(r A^-1 r)/dA = -(A^-1 r)^T (A^-1 r). The off diagonal elements get
-    // multiplied by 2 because a single parameter changes both off diagonal
-    // elements.
+    // d(r A^-1 r)/dA = -(A^-1 r)^T (A^-1 r).
     double gradient (const double* x1, const double* x2, double* grad) {
         unsigned i, j, k, n = this->subspace_.get_naxes();
         double r2;

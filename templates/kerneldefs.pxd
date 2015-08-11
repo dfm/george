@@ -147,7 +147,7 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
                 kernel_spec.__class__.__name__))
 
     cdef unsigned i
-    cdef np.ndarray[DTYPE_t, ndim=1] pars = kernel_spec.pars
+    cdef np.ndarray[DTYPE_t, ndim=1] pars = kernel_spec._parameter_vector
     cdef Kernel* kernel
     cdef Metric* metric
     cdef Subspace* subspace
@@ -167,7 +167,8 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
             raise TypeError("Unknown metric type: {0}".format(
                 kernel_spec.__class__.__name__))
 
-        for i, (a, p) in enumerate(zip(metric_spec.axes, metric_spec.params)):
+        for i, (a, p) in enumerate(zip(metric_spec.axes,
+                                       metric_spec.parameters)):
             metric.set_axis(i, a)
             metric.set_parameter(i, p)
 
