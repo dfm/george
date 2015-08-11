@@ -80,6 +80,22 @@ class Kernel(object):
             self._parameter_vector[i] = v
             self.dirty = True
 
+    def __getitem__(self, k):
+        try:
+            i = int(k)
+        except ValueError:
+            i = self.get_parameter_names().index(k)
+        return self.get_vector()[i]
+
+    def __setitem__(self, k, value):
+        try:
+            i = int(k)
+        except ValueError:
+            i = self.get_parameter_names().index(k)
+        v = self.get_vector()
+        v[i] = value
+        self.set_vector(v)
+
     def __len__(self):
         return len(self.params)
 

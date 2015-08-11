@@ -3,7 +3,8 @@
 from __future__ import division, print_function
 
 __all__ = [
-    "test_gradient", "test_prediction", "test_repeated_prediction_cache"
+    "test_gradient", "test_prediction", "test_repeated_prediction_cache",
+    "test_apply_inverse",
 ]
 
 import numpy as np
@@ -11,17 +12,17 @@ import numpy as np
 from .. import kernels, GP, BasicSolver, HODLRSolver
 
 
-def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-4, solver=BasicSolver):
+def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-3, solver=BasicSolver):
     np.random.seed(seed)
 
     # Set up the solver.
-    kernel = 0.1 * kernels.ExpSquaredKernel(0.5, ndim)
+    kernel = 1.0 * kernels.ExpSquaredKernel(0.5, ndim=ndim)
     gp = GP(kernel, solver=solver)
 
     # Sample some data.
     x = np.random.rand(N, ndim)
     y = gp.sample(x)
-    gp.compute(x)
+    gp.compute(x, yerr=0.1)
 
     # Compute the initial gradient.
     grad0 = gp.grad_lnlikelihood(y)
@@ -110,3 +111,29 @@ def test_repeated_prediction_cache():
     assert not np.allclose(a0, a1), \
         "Different kernel parameters must give different alphas " \
         "(problem with GP cache)."
+
+
+def _test_apply_inverse(seed=1234, N=100, ndim=3, solver=BasicSolver,
+                        yerr=0.1):
+    np.random.seed(seed)
+
+    # Set up the solver.
+    kernel = 1.0 * kernels.ExpSquaredKernel(0.5, ndim=ndim)
+    gp = GP(kernel, solver=solver)
+
+    # Sample some data.
+    x = np.random.rand(N, ndim)
+    y = gp.sample(x)
+    gp.compute(x, yerr=yerr, sort=True)
+
+    K = gp.get_matrix(x)
+    K[np.diag_indices_from(K)] += yerr**2
+    b1 = np.linalg.solve(K, y)
+    b2 = gp.apply_inverse(y)
+    assert np.allclose(b1, b2), \
+        "Apply inverse with a sort isn't working"
+
+
+def test_apply_inverse(**kwargs):
+    _test_apply_inverse(solver=BasicSolver, **kwargs)
+    _test_apply_inverse(solver=HODLRSolver, **kwargs)

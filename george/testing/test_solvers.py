@@ -23,7 +23,7 @@ def _test_solver(Solver, N=100, seed=1234):
     solver.compute(x, yerr)
 
     # Build the matrix.
-    K = kernel.value(x)
+    K = kernel.get_value(x)
     K[np.diag_indices_from(K)] += yerr ** 2
 
     # Check the determinant.

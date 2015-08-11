@@ -150,6 +150,13 @@ class GP(object):
                                      - self.mean(self._x), dtype=np.float64)
             self._alpha = self.solver.apply_inverse(r, in_place=True)
 
+    def apply_inverse(self, y):
+        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds],
+                                 dtype=np.float64)
+        b = np.empty_like(r)
+        b[self.inds] = self.solver.apply_inverse(r, in_place=True)
+        return b
+
     def compute(self, x, yerr=TINY, sort=True, **kwargs):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
@@ -429,6 +436,25 @@ class GP(object):
             print(results.message)
 
         return self.kernel.vector[dims], results
+
+    # Modeling protocol.
+    def __len__(self):
+        return len(self.kernel)
+
+    def get_parameter_names(self):
+        return self.kernel.get_parameter_names()
+
+    def get_vector(self):
+        return self.kernel.get_vector()
+
+    def set_vector(self, vector):
+        self.kernel.set_vector(vector)
+
+    def freeze_parameter(self, parameter_name):
+        self.kernel.freeze_parameter(parameter_name)
+
+    def thaw_parameter(self, parameter_name):
+        self.kernel.thaw_parameter(parameter_name)
 
 
 class _default_mean(object):

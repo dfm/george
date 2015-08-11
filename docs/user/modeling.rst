@@ -110,6 +110,7 @@ implementation would be something like the following:
     class MyNewExpSquared(object):
 
         def __init__(self, a, l):
+            self.parameter_names = ["lna", "lnl"]
             self.parameters = np.array([a, l])
             self.unfrozen = np.ones_like(self.parameters, dtype=bool)
 
@@ -117,7 +118,8 @@ implementation would be something like the following:
             return np.sum(self.unfrozen)
 
         def get_parameter_names(self):
-            return np.array(["lna", "lnl"])[self.unfrozen]
+            return [n for i, n in enumerate(self.parameter_names)
+                    if self.unfrozen[i]]
 
         def get_vector(self):
             return np.log(self.parameters[self.unfrozen])
@@ -140,9 +142,9 @@ implementation would be something like the following:
             return grad[self.unfrozen]
 
         def freeze_parameter(self, parameter_name):
-            names = self.get_parameter_names()
+            names = self.parameter_names
             self.unfrozen[names.index(parameter_name)] = False
 
         def thaw_parameter(self, parameter_name):
-            names = self.get_parameter_names()
+            names = self.parameter_names
             self.unfrozen[names.index(parameter_name)] = True
