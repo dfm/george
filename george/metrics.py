@@ -23,13 +23,14 @@ class Subspace(object):
 
 class Metric(object):
 
-    def __new__(cls, metric, *args, **kwargs):
-        if isinstance(metric, Metric):
-            return copy.deepcopy(metric)
-        return object.__new__(cls, metric, *args, **kwargs)
-
     def __init__(self, metric, ndim=None, axes=None, lower=True):
         if isinstance(metric, Metric):
+            self.metric_type = metric.metric_type
+            self.parameter_names = metric.parameter_names
+            self.parameters = metric.parameters
+            self.ndim = metric.ndim
+            self.axes = metric.axes
+            self.unfrozen = metric.unfrozen
             return
 
         if ndim is None:

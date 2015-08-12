@@ -59,11 +59,7 @@ behavior and these are controlled using the :ref:`modeling`.
 
 .. code-block:: python
 
-    from george import kernels
-
     k = 2.0 * kernels.Matern32Kernel(5.0)
-
-    print(k)
 
     print(k.get_parameter_names())
     # ['k1:ln_constant', 'k2:ln_M_0_0']
@@ -71,43 +67,34 @@ behavior and these are controlled using the :ref:`modeling`.
     print(k.get_vector())
     # [ 0.69314718  1.60943791]
 
-
-In general, kernel functions have some—possibly different—natural
-parameterization that can be useful for parameter inference.
-This can be accessed via the ``vector`` property and for most kernels, this
-will be—unless otherwise specified—the natural logarithm of the ``pars``
-array.
-So, for our previous example,
-
-.. code-block:: python
-
-    k = 2.0 * kernels.Matern32Kernel(5.0)
-    print(k.vector)
-    # array([ 0.69314718,  1.60943791])
-
-George is smart about when it recomputes the kernel and it will only do this
-if you change the parameters.
-Therefore, the best way to make changes is by *subscripting* the kernel.
-It's worth noting that subscripting changes the ``vector`` array (not
-``pars``) so following up our previous example, we can do something like
+You'll notice that, in this case, the parameter vector is the logarithm of
+the parameters given when building the kernel.
+This will be the case for any strictly positive parameters because it is
+always better to fit in the logarithm of these types of parameters.
+You probably also noticed that the parameters have names.
+This opens up a few interesting features.
+For example, if you want to change any of the parameters, you can do it as
+follows:
 
 .. code-block:: python
 
     import numpy as np
-    k = 2.0 * kernels.Matern32Kernel(5.0)
 
-    k[0] = np.log(4.0)
-    print(k.pars)
-    # array([ 4.,  5.])
+    k["k1:ln_constant"] = np.log(10.0)
+    print(k.get_vector())
+    # [ 2.30258509  1.60943791]
 
-    k[:] = np.log([6.0, 10.0])
-    print(k.pars)
-    # array([ 6.,  10.])
+    # ... or:
+    k[0] = np.log(2.0)
+    print(k.get_vector())
+    # [ 0.69314718  1.60943791]
 
-.. note:: The gradient of each kernel is given with respect to ``vector`` not
-    ``pars``. This means that in most cases the gradient taken in terms of the
-    *logarithm* of the hyperparameters.
+Finally, if you want to update the entire vector, you can use the
+:func:`set_vector` method:
 
+.. code-block:: python
+
+    k.set_vector(k.get_vector() + np.random.randn(2))
 
 
 .. _basic-kernels:
