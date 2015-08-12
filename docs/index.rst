@@ -22,6 +22,7 @@ User Guide
    user/hyper
    user/gp
    user/kernels
+   user/modeling
    user/solvers
 
 

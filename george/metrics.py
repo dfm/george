@@ -51,7 +51,7 @@ class Metric(object):
                     raise ValueError("invalid (negative) metric")
                 for i, v in enumerate(metric):
                     self.parameter_names.append("ln_M_{0}_{0}".format(i))
-                    self.parameters.append(v)
+                    self.parameters.append(np.log(v))
 
             elif len(metric.shape) == 2:
                 self.metric_type = 2
@@ -83,7 +83,7 @@ class Metric(object):
         else:
             self.metric_type = 0
             self.parameter_names.append("ln_M_0_0")
-            self.parameters.append(metric)
+            self.parameters.append(np.log(metric))
 
         self.parameters = np.array(self.parameters)
         self.unfrozen = np.ones_like(self.parameters, dtype=bool)

@@ -170,6 +170,8 @@ if __name__ == "__main__":
     if len(kernel_specs):
         print("Compiling kernels")
         compile_kernels(kernel_specs)
+        if "kernels" in sys.argv:
+            sys.exit()
 
     # Check for the Cython source (development mode) and compile it if it
     # exists.

@@ -1,6 +1,6 @@
 .. _modeling:
 
-Modeling language
+Modeling protocol
 =================
 
 In order to make hyperparameter optimization, george comes with a modeling
@@ -142,9 +142,7 @@ implementation would be something like the following:
             return grad[self.unfrozen]
 
         def freeze_parameter(self, parameter_name):
-            names = self.parameter_names
-            self.unfrozen[names.index(parameter_name)] = False
+            self.unfrozen[self.parameter_names.index(parameter_name)] = False
 
         def thaw_parameter(self, parameter_name):
-            names = self.parameter_names
-            self.unfrozen[names.index(parameter_name)] = True
+            self.unfrozen[self.parameter_names.index(parameter_name)] = True

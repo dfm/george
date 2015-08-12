@@ -47,50 +47,16 @@ def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-6):
             "Gradient computation failed in dimension {0}".format(i)
 
 
-#
-# BASIC KERNELS
-#
-
-# def test_custom():
-#     def f(x1, x2, p):
-#         return np.exp(-0.5 * np.dot(x1, x2) / p[0])
-
-#     def g(x1, x2, p):
-#         arg = 0.5 * np.dot(x1, x2) / p[0]
-#         return np.exp(-arg) * arg / p[0]
-
-#     def wrong_g(x1, x2, p):
-#         arg = 0.5 * np.dot(x1, x2) / p[0]
-#         return 10 * np.exp(-arg) * arg / p[0]
-
-#     do_kernel_t(kernels.PythonKernel(f, g, pars=[0.5]))
-#     do_kernel_t(kernels.PythonKernel(f, g, pars=[0.1]))
-
-#     try:
-#         do_kernel_t(kernels.PythonKernel(f, wrong_g, pars=[0.5]))
-#     except AssertionError:
-#         pass
-#     else:
-#         assert False, "This test should fail"
-
-
-# def test_custom_numerical():
-#     def f(x1, x2, p):
-#         return np.exp(-0.5 * np.dot(x1, x2) / p[0])
-#     do_kernel_t(kernels.PythonKernel(f, pars=[0.5]))
-#     do_kernel_t(kernels.PythonKernel(f, pars=[10.0]))
-
-
 def test_constant():
-    do_kernel_t(kernels.ConstantKernel(0.1))
-    do_kernel_t(kernels.ConstantKernel(10.0, 2))
-    do_kernel_t(kernels.ConstantKernel(5.0, 5))
+    do_kernel_t(kernels.ConstantKernel(constant=0.1))
+    do_kernel_t(kernels.ConstantKernel(constant=10.0, ndim=2))
+    do_kernel_t(kernels.ConstantKernel(constant=5.0, ndim=5))
 
 
 def test_dot_prod():
     do_kernel_t(kernels.DotProductKernel())
-    do_kernel_t(kernels.DotProductKernel(2))
-    do_kernel_t(kernels.DotProductKernel(5))
+    do_kernel_t(kernels.DotProductKernel(ndim=2))
+    do_kernel_t(kernels.DotProductKernel(ndim=5, axes=0))
 
 
 #
@@ -145,35 +111,29 @@ def test_matern52():
 
 
 def test_rational_quadratic():
-    do_stationary_t(kernels.RationalQuadraticKernel, ln_alpha=np.log(1.0))
-    do_stationary_t(kernels.RationalQuadraticKernel, ln_alpha=np.log(0.1))
-    do_stationary_t(kernels.RationalQuadraticKernel, ln_alpha=np.log(10.0))
+    do_stationary_t(kernels.RationalQuadraticKernel, alpha=1.0)
+    do_stationary_t(kernels.RationalQuadraticKernel, alpha=0.1)
+    do_stationary_t(kernels.RationalQuadraticKernel, alpha=10.0)
 
-
-#
-# PERIODIC KERNELS
-#
 
 def test_cosine():
-    do_kernel_t(kernels.CosineKernel(1.0))
-    do_kernel_t(kernels.CosineKernel(0.5, ndim=2))
-    do_kernel_t(kernels.CosineKernel(0.5, ndim=2, axes=1))
-    do_kernel_t(kernels.CosineKernel(0.75, ndim=5, axes=[2, 3]))
+    do_kernel_t(kernels.CosineKernel(period=1.0))
+    do_kernel_t(kernels.CosineKernel(period=0.5, ndim=2))
+    do_kernel_t(kernels.CosineKernel(period=0.5, ndim=2, axes=1))
+    do_kernel_t(kernels.CosineKernel(period=0.75, ndim=5, axes=[2, 3]))
 
 
 def test_exp_sine2():
-    do_kernel_t(kernels.ExpSine2Kernel(0.4, 1.0))
-    do_kernel_t(kernels.ExpSine2Kernel(12., 0.5, ndim=2))
-    do_kernel_t(kernels.ExpSine2Kernel(17., 0.5, ndim=2, axes=1))
-    do_kernel_t(kernels.ExpSine2Kernel(13.7, -0.75, ndim=5, axes=[2, 3]))
-    do_kernel_t(kernels.ExpSine2Kernel(-0.7, 0.75, ndim=5, axes=[2, 3]))
-    do_kernel_t(kernels.ExpSine2Kernel(-10, 0.75))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=0.4, period=1.0))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=12., period=0.5, ndim=2))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=17., period=0.5, ndim=2, axes=1))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=13.7, ln_period=-0.75, ndim=5,
+                                       axes=[2, 3]))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=-0.7, period=0.75, ndim=5,
+                                       axes=[2, 3]))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=-10, period=0.75))
 
-
-#
-# COMBINING KERNELS
-#
 
 def test_combine():
-    do_kernel_t(12 * kernels.ExpSine2Kernel(0.4, 1.0, ndim=5) + 0.1)
+    do_kernel_t(12 * kernels.ExpSine2Kernel(gamma=0.4, period=1.0, ndim=5))
     do_kernel_t(12 * kernels.ExpSquaredKernel(0.4, ndim=3) + 0.1)

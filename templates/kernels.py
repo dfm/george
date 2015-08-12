@@ -101,7 +101,7 @@ class Kernel(object):
 
     def __add__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Sum(ConstantKernel(np.log(float(b)), ndim=self.ndim), self)
+            return Sum(ConstantKernel(constant=float(b), ndim=self.ndim), self)
         return Sum(self, b)
 
     def __radd__(self, b):
@@ -109,7 +109,7 @@ class Kernel(object):
 
     def __mul__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Product(ConstantKernel(np.log(float(b)), ndim=self.ndim),
+            return Product(ConstantKernel(constant=float(b), ndim=self.ndim),
                                           self)
         return Product(self, b)
 
@@ -281,6 +281,8 @@ class {{ spec.name }} (Kernel):
 
     def __init__(self,
                  {% for p in spec.params %}{{ p }}=None,
+                 {%- if p.startswith("ln_") %}
+                 {{ p[3:] }}=None,{% endif %}
                  {% endfor -%}
                  {% if spec.stationary -%}
                  metric=None,
@@ -292,11 +294,16 @@ class {{ spec.name }} (Kernel):
         self._unfrozen = np.ones({{ spec.params|length }}, dtype=bool)
 
         {% for p in spec.params -%}
-        if {{ p }} is None:
-            raise ValueError("missing required parameter '{{ p }}'")
+        if {{ p }} is None{% if p.startswith("ln_") %} and {{ p[3:] }} is None{% endif %}:
+            raise ValueError("missing required parameter '{{ p }}'{% if p.startswith("ln_") %} or '{{ p[3:] }}'{% endif %}")
+        {%- if p.startswith("ln_") %}
+        elif {{ p }} is None:
+            if {{ p[3:] }} <= 0.0:
+                raise ValueError("invalid parameter '{{ p[3:] }} <= 0.0'")
+            {{ p }} = np.log({{ p[3:] }})
+        {%- endif %}
         self.{{ p }} = {{ p }}
-        {% endfor -%}
-
+        {% endfor %}
         {% if spec.stationary -%}
         if metric is None:
             raise ValueError("missing required parameter 'metric'")

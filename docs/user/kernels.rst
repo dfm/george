@@ -19,33 +19,50 @@ The standard kernels fall into the following categories:
 sophisticated models and :ref:`new-kernels` explains how you would go about
 incorporating a custom kernel.
 
-**Note:** every kernel takes an optional ``ndim`` keyword that must be set to
-the number of input dimensions for your problem.
+Common parameters
+-----------------
+
+Every kernel accepts the two keyword arguments ``ndim`` and ``axes``. By
+default, kernels are only one dimensional so you must specify the ``ndim``
+argument if you want the kernel to work with higher dimensional inputs.
+By default, higher dimensional kernels are applied to every dimension but you
+can restrict the evaluation to a subspace using the ``axes`` argument.
+For example, if you have a 3 dimensional input space but you want one of the
+kernels to only act in the first dimension, you would do the following:
+
+.. code-block:: python
+
+    from george import kernels
+    kernel = 10.0 * kernels.Matern32Kernel(1.0, ndim=3, axes=0)
+
+Similarly, if you wanted the kernel to act on only the second and third
+dimensions, you could do something like:
+
+.. code-block:: python
+
+    kernel = 10.0 * kernels.ExpSquaredKernel([1.0, 0.5], ndim=3, axes=[1, 2])
+
 
 .. _implementation:
 
-Implementation Details
+Implementation details
 ----------------------
 
 It's worth understanding how these kernels are implemented.
 Most of the hard work is done at a low level (in C++) and the Python is only a
 thin wrapper to this functionality.
 This makes the code fast and consistent across interfaces but it also means
-that it isn't currently possible to implement new kernel functions efficiently
-without recompiling the code.
+that it isn't currently possible to implement new kernel functions without
+recompiling the code.
 Almost every kernel has hyperparameters that you can set to control its
-behavior and these can be accessed via the ``pars`` property.
-The values in this array are in the same order as you specified them when
-initializing the kernel and, in the case of composite kernels (see
-:ref:`combining-kernels`) the order goes from left to right.
-For example,
+behavior and these are controlled using the :ref:`modeling`.
 
 .. code-block:: python
 
     from george import kernels
 
     k = 2.0 * kernels.Matern32Kernel(5.0)
-    print(k.pars)
+    print(k.get_vector())
     # array([ 2.,  5.])
 
 
@@ -156,10 +173,4 @@ addition:
 Implementing New Kernels
 ------------------------
 
-Implementing custom kernels in George is a bit of a pain in the current
-version. For now, the only way to do it is with the :class:`PythonKernel`
-where you provide a Python function that computes the value of the kernel
-function at *a single pair of training points*.
-
-.. autoclass:: george.kernels.PythonKernel
-    :members:
+TO DO.
