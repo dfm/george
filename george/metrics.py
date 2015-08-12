@@ -22,7 +22,15 @@ class Subspace(object):
 
 class Metric(object):
 
+    def __new__(cls, metric, *args, **kwargs):
+        if isinstance(metric, Metric):
+            return metric
+        return object.__new__(cls, metric, *args, **kwargs)
+
     def __init__(self, metric, ndim=None, axes=None, lower=True):
+        if isinstance(metric, Metric):
+            return
+
         if ndim is None:
             raise ValueError("missing required parameter 'ndim'")
 
@@ -122,9 +130,9 @@ class Metric(object):
 
     def __repr__(self):
         if self.metric_type == 0:
-            params = ["{0}".format(float(self.parameters))]
+            params = ["{0}".format(float(np.exp(self.parameters)))]
         elif self.metric_type == 1:
-            params = ["{0}".format(self.parameters)]
+            params = ["{0}".format(np.exp(self.parameters))]
         elif self.metric_type == 2:
             params = ["{0}".format(self.to_matrix().tolist())]
         params += ["ndim={0}".format(self.ndim), "axes={0}".format(self.axes)]

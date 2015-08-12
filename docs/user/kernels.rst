@@ -62,8 +62,14 @@ behavior and these are controlled using the :ref:`modeling`.
     from george import kernels
 
     k = 2.0 * kernels.Matern32Kernel(5.0)
+
+    print(k)
+
+    print(k.get_parameter_names())
+    # ['k1:ln_constant', 'k2:ln_M_0_0']
+
     print(k.get_vector())
-    # array([ 2.,  5.])
+    # [ 0.69314718  1.60943791]
 
 
 In general, kernel functions have some—possibly different—natural
