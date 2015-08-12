@@ -11,8 +11,8 @@ George is being actively developed in `a public repository on GitHub
 <https://github.com/dfm/george/issues>`_ there.
 
 
-Learn by example
-----------------
+User guide
+----------
 
 .. toctree::
    :maxdepth: 2
@@ -20,14 +20,7 @@ Learn by example
    tutorials/quickstart
    tutorials/model
    tutorials/hyper
-
-
-User guide
-----------
-
-.. toctree::
-   :maxdepth: 2
-
+   tutorials/new_kernel
    user/gp
    user/kernels
    user/modeling

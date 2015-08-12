@@ -2,8 +2,8 @@
 
 .. _hyper:
 
-Setting the hyperparameters
-===========================
+Tutorial: setting the hyperparameters
+=====================================
 
 In this demo, we'll reproduce the analysis for Figure 5.6 in `Chapter 5 of
 Rasmussen & Williams (R&W)

@@ -5,7 +5,6 @@ from __future__ import division, print_function
 __all__ = ["GP"]
 
 import numpy as np
-import scipy.optimize as op
 from scipy.linalg import LinAlgError
 
 from .basic import BasicSolver
@@ -39,12 +38,20 @@ class GP(object):
 
     """
 
-    def __init__(self, kernel, mean=None, solver=BasicSolver, **kwargs):
+    def __init__(self,
+                 kernel,
+                 mean=None,
+                 white_noise=0.0,
+                 fit_white_noise=False,
+                 solver=BasicSolver,
+                 **kwargs):
         self.kernel = kernel
         self._computed = False
         self._alpha = None
         self._y = None
         self.mean = mean
+        self.ln_sigma2 = np.log(white_noise)
+        self.fit_white_noise = fit_white_noise
 
         self.solver_type = solver
         self.solver_kwargs = kwargs
@@ -65,6 +72,15 @@ class GP(object):
                 self._mean = mean
             else:
                 self._mean = _default_mean(val)
+
+    @property
+    def ln_sigma2(self):
+        return self._ln_sigma2
+
+    @ln_sigma2.setter
+    def ln_sigma2(self, value):
+        self._ln_sigma2 = value
+        self._computed = False
 
     @property
     def computed(self):
@@ -200,7 +216,10 @@ class GP(object):
 
         # Set up and pre-compute the solver.
         self.solver = self.solver_type(self.kernel, **(self.solver_kwargs))
-        self.solver.compute(self._x, self._yerr, **kwargs)
+
+        # Include the white noise term.
+        yerr = np.sqrt(self._yerr ** 2 + np.exp(self.ln_sigma2))
+        self.solver.compute(self._x, yerr, **kwargs)
 
         self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
                               + self.solver.log_determinant)
@@ -279,11 +298,16 @@ class GP(object):
 
         # Calculate the gradient.
         A = np.outer(self._alpha, self._alpha) - K_inv
-        g = 0.5 * np.einsum('ijk,ij', Kg, A)
+        g = 0.5 * np.einsum("ijk,ij", Kg, A)
+
+        if self.fit_white_noise:
+            g = np.append(0.5*np.exp(self.ln_sigma2)*np.sum(np.diag(A)), g)
 
         return g
 
-    def predict(self, y, t, mean_only=False):
+    def predict(self, y, t,
+                return_cov=True,
+                return_var=False):
         """
         Compute the conditional predictive distribution of the model.
 
@@ -307,14 +331,18 @@ class GP(object):
         # Compute the predictive mean.
         Kxs = self.kernel.get_value(xs, self._x)
         mu = np.dot(Kxs, self._alpha) + self.mean(xs)
-        if mean_only:
+        if not (return_var or return_cov):
             return mu
 
-        # Compute the predictive covariance.
         KxsT = np.ascontiguousarray(Kxs.T, dtype=np.float64)
+        if return_var:
+            var = self.kernel.get_value(xs, diag=True)
+            var -= np.sum(Kxs.T*self.solver.apply_inverse(KxsT, in_place=True),
+                          axis=0)
+            return mu, var
+
         cov = self.kernel.get_value(xs)
         cov -= np.dot(Kxs, self.solver.apply_inverse(KxsT, in_place=True))
-
         return mu, cov
 
     def sample_conditional(self, y, t, size=1):
@@ -386,86 +414,39 @@ class GP(object):
         x2, _ = self.parse_samples(x2, False)
         return self.kernel.get_value(x1, x2)
 
-    def optimize(self, x, y, yerr=TINY, sort=True, dims=None, verbose=True,
-                 **kwargs):
-        """
-        A simple and not terribly robust non-linear optimization algorithm for
-        the kernel hyperpararmeters.
-
-        :param x: ``(nsamples,)`` or ``(nsamples, ndim)``
-            The independent coordinates of the data points.
-
-        :param y: ``(nsamples, )``
-            The observations at the coordinates ``x``.
-
-        :param yerr: (optional) ``(nsamples,)`` or scalar
-            The Gaussian uncertainties on the data points at coordinates
-            ``x``. These values will be added in quadrature to the diagonal of
-            the covariance matrix.
-
-        :param sort: (optional)
-            Should the samples be sorted before computing the covariance
-            matrix?
-
-        :param dims: (optional)
-            If you only want to optimize over some parameters, list their
-            indices here.
-
-        :param verbose: (optional)
-            Display the results of the call to :func:`scipy.optimize.minimize`?
-            (default: ``True``)
-
-        Returns ``(pars, results)`` where ``pars`` is the list of optimized
-        parameters and ``results`` is the results object returned by
-        :func:`scipy.optimize.minimize`.
-
-        """
-        self.compute(x, yerr, sort=sort)
-
-        # By default, optimize all the hyperparameters.
-        if dims is None:
-            dims = np.ones(len(self.kernel), dtype=bool)
-        dims = np.arange(len(self.kernel))[dims]
-
-        # Define the objective function and gradient.
-        def nll(pars):
-            self.kernel[dims] = pars
-            ll = self.lnlikelihood(y, quiet=True)
-            if not np.isfinite(ll):
-                return 1e25  # The optimizers can't deal with infinities.
-            return -ll
-
-        def grad_nll(pars):
-            self.kernel[dims] = pars
-            return -self.grad_lnlikelihood(y, quiet=True)[dims]
-
-        # Run the optimization.
-        p0 = self.kernel.vector[dims]
-        results = op.minimize(nll, p0, jac=grad_nll, **kwargs)
-
-        if verbose:
-            print(results.message)
-
-        return self.kernel.vector[dims], results
-
     # Modeling protocol.
     def __len__(self):
-        return len(self.kernel)
+        return len(self.kernel) + int(self.fit_white_noise)
 
     def get_parameter_names(self):
-        return self.kernel.get_parameter_names()
+        n = []
+        if self.fit_white_noise:
+            n = ["ln_sigma2"]
+        return n + self.kernel.get_parameter_names()
 
     def get_vector(self):
+        if self.fit_white_noise:
+            return np.append(self.ln_sigma2, self.kernel.get_vector())
         return self.kernel.get_vector()
 
     def set_vector(self, vector):
-        self.kernel.set_vector(vector)
+        if self.fit_white_noise:
+            self.ln_sigma2 = vector[0]
+            self.kernel.set_vector(vector[1:])
+        else:
+            self.kernel.set_vector(vector)
 
     def freeze_parameter(self, parameter_name):
-        self.kernel.freeze_parameter(parameter_name)
+        if parameter_name == "ln_sigma2":
+            self.fit_white_noise = False
+        else:
+            self.kernel.freeze_parameter(parameter_name)
 
     def thaw_parameter(self, parameter_name):
-        self.kernel.thaw_parameter(parameter_name)
+        if parameter_name == "ln_sigma2":
+            self.fit_white_noise = True
+        else:
+            self.kernel.thaw_parameter(parameter_name)
 
 
 class _default_mean(object):

@@ -153,12 +153,18 @@ class Kernel(object):
             self.metric.set_vector(vector[n:])
         self.dirty = True
 
-    def get_value(self, x1, x2=None):
+    def get_value(self, x1, x2=None, diag=False):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
-            return self.kernel.value_symmetric(x1)
+            if diag:
+                return self.kernel.value_diagonal(x1, x1)
+            else:
+                return self.kernel.value_symmetric(x1)
         x2 = np.ascontiguousarray(x2, dtype=np.float64)
-        return self.kernel.value_general(x1, x2)
+        if diag:
+            return self.kernel.value_diagonal(x1, x2)
+        else:
+            return self.kernel.value_general(x1, x2)
 
     def get_gradient(self, x1, x2=None):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)

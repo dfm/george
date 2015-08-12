@@ -1,7 +1,7 @@
 .. _model:
 
-Model fitting with correlated noise
-===================================
+Tutorial: model fitting with correlated noise
+=============================================
 
 In this example, we're going to simulate a common data analysis situation
 where our dataset exhibits unknown correlations in the noise.

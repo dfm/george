@@ -12,12 +12,13 @@ import numpy as np
 from .. import kernels, GP, BasicSolver, HODLRSolver
 
 
-def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-3, solver=BasicSolver):
+def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-3, solver=BasicSolver,
+                   **kwargs):
     np.random.seed(seed)
 
     # Set up the solver.
     kernel = 1.0 * kernels.ExpSquaredKernel(0.5, ndim=ndim)
-    gp = GP(kernel, solver=solver)
+    gp = GP(kernel, solver=solver, **kwargs)
 
     # Sample some data.
     x = np.random.rand(N, ndim)
@@ -26,14 +27,21 @@ def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-3, solver=BasicSolver):
 
     # Compute the initial gradient.
     grad0 = gp.grad_lnlikelihood(y)
+    vector = gp.get_vector()
 
-    for i in range(len(kernel)):
+    for i, v in enumerate(vector):
         # Compute the centered finite difference approximation to the gradient.
-        kernel[i] += eps
+        vector[i] = v + eps
+        gp.set_vector(vector)
         lp = gp.lnlikelihood(y)
-        kernel[i] -= 2*eps
+
+        vector[i] = v - eps
+        gp.set_vector(vector)
         lm = gp.lnlikelihood(y)
-        kernel[i] += eps
+
+        vector[i] = v
+        gp.set_vector(vector)
+
         grad = 0.5 * (lp - lm) / eps
         assert np.abs(grad - grad0[i]) < 5 * eps, \
             "Gradient computation failed in dimension {0} ({1})\n{2}" \
@@ -43,6 +51,11 @@ def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-3, solver=BasicSolver):
 def test_gradient(**kwargs):
     _test_gradient(solver=BasicSolver, **kwargs)
     _test_gradient(solver=HODLRSolver, **kwargs)
+
+    _test_gradient(solver=BasicSolver, white_noise=0.1, fit_white_noise=True,
+                   **kwargs)
+    _test_gradient(solver=HODLRSolver, white_noise=0.1, fit_white_noise=True,
+                   **kwargs)
 
 
 def _test_prediction(solver=BasicSolver):
@@ -92,13 +105,13 @@ def test_repeated_prediction_cache():
     t = np.array((-.5, .3, 1.2))
 
     y = x/x.std()
-    mu0, mu1 = (gp.predict(y, t, mean_only=True) for _ in range(2))
+    mu0, mu1 = (gp.predict(y, t, return_cov=False) for _ in range(2))
     assert np.array_equal(mu0, mu1), \
         "Identical training data must give identical predictions " \
         "(problem with GP cache)."
 
     y2 = 2*y
-    mu2 = gp.predict(y2, t, mean_only=True)
+    mu2 = gp.predict(y2, t, return_cov=False)
     assert not np.array_equal(mu0, mu2), \
         "Different training data must give different predictions " \
         "(problem with GP cache)."
@@ -111,6 +124,12 @@ def test_repeated_prediction_cache():
     assert not np.allclose(a0, a1), \
         "Different kernel parameters must give different alphas " \
         "(problem with GP cache)."
+
+    mu, cov = gp.predict(y2, t)
+    _, var = gp.predict(y2, t, return_var=True)
+    assert np.allclose(np.diag(cov), var), \
+        "The predictive variance must be equal to the diagonal of the " \
+        "predictive covariance."
 
 
 def _test_apply_inverse(seed=1234, N=100, ndim=3, solver=BasicSolver,

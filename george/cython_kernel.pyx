@@ -32,6 +32,25 @@ cdef class CythonKernel:
         del self.kernel
 
     @cython.boundscheck(False)
+    def value_diagonal(self, np.ndarray[DTYPE_t, ndim=2] x1,
+                       np.ndarray[DTYPE_t, ndim=2] x2):
+        # Parse the input kernel spec.
+        cdef unsigned int n = x1.shape[0], ndim = x1.shape[1]
+        if (self.kernel.get_ndim() != ndim or x2.shape[1] != ndim
+                or x2.shape[0] != n):
+            raise ValueError("Dimension mismatch")
+
+        # Build the kernel matrix.
+        cdef double value
+        cdef unsigned int i, j, d1 = x1.strides[0], d2 = x2.strides[0]
+        cdef np.ndarray[DTYPE_t, ndim=1] k = np.empty(n, dtype=DTYPE)
+        for i in range(n):
+            k[i] = self.kernel.value(<double*>(x1.data + i*d1),
+                                     <double*>(x2.data + i*d2))
+
+        return k
+
+    @cython.boundscheck(False)
     def value_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x):
         cdef unsigned int n = x.shape[0], ndim = x.shape[1]
         if self.kernel.get_ndim() != ndim:
