@@ -63,6 +63,7 @@ def find_eigen(hint=None):
         "/opt/local/include/eigen3",
         "/usr/include/eigen3",
         "/usr/include/local",
+        "/usr/include",
     ]
 
     # Loop over search paths and check for the existence of the Eigen/Dense
@@ -98,6 +99,7 @@ def find_hodlr(hint=None):
         "./hodlr/header",
         "/usr/local/include",
         "/usr/include/local",
+        "/usr/include",
     ]
 
     # Loop over search paths and check for the existence of the Eigen/Dense
