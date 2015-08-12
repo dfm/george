@@ -96,9 +96,6 @@ class Kernel(object):
         v[i] = value
         self.set_vector(v)
 
-    def __len__(self):
-        return len(self.params)
-
     def __add__(self, b):
         if not hasattr(b, "is_kernel"):
             return Sum(ConstantKernel(constant=float(b), ndim=self.ndim), self)
@@ -170,6 +167,27 @@ class Kernel(object):
         x2 = np.ascontiguousarray(x2, dtype=np.float64)
         return self.kernel.gradient_general(x1, x2)[:, :, self.unfrozen]
 
+    def test_gradient(self, x1, x2=None, eps=1.32e-6, **kwargs):
+        vector = self.get_vector()
+        g0 = self.get_gradient(x1, x2=x2)
+
+        for i, v in enumerate(vector):
+            vector[i] = v + eps
+            self.set_vector(vector)
+            kp = self.get_value(x1, x2=x2)
+
+            vector[i] = v - eps
+            self.set_vector(vector)
+            km = self.get_value(x1, x2=x2)
+
+            vector[i] = v
+            self.set_vector(vector)
+
+            grad = 0.5 * (kp - km) / eps
+            assert np.allclose(g0[:, :, i], grad, **kwargs), \
+                "incorrect gradient for parameter '{0}' ({1})" \
+                .format(self.get_parameter_names()[i], i)
+
     def freeze_parameter(self, parameter_name):
         try:
             i = self._parameter_names.index(parameter_name)
@@ -232,7 +250,7 @@ class _operator(Kernel):
 
     def freeze_parameter(self, parameter_name):
         n = parameter_name.split(":")
-        if len(n) <= 2:
+        if len(n) < 2:
             raise ValueError("invalid parameter '{0}'".format(parameter_name))
         if n[0] == "k1":
             self.k1.freeze_parameter(":".join(n[1:]))

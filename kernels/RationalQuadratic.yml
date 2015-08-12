@@ -10,8 +10,8 @@ doc: |
     .. math::
         k(r^2) = \left[1 - \frac{r^2}{2\,\alpha} \right]^\alpha
 
-    :param ln_alpha:
-        The logarithm of the Gamma distribution parameter.
+    :param alpha:
+        The Gamma distribution parameter.
 
 value: |
     double alpha = exp(ln_alpha);

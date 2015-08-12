@@ -13,8 +13,8 @@ doc: |
     kernel should probably always be multiplied be a stationary kernel
     (e.g. :class:`ExpSquaredKernel`) to allow quasi-periodic variations.
 
-    :param ln_period:
-        The logarithm of the period of the oscillation.
+    :param period:
+        The period of the oscillation.
 
 value: |
     return cos(2 * M_PI * (x1 - x2) * exp(-ln_period));

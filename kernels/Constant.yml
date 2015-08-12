@@ -11,8 +11,8 @@ doc: |
 
     where :math:`c` is a parameter.
 
-    :param ln_constant:
-        The logarithm of the constant value :math:`c` in the above equation.
+    :param constant:
+        The constant value :math:`c` in the above equation.
 
 value: |
     return exp(ln_constant);

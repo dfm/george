@@ -16,9 +16,9 @@ doc: |
     :param gamma:
         The scale :math:`\Gamma` of the correlations.
 
-    :param ln_period:
-        The logarithm of the period :math:`P` of the oscillation (in the same
-        units as :math:`\mathbf{x}`).
+    :param period:
+        The period :math:`P` of the oscillation (in the same units as
+        :math:`\mathbf{x}`).
 
 value: |
     double s = sin((x1 - x2) * M_PI * exp(-ln_period));

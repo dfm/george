@@ -21,30 +21,9 @@ def test_dtype(seed=123):
 
 
 def do_kernel_t(kernel, N=20, seed=123, eps=1.32e-6):
-    """
-    Test that both the Python and C++ kernels return the same matrices.
-
-    """
     np.random.seed(seed)
     t1 = np.random.randn(N, kernel.ndim)
-
-    v = kernel.get_vector()
-
-    # Check the symmetric gradients.
-    g1 = kernel.get_gradient(t1)
-    for i in range(len(kernel)):
-        # Compute the centered finite difference approximation to the gradient.
-        v[i] += eps
-        kernel.set_vector(v)
-        kp = kernel.get_value(t1)
-        v[i] -= 2*eps
-        kernel.set_vector(v)
-        km = kernel.get_value(t1)
-        v[i] += eps
-        kernel.set_vector(v)
-        g0 = 0.5 * (kp - km) / eps
-        assert np.allclose(g1[:, :, i], g0), \
-            "Gradient computation failed in dimension {0}".format(i)
+    kernel.test_gradient(t1, eps=eps)
 
 
 def test_constant():
@@ -132,6 +111,15 @@ def test_exp_sine2():
     do_kernel_t(kernels.ExpSine2Kernel(gamma=-0.7, period=0.75, ndim=5,
                                        axes=[2, 3]))
     do_kernel_t(kernels.ExpSine2Kernel(gamma=-10, period=0.75))
+
+
+def test_local():
+    do_kernel_t(kernels.LocalGaussianKernel(width=0.5, location=1.0))
+    do_kernel_t(kernels.LocalGaussianKernel(width=0.1, location=0.5, ndim=2))
+    do_kernel_t(kernels.LocalGaussianKernel(width=1.5, location=-0.5, ndim=2,
+                                            axes=1))
+    do_kernel_t(kernels.LocalGaussianKernel(width=2.0, location=0.75, ndim=5,
+                                            axes=[2, 3]))
 
 
 def test_combine():

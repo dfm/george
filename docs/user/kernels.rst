@@ -9,15 +9,15 @@ George comes equipped with a suite of standard covariance functions or
 kernels that can be combined to build more complex models.
 The standard kernels fall into the following categories:
 
-1. :ref:`basic-kernels` — trivial (constant or parameterless) functions,
-2. :ref:`stationary-kernels` — functions that depend only on the radial
+1. :ref:`stationary-kernels` — functions that depend only on the radial
    distance between points in some user-defined metric, and
-3. :ref:`periodic-kernels` — exactly period functions that, when combined with
-   a radial kernel, can model quasi-periodic signals.
+2. :ref:`non-stationary-kernels` — functions that depend on the value of the
+   input coordinates themselves.
 
 :ref:`combining-kernels` describes how to combine kernels to build more
 sophisticated models and :ref:`new-kernels` explains how you would go about
 incorporating a custom kernel.
+
 
 Common parameters
 -----------------
@@ -45,8 +45,8 @@ dimensions, you could do something like:
 
 .. _implementation:
 
-Implementation details
-----------------------
+Implementation details & modeling interface
+-------------------------------------------
 
 It's worth understanding how these kernels are implemented.
 Most of the hard work is done at a low level (in C++) and the Python is only a
@@ -96,40 +96,146 @@ Finally, if you want to update the entire vector, you can use the
 
     k.set_vector(k.get_vector() + np.random.randn(2))
 
+Another feature common to the kernels is that you can "freeze" and "thaw"
+parameters by name.
+For example, let's say that you want to keep the amplitude of your kernel
+fixed and fit for only the scale length:
 
-.. _basic-kernels:
+.. code-block:: python
 
-Basic Kernels
--------------
+    k = 2.0 * kernels.Matern32Kernel(5.0)
+    k.freeze_parameter("k1:ln_constant")
 
-.. autoclass:: george.kernels.ConstantKernel
-.. autoclass:: george.kernels.DotProductKernel
+    print(k.get_parameter_names())
+    # ['k2:ln_M_0_0']
+
+    print(k.get_vector())
+    # [ 1.60943791]
+
+Bringing a parameter back into the fold is as easy as
+
+.. code-block:: python
+
+    k.thaw_parameter("k1:ln_constant")
+
+    print(k.get_parameter_names())
+    # ['k1:ln_constant', 'k2:ln_M_0_0']
+
+    print(k.get_vector())
+    # [ 0.69314718  1.60943791]
 
 
 .. _stationary-kernels:
 
-Stationary Kernels
+Stationary kernels
 ------------------
 
-.. autoclass:: george.kernels.ExpKernel
+Stationary kernels are a class of functions that depend on the input
+coordinates :math:`\mathbf{x}_i` and :math:`\mathbf{x}_j` through their
+squared distance under some metric :math:`C`:
+
+.. math::
+
+    r^2 = (\mathbf{x}_i - \mathbf{x}_j)^\mathrm{T}\,C^{-1}\,
+        (\mathbf{x}_i - \mathbf{x}_j)
+
+The currently supported metrics are:
+
+1. "isotropic" — the scale length is equal in all dimensions,
+2. "axis-aligned" — there is a different scale length in each dimension, and
+3. "general" — arbitrary covariances between dimensions are allowed.
+
+The "isotropic" and "axis-aligned" metrics are parameterized by the logarithms
+of their scale lengths.
+For example:
+
+.. code-block:: python
+
+    from george.metrics import Metric
+    m = Metric(2.0, ndim=2)
+    print(m.get_vector())
+    # [ 0.69314718]
+
+gives a two-dimensional isotropic metric with
+
+.. math::
+
+    C = \left(\begin{array}{cc} 2 & 0 \\ 0 & 2 \end{array}\right)
+
+and
+
+.. code-block:: python
+
+    m = Metric([2.0, 4.0], ndim=2)
+    print(m.get_vector())
+    # [ 0.69314718  1.38629436]
+
+specifies the following matrix
+
+.. math::
+
+    C = \left(\begin{array}{cc} 2 & 0 \\ 0 & 4 \end{array}\right) \quad.
+
+In the "general" case, the matrix is parameterized by the elements of the
+Cholesky decomposition :math:`C = L\,L^\mathrm{T}` with logarithms along the
+diagonal.
+For example:
+
+.. code-block:: python
+
+    m = Metric([[2.0, 0.1], [0.1, 4.0]], ndim=2)
+    print(m.get_vector())
+    # [ 0.34657359  0.07071068  0.69252179]
+
+All the stationary kernels take the ``metric`` specification as a keyword
+argument:
+
+.. code-block:: python
+
+    k = kernels.ExpSquaredKernel(metric=[[5.0, 0.1], [0.1, 4.0]], ndim=2)
+    print(k.get_vector())
+    # [ 0.80471896  0.04472136  0.69289712]
+
+The currently available stationary kernels are:
+
 .. autoclass:: george.kernels.ExpSquaredKernel
 .. autoclass:: george.kernels.Matern32Kernel
 .. autoclass:: george.kernels.Matern52Kernel
+.. autoclass:: george.kernels.ExpKernel
 .. autoclass:: george.kernels.RationalQuadraticKernel
 
 
-.. _periodic-kernels:
+.. _non-stationary-kernels:
 
-Periodic Kernels
-----------------
+Non-stationary kernels
+----------------------
 
+Non-stationary kernels are specified by a (symmetric) function of the input
+coordinates themselves.
+They are applied identically to every axis so the ``axes`` keyword argument
+will probably come in handy.
+
+For example, to implement a quasi-periodic kernel with a three-dimensional
+input space where you only want to apply the periodicity along the first
+(e.g. time) dimension, you would use something like:
+
+.. code-block:: python
+
+    k = kernels.ExpSine2Kernel(gamma=0.1, period=5.0, ndim=3, axes=0)
+    k *= 10.0 * kernels.ExpSquaredKernel(metric=5.0, ndim=3, axes=0)
+    k += 4.0 * kernels.Matern32Kernel(metric=4.0, ndim=3, axes=[1, 2])
+
+The currently available non-stationary kernels are:
+
+.. autoclass:: george.kernels.ConstantKernel
+.. autoclass:: george.kernels.DotProductKernel
 .. autoclass:: george.kernels.CosineKernel
 .. autoclass:: george.kernels.ExpSine2Kernel
 
 
 .. _combining-kernels:
 
-Combining Kernels
+Combining kernels
 -----------------
 
 More complicated kernels can be constructed by algebraically combining the
@@ -163,7 +269,9 @@ addition:
 
 .. _new-kernels:
 
-Implementing New Kernels
+Implementing new kernels
 ------------------------
 
-TO DO.
+As mentioned previously, because of technical limitations, new kernels can
+only be implemented by re-compiling george.
+See

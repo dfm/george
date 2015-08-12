@@ -11,15 +11,23 @@ George is being actively developed in `a public repository on GitHub
 <https://github.com/dfm/george/issues>`_ there.
 
 
-User Guide
+Learn by example
+----------------
+
+.. toctree::
+   :maxdepth: 2
+
+   tutorials/quickstart
+   tutorials/model
+   tutorials/hyper
+
+
+User guide
 ----------
 
 .. toctree::
    :maxdepth: 2
 
-   user/quickstart
-   user/model
-   user/hyper
    user/gp
    user/kernels
    user/modeling
