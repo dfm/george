@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Modeling protocol &mdash; George 1.0.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="next" title="Solvers" href="../solvers/"/>
+        <link rel="prev" title="Kernels" href="../kernels/"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../" class="fa fa-home"> George</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/quickstart/#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/quickstart/#a-simple-example">A Simple Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/model/">Tutorial: model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/hyper/">Tutorial: hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/new_kernel/">Implementing a new kernel function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kernels/">Kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#common-parameters">Common parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#stationary-kernels">Stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#non-stationary-kernels">Non-stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#combining-kernels">Combining kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#implementing-new-kernels">Implementing new kernels</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../solvers/">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#hodlr-solver">HODLR Solver</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../">George</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../">Docs</a> &raquo;</li>
+      
+    <li>Modeling protocol</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="https://github.com/dfm/george/blob/master/docs/user/modeling.rst" class="fa fa-github"> Edit on GitHub</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="modeling-protocol">
+<span id="modeling"></span><h1>Modeling protocol<a class="headerlink" href="#modeling-protocol" title="Permalink to this headline">¶</a></h1>
+<p>In order to make hyperparameter optimization, george comes with a modeling
+language specification. To this end, any component of the model that is
+specified by parameters that we might want to fit should conform to a simple
+modeling protocol. Each element should expose a value, a parameter vector, and
+the gradient of the value with respect to these parameters. Some places where
+this comes in handy is for the hyperparameters of the kernels and the metrics.</p>
+<div class="section" id="the-protocol">
+<h2>The protocol<a class="headerlink" href="#the-protocol" title="Permalink to this headline">¶</a></h2>
+<p>We don&#8217;t really care too much about the implementation details of your objects
+but if you want them to satisfy this protocol, they must satisfy all of the
+following methods:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="k">class</span> <span class="nc">ModelingProtocol</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of (un-frozen) parameters exposed by this</span>
+<span class="sd">        object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">10</span>
+
+    <span class="k">def</span> <span class="nf">get_parameter_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list with the names of the parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s">&quot;param1&quot;</span><span class="p">,</span> <span class="s">&quot;param2&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a numpy array with the current settings of all the</span>
+<span class="sd">        non-frozen parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">par1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">par2</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">set_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the vector with a numpy array of the same shape and order</span>
+<span class="sd">        as ``get_vector``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par1</span> <span class="o">=</span> <span class="n">vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par2</span> <span class="o">=</span> <span class="n">vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value of this object at the current setting of the</span>
+<span class="sd">        parameters. This method can optionally take arguments. For a</span>
+<span class="sd">        kernel, these extra arguments would be the input coordinates.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the gradient of ``get_value`` with respect to the parameter</span>
+<span class="sd">        vector returned by ``get_vector``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">dfdx</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">freeze_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fix the value of some parameter by name at its current value. This</span>
+<span class="sd">        parameter should no longer be returned by ``get_vector`` or</span>
+<span class="sd">        ``get_gradient``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">freeze</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">thaw_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The opposite of ``freeze_parameter``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">thaw</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="a-simple-example">
+<h2>A simple example<a class="headerlink" href="#a-simple-example" title="Permalink to this headline">¶</a></h2>
+<p>Let&#8217;s start with a simple example. Let&#8217;s say that we want to implement a
+one-dimensional exponential-squared kernel</p>
+<div class="math">
+\[k(x_1, \, x_2) = a\,\exp\left(-\frac{(x_1-x_2)^2}{2\,l}\right)\]</div>
+<p>in pure-Python and fit for the logarithms of the parameters. In that case, the
+implementation would be something like the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="k">class</span> <span class="nc">MyNewExpSquared</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_names</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;lna&quot;</span><span class="p">,</span> <span class="s">&quot;lnl&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">l</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unfrozen</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_parameter_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+
+    <span class="k">def</span> <span class="nf">get_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">unfrozen</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">set_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">unfrozen</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="n">r2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">r2</span> <span class="o">/</span> <span class="n">l</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">)</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span>
+            <span class="n">value</span><span class="p">,</span>
+            <span class="n">value</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">l</span><span class="p">)</span>
+        <span class="p">))</span>
+        <span class="k">return</span> <span class="n">grad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">unfrozen</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">freeze_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">thaw_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../solvers/" class="btn btn-neutral float-right" title="Solvers"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../kernels/" class="btn btn-neutral" title="Kernels"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014 Dan Foreman-Mackey.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../_static/js/analytics.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

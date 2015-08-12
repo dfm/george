@@ -1,0 +1,431 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial: hyperparameter optimization &mdash; George 1.0.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="next" title="Implementing a new kernel function" href="../new_kernel/"/>
+        <link rel="prev" title="Tutorial: model fitting with correlated noise" href="../model/"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../" class="fa fa-home"> George</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#a-simple-example">A Simple Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Tutorial: model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial: hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Implementing a new kernel function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/kernels/">Kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#common-parameters">Common parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#stationary-kernels">Stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#non-stationary-kernels">Non-stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#combining-kernels">Combining kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementing-new-kernels">Implementing new kernels</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/solvers/">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#hodlr-solver">HODLR Solver</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../">George</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../">Docs</a> &raquo;</li>
+      
+    <li>Tutorial: hyperparameter optimization</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="https://github.com/dfm/george/blob/master/docs/tutorials/hyper.rst" class="fa fa-github"> Edit on GitHub</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="tutorial-hyperparameter-optimization">
+<h1>Tutorial: hyperparameter optimization<a class="headerlink" href="#tutorial-hyperparameter-optimization" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial was generated from an IPython notebook that <a class="reference external" href="../../_static/notebooks/hyper.ipynb">can be
+downloaded here</a>. It was made
+with the following version of george:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
+<span class="n">george</span><span class="o">.</span><span class="n">__version__</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&#39;1.0.0.dev0&#39;</span>
+</pre></div>
+</div>
+<p>In this tutorial, we’ll reproduce the analysis for Figure 5.6 in
+<a class="reference external" href="http://www.gaussianprocess.org/gpml/chapters/RW5.pdf">Chapter 5 of Rasmussen &amp; Williams
+(R&amp;W)</a>. The
+data are measurements of the atmospheric CO2 concentration made at Mauna
+Loa, Hawaii (Keeling &amp; Whorf 2004). The dataset is said to be available
+online but I couldn’t seem to download it from the original source.
+Luckily the <a class="reference external" href="http://statsmodels.sourceforge.net/">statsmodels</a>
+package <a class="reference external" href="http://statsmodels.sourceforge.net/devel/datasets/generated/co2.html">includes a
+copy</a>
+that we can load as follows:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="kn">as</span> <span class="nn">sm</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pl</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get_rdataset</span><span class="p">(</span><span class="s">&quot;co2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">co2</span><span class="p">)</span>
+
+<span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s">&quot;.k&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">t</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;CO$_2$ in ppm&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="../../_images/hyper_4_0.png" src="../../_images/hyper_4_0.png" />
+<p>In this figure, you can see that there is periodic (or quasi-periodic)
+signal with a year-long period superimposed on a long term trend. We
+will follow R&amp;W and model these effects non-parametrically using a
+complicated covariance function. The covariance function that we’ll use
+is:</p>
+<div class="math">
+\[k(r) = k_1(r) + k_2(r) + k_3(r) + k_4(r)\]</div>
+<p>where</p>
+<div class="math">
+\[\begin{split}\begin{eqnarray}
+    k_1(r) &amp;=&amp; \theta_1^2 \, \exp \left(-\frac{r^2}{2\,\theta_2} \right) \\
+    k_2(r) &amp;=&amp; \theta_3^2 \, \exp \left(-\frac{r^2}{2\,\theta_4}
+                                         -\theta_5\,\sin^2\left(
+                                         \frac{\pi\,r}{\theta_6}\right)
+                                        \right) \\
+    k_3(r) &amp;=&amp; \theta_7^2 \, \left [ 1 + \frac{r^2}{2\,\theta_8\,\theta_9}
+                             \right ]^{-\theta_8} \\
+    k_4(r) &amp;=&amp; \theta_{10}^2 \, \exp \left(-\frac{r^2}{2\,\theta_{11}} \right)
+                + \theta_{12}^2\,\delta_{ij}
+\end{eqnarray}\end{split}\]</div>
+<p>We can implement this kernel in George as follows (we&#8217;ll use the R&amp;W
+results as the hyperparameters for now):</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">george</span> <span class="kn">import</span> <span class="n">kernels</span>
+
+<span class="n">k1</span> <span class="o">=</span> <span class="mi">66</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="mi">67</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">k2</span> <span class="o">=</span> <span class="mf">2.4</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mi">90</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSine2Kernel</span><span class="p">(</span><span class="n">gamma</span><span class="o">=</span><span class="mi">2</span><span class="o">/</span><span class="mf">1.3</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">k3</span> <span class="o">=</span> <span class="mf">0.66</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">RationalQuadraticKernel</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.78</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="mf">1.2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">k4</span> <span class="o">=</span> <span class="mf">0.18</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">1.6</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">k1</span> <span class="o">+</span> <span class="n">k2</span> <span class="o">+</span> <span class="n">k3</span> <span class="o">+</span> <span class="n">k4</span>
+</pre></div>
+</div>
+<div class="section" id="optimization">
+<h2>Optimization<a class="headerlink" href="#optimization" title="Permalink to this headline">¶</a></h2>
+<p>If we want to find the &#8220;best-fit&#8221; hyperparameters, we should <em>optimize</em>
+an objective function. The two standard functions (as described in
+Chapter 5 of R&amp;W) are the marginalized ln-likelihood and the cross
+validation likelihood. George implements the former in the
+<tt class="docutils literal"><span class="pre">GP.lnlikelihood</span></tt> function and the gradient with respect to the
+hyperparameters in the <tt class="docutils literal"><span class="pre">GP.grad_lnlikelihood</span></tt> function:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
+<span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">),</span>
+               <span class="n">white_noise</span><span class="o">=</span><span class="mf">0.19</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">fit_white_noise</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">grad_lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre>-136.166948891
+[  1.01554945e+02   2.84403216e-01  -2.07871875e+00  -1.84883265e-01
+   1.92835916e+00  -1.18652524e+00  -2.26721780e+03   9.41628135e+00
+  -1.25060215e+01  -3.07023672e+01  -1.80087624e-01   3.11546171e-03]
+</pre></div>
+</div>
+<p>We&#8217;ll use a gradient based optimization routine from SciPy to fit this
+model as follows:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">scipy.optimize</span> <span class="kn">as</span> <span class="nn">op</span>
+
+<span class="c"># Define the objective function (negative log-likelihood in this case).</span>
+<span class="k">def</span> <span class="nf">nll</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">ll</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">ll</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ll</span><span class="p">)</span> <span class="k">else</span> <span class="mf">1e25</span>
+
+<span class="c"># And the gradient of the objective function.</span>
+<span class="k">def</span> <span class="nf">grad_nll</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">gp</span><span class="o">.</span><span class="n">grad_lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c"># You need to compute the GP once before starting the optimization.</span>
+<span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+<span class="c"># Print the initial ln-likelihood.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+
+<span class="c"># Run the optimization routine.</span>
+<span class="n">p0</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">get_vector</span><span class="p">()</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">nll</span><span class="p">,</span> <span class="n">p0</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">grad_nll</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&quot;L-BFGS-B&quot;</span><span class="p">)</span>
+
+<span class="c"># Update the kernel and print the final log-likelihood.</span>
+<span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="o">-</span><span class="mf">136.166948891</span>
+<span class="o">-</span><span class="mf">84.1979126818</span>
+</pre></div>
+</div>
+<p><strong>Warning:</strong> <em>An optimization code something like this should work on
+most problems but the results can be very sensitive to your choice of
+initialization and algorithm. If the results are nonsense, try choosing
+a better initial guess or try a different value of the ``method``
+parameter in ``op.minimize``.</em></p>
+<p>After running this optimization, we find a final ln-likelihood of -84;
+slightly better than the result in R&amp;W. We can plot our prediction of
+the CO2 concentration into the future using our optimized Gaussian
+process model by running:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="mi">2025</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+<span class="n">mu</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">return_var</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+<span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s">&quot;.k&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="o">+</span><span class="n">std</span><span class="p">,</span> <span class="n">mu</span><span class="o">-</span><span class="n">std</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;g&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="mi">2025</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;CO$_2$ in ppm&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="../../_images/hyper_12_0.png" src="../../_images/hyper_12_0.png" />
+</div>
+<div class="section" id="sampling-marginalization">
+<h2>Sampling &amp; Marginalization<a class="headerlink" href="#sampling-marginalization" title="Permalink to this headline">¶</a></h2>
+<p>The prediction made in the previous section take into account
+uncertainties due to the fact that a Gaussian process is stochastic but
+it doesn’t take into account any uncertainties in the values of the
+hyperparameters. This won’t matter if the hyperparameters are very well
+constrained by the data but in this case, many of the parameters are
+actually poorly constrained. To take this effect into account, we can
+apply prior probability functions to the hyperparameters and marginalize
+using Markov chain Monte Carlo (MCMC). To do this, we’ll use the
+<a class="reference external" href="http://dfm.io/emcee">emcee</a> package.</p>
+<p>First, we define the probabilistic model:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">lnprob</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="c"># Trivial uniform prior.</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">((</span><span class="o">-</span><span class="mi">100</span> <span class="o">&gt;</span> <span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">p</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="c"># Update the kernel and compute the lnlikelihood.</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this function, we’ve applied a prior on every parameter that is
+uniform between -100 and 100 for every parameter. In real life, you
+should probably use something more intelligent but this will work for
+this problem. The quiet argument in the call to <tt class="docutils literal"><span class="pre">GP.lnlikelihood()</span></tt>
+means that that function will return <tt class="docutils literal"><span class="pre">-numpy.inf</span></tt> if the kernel is
+invalid or if there are any linear algebra errors (otherwise it would
+raise an exception).</p>
+<p>Then, we run the sampler (this will probably take a while to run if you
+want to repeat this analysis):</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">emcee</span>
+
+<span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+<span class="c"># Set up the sampler.</span>
+<span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">=</span> <span class="mi">36</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span>
+<span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">lnprob</span><span class="p">)</span>
+
+<span class="c"># Initialize the walkers.</span>
+<span class="n">p0</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">get_vector</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;Running burn-in&quot;</span><span class="p">)</span>
+<span class="n">p0</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;Running production chain&quot;</span><span class="p">)</span>
+<span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre>Running burn-in
+Running production chain
+</pre></div>
+</div>
+<p>After this run, you can plot 50 samples from the marginalized predictive
+probability distribution:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="mi">2025</span><span class="p">,</span> <span class="mi">250</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+    <span class="c"># Choose a random walker and step.</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">chain</span><span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span>
+
+    <span class="c"># Plot a single sample.</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">gp</span><span class="o">.</span><span class="n">sample_conditional</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="s">&quot;g&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+<span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s">&quot;.k&quot;</span><span class="p">)</span>
+
+<span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="mi">2025</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;CO$_2$ in ppm&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="../../_images/hyper_18_0.png" src="../../_images/hyper_18_0.png" />
+<p>Comparing this to the same figure in the previous section, you’ll notice
+that the error bars on the prediction are now substantially larger than
+before. This is because we are now considering all the predictions that
+are consistent with the data, not just the “best” prediction. In
+general, even though it requires much more computation, it is more
+conservative (and honest) to take all these sources of uncertainty into
+account.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../new_kernel/" class="btn btn-neutral float-right" title="Implementing a new kernel function"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../model/" class="btn btn-neutral" title="Tutorial: model fitting with correlated noise"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014 Dan Foreman-Mackey.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../_static/js/analytics.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

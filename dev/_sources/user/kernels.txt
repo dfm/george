@@ -1,0 +1,277 @@
+.. module:: george.kernels
+
+.. _kernels:
+
+Kernels
+=======
+
+George comes equipped with a suite of standard covariance functions or
+kernels that can be combined to build more complex models.
+The standard kernels fall into the following categories:
+
+1. :ref:`stationary-kernels` — functions that depend only on the radial
+   distance between points in some user-defined metric, and
+2. :ref:`non-stationary-kernels` — functions that depend on the value of the
+   input coordinates themselves.
+
+:ref:`combining-kernels` describes how to combine kernels to build more
+sophisticated models and :ref:`new-kernels` explains how you would go about
+incorporating a custom kernel.
+
+
+Common parameters
+-----------------
+
+Every kernel accepts the two keyword arguments ``ndim`` and ``axes``. By
+default, kernels are only one dimensional so you must specify the ``ndim``
+argument if you want the kernel to work with higher dimensional inputs.
+By default, higher dimensional kernels are applied to every dimension but you
+can restrict the evaluation to a subspace using the ``axes`` argument.
+For example, if you have a 3 dimensional input space but you want one of the
+kernels to only act in the first dimension, you would do the following:
+
+.. code-block:: python
+
+    from george import kernels
+    kernel = 10.0 * kernels.Matern32Kernel(1.0, ndim=3, axes=0)
+
+Similarly, if you wanted the kernel to act on only the second and third
+dimensions, you could do something like:
+
+.. code-block:: python
+
+    kernel = 10.0 * kernels.ExpSquaredKernel([1.0, 0.5], ndim=3, axes=[1, 2])
+
+
+.. _implementation:
+
+Implementation details & modeling interface
+-------------------------------------------
+
+It's worth understanding how these kernels are implemented.
+Most of the hard work is done at a low level (in C++) and the Python is only a
+thin wrapper to this functionality.
+This makes the code fast and consistent across interfaces but it also means
+that it isn't currently possible to implement new kernel functions without
+recompiling the code.
+Almost every kernel has hyperparameters that you can set to control its
+behavior and these are controlled using the :ref:`modeling`.
+
+.. code-block:: python
+
+    k = 2.0 * kernels.Matern32Kernel(5.0)
+
+    print(k.get_parameter_names())
+    # ['k1:ln_constant', 'k2:ln_M_0_0']
+
+    print(k.get_vector())
+    # [ 0.69314718  1.60943791]
+
+You'll notice that, in this case, the parameter vector is the logarithm of
+the parameters given when building the kernel.
+This will be the case for any strictly positive parameters because it is
+always better to fit in the logarithm of these types of parameters.
+You probably also noticed that the parameters have names.
+This opens up a few interesting features.
+For example, if you want to change any of the parameters, you can do it as
+follows:
+
+.. code-block:: python
+
+    import numpy as np
+
+    k["k1:ln_constant"] = np.log(10.0)
+    print(k.get_vector())
+    # [ 2.30258509  1.60943791]
+
+    # ... or:
+    k[0] = np.log(2.0)
+    print(k.get_vector())
+    # [ 0.69314718  1.60943791]
+
+Finally, if you want to update the entire vector, you can use the
+:func:`set_vector` method:
+
+.. code-block:: python
+
+    k.set_vector(k.get_vector() + np.random.randn(2))
+
+Another feature common to the kernels is that you can "freeze" and "thaw"
+parameters by name.
+For example, let's say that you want to keep the amplitude of your kernel
+fixed and fit for only the scale length:
+
+.. code-block:: python
+
+    k = 2.0 * kernels.Matern32Kernel(5.0)
+    k.freeze_parameter("k1:ln_constant")
+
+    print(k.get_parameter_names())
+    # ['k2:ln_M_0_0']
+
+    print(k.get_vector())
+    # [ 1.60943791]
+
+Bringing a parameter back into the fold is as easy as
+
+.. code-block:: python
+
+    k.thaw_parameter("k1:ln_constant")
+
+    print(k.get_parameter_names())
+    # ['k1:ln_constant', 'k2:ln_M_0_0']
+
+    print(k.get_vector())
+    # [ 0.69314718  1.60943791]
+
+
+.. _stationary-kernels:
+
+Stationary kernels
+------------------
+
+Stationary kernels are a class of functions that depend on the input
+coordinates :math:`\mathbf{x}_i` and :math:`\mathbf{x}_j` through their
+squared distance under some metric :math:`C`:
+
+.. math::
+
+    r^2 = (\mathbf{x}_i - \mathbf{x}_j)^\mathrm{T}\,C^{-1}\,
+        (\mathbf{x}_i - \mathbf{x}_j)
+
+The currently supported metrics are:
+
+1. "isotropic" — the scale length is equal in all dimensions,
+2. "axis-aligned" — there is a different scale length in each dimension, and
+3. "general" — arbitrary covariances between dimensions are allowed.
+
+The "isotropic" and "axis-aligned" metrics are parameterized by the logarithms
+of their scale lengths.
+For example:
+
+.. code-block:: python
+
+    from george.metrics import Metric
+    m = Metric(2.0, ndim=2)
+    print(m.get_vector())
+    # [ 0.69314718]
+
+gives a two-dimensional isotropic metric with
+
+.. math::
+
+    C = \left(\begin{array}{cc} 2 & 0 \\ 0 & 2 \end{array}\right)
+
+and
+
+.. code-block:: python
+
+    m = Metric([2.0, 4.0], ndim=2)
+    print(m.get_vector())
+    # [ 0.69314718  1.38629436]
+
+specifies the following matrix
+
+.. math::
+
+    C = \left(\begin{array}{cc} 2 & 0 \\ 0 & 4 \end{array}\right) \quad.
+
+In the "general" case, the matrix is parameterized by the elements of the
+Cholesky decomposition :math:`C = L\,L^\mathrm{T}` with logarithms along the
+diagonal.
+For example:
+
+.. code-block:: python
+
+    m = Metric([[2.0, 0.1], [0.1, 4.0]], ndim=2)
+    print(m.get_vector())
+    # [ 0.34657359  0.07071068  0.69252179]
+
+All the stationary kernels take the ``metric`` specification as a keyword
+argument:
+
+.. code-block:: python
+
+    k = kernels.ExpSquaredKernel(metric=[[5.0, 0.1], [0.1, 4.0]], ndim=2)
+    print(k.get_vector())
+    # [ 0.80471896  0.04472136  0.69289712]
+
+The currently available stationary kernels are:
+
+.. autoclass:: george.kernels.ExpSquaredKernel
+.. autoclass:: george.kernels.Matern32Kernel
+.. autoclass:: george.kernels.Matern52Kernel
+.. autoclass:: george.kernels.ExpKernel
+.. autoclass:: george.kernels.RationalQuadraticKernel
+
+
+.. _non-stationary-kernels:
+
+Non-stationary kernels
+----------------------
+
+Non-stationary kernels are specified by a (symmetric) function of the input
+coordinates themselves.
+They are applied identically to every axis so the ``axes`` keyword argument
+will probably come in handy.
+
+For example, to implement a quasi-periodic kernel with a three-dimensional
+input space where you only want to apply the periodicity along the first
+(e.g. time) dimension, you would use something like:
+
+.. code-block:: python
+
+    k = kernels.ExpSine2Kernel(gamma=0.1, period=5.0, ndim=3, axes=0)
+    k *= 10.0 * kernels.ExpSquaredKernel(metric=5.0, ndim=3, axes=0)
+    k += 4.0 * kernels.Matern32Kernel(metric=4.0, ndim=3, axes=[1, 2])
+
+The currently available non-stationary kernels are:
+
+.. autoclass:: george.kernels.ConstantKernel
+.. autoclass:: george.kernels.DotProductKernel
+.. autoclass:: george.kernels.CosineKernel
+.. autoclass:: george.kernels.ExpSine2Kernel
+
+
+.. _combining-kernels:
+
+Combining kernels
+-----------------
+
+More complicated kernels can be constructed by algebraically combining the
+basic kernels listed in the previous sections.
+In particular, all the kernels support addition and multiplication.
+For example, an exponential-squared kernel with a non-trivial variance can be
+constructed as follows:
+
+.. code-block:: python
+
+    from george import kernels
+    kernel = 1e-3 * kernels.ExpSquaredKernel(3.4)
+
+This is equivalent to:
+
+.. code-block:: python
+
+    from math import sqrt
+    kernel = kernels.Product(kernels.ConstantKernel(sqrt(1e-3)),
+                             kernels.ExpSquaredKernel(3.4))
+
+As demonstrated in :ref:`hyper`, a mixture of kernels can be implemented with
+addition:
+
+.. code-block:: python
+
+    k1 = 1e-3 * kernels.ExpSquaredKernel(3.4)
+    k2 = 1e-4 * kernels.Matern32Kernel(14.53)
+    kernel = k1 + k2
+
+
+.. _new-kernels:
+
+Implementing new kernels
+------------------------
+
+As mentioned previously, because of technical limitations, new kernels can
+only be implemented by re-compiling george.
+See
