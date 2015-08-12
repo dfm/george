@@ -41,7 +41,7 @@ class GP(object):
     def __init__(self,
                  kernel,
                  mean=None,
-                 white_noise=0.0,
+                 white_noise=TINY,
                  fit_white_noise=False,
                  solver=BasicSolver,
                  **kwargs):
@@ -50,7 +50,7 @@ class GP(object):
         self._alpha = None
         self._y = None
         self.mean = mean
-        self.ln_sigma2 = np.log(white_noise)
+        self.ln_sigma2 = np.log(white_noise) if white_noise > 0.0 else -np.inf
         self.fit_white_noise = fit_white_noise
 
         self.solver_type = solver
@@ -209,16 +209,16 @@ class GP(object):
         self._x, self.inds = self.parse_samples(x, sort)
         self._x = np.ascontiguousarray(self._x, dtype=np.float64)
         try:
-            self._yerr = float(yerr) * np.ones(len(x))
+            self._yerr2 = float(yerr)**2 * np.ones(len(x))
         except TypeError:
-            self._yerr = self._check_dimensions(yerr)[self.inds]
-        self._yerr = np.ascontiguousarray(self._yerr, dtype=np.float64)
+            self._yerr2 = self._check_dimensions(yerr)[self.inds] ** 2
+        self._yerr2 = np.ascontiguousarray(self._yerr2, dtype=np.float64)
 
         # Set up and pre-compute the solver.
         self.solver = self.solver_type(self.kernel, **(self.solver_kwargs))
 
         # Include the white noise term.
-        yerr = np.sqrt(self._yerr ** 2 + np.exp(self.ln_sigma2))
+        yerr = np.sqrt(self._yerr2 + np.exp(self.ln_sigma2))
         self.solver.compute(self._x, yerr, **kwargs)
 
         self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
@@ -234,13 +234,14 @@ class GP(object):
 
         """
         if self.kernel.dirty or not self.computed:
-            if not (hasattr(self, "_x") and hasattr(self, "_yerr")):
+            if not (hasattr(self, "_x") and hasattr(self, "_yerr2")):
                 raise RuntimeError("You need to compute the model first")
             try:
                 # Update the model making sure that we store the original
                 # ordering of the points.
                 initial_order = np.array(self.inds)
-                self.compute(self._x, self._yerr, sort=False, **kwargs)
+                self.compute(self._x, np.sqrt(self._yerr2), sort=False,
+                             **kwargs)
                 self.inds = initial_order
             except (ValueError, LinAlgError):
                 if quiet:
@@ -288,7 +289,7 @@ class GP(object):
         # Make sure that the model is computed and try to recompute it if it's
         # dirty.
         if not self.recompute(quiet=quiet):
-            return np.zeros(len(self.kernel), dtype=float)
+            return np.zeros(len(self), dtype=float)
 
         # Pre-compute some factors.
         self._compute_alpha(y)
@@ -398,6 +399,7 @@ class GP(object):
 
         x, _ = self.parse_samples(t, False)
         cov = self.get_matrix(x)
+        cov[np.diag_indices_from(cov)] += TINY
         return multivariate_gaussian_samples(cov, size, mean=self.mean(x))
 
     def get_matrix(self, x1, x2=None):
