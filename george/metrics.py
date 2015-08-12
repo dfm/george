@@ -4,6 +4,7 @@ from __future__ import division, print_function
 
 __all__ = ["Metric", "Subspace"]
 
+import copy
 import numpy as np
 from scipy.linalg import cho_factor
 
@@ -24,7 +25,7 @@ class Metric(object):
 
     def __new__(cls, metric, *args, **kwargs):
         if isinstance(metric, Metric):
-            return metric
+            return copy.deepcopy(metric)
         return object.__new__(cls, metric, *args, **kwargs)
 
     def __init__(self, metric, ndim=None, axes=None, lower=True):
