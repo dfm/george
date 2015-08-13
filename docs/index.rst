@@ -16,10 +16,11 @@ George is being actively developed in `a public repository on GitHub
    :caption: User Guide
 
    user/quickstart
-   user/gp
+   user/upgrade
    user/kernels
-   user/modeling
+   user/gp
    user/solvers
+   user/modeling
 
 
 .. toctree::

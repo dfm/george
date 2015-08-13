@@ -1,8 +1,5 @@
-Author:
-
-- `Dan Foreman-Mackey (@dfm) <https://github.com/dfm>`_
-
-With many contributions from:
+George is being developed by `Dan Foreman-Mackey (@dfm)
+<https://github.com/dfm>`_ with many contributions from:
 
 - `Ruth Angus (@RuthAngus) <https://github.com/RuthAngus>`_
 - `Jonah Bernhard (@jbernhard) <https://github.com/jbernhard>`_

@@ -8,9 +8,16 @@ except NameError:
     __GEORGE_SETUP__ = False
 
 if not __GEORGE_SETUP__:
-    __all__ = ["kernels", "GP", "BasicSolver", "HODLRSolver"]
+    __all__ = [
+        "kernels",
+        "GP",
+        "BasicSolver", "HODLRSolver",
+        "ModelingMixin",
+    ]
 
     from . import kernels
     from .gp import GP
     from .basic import BasicSolver
     from .hodlr import HODLRSolver
+
+    from .modeling import ModelingMixin
