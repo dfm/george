@@ -15,16 +15,18 @@ doc: |
     :param width:
         The (squared) width :math:`w` of the Gaussian.
 
+reparams:
+    inv_2w: return 0.5 * exp(-ln_width);
+
 value: |
     double d1 = x1 - location, d2 = x2 - location;
-    return exp(-0.5 * (d1*d1 + d2*d2) * exp(-ln_width));
+    return exp(-(d1*d1 + d2*d2) * inv_2w);
 
 grad:
     location: |
-        double d1 = x1 - location, d2 = x2 - location,
-               inv_w = exp(-ln_width);
-        return exp(-0.5 * (d1*d1 + d2*d2) * inv_w) * inv_w * (d1 + d2);
+        double d1 = x1 - location, d2 = x2 - location;
+        return 2 * exp(-(d1*d1 + d2*d2) * inv_2w) * inv_2w * (d1 + d2);
     ln_width: |
         double d1 = x1 - location, d2 = x2 - location,
-               arg = 0.5 * (d1*d1 + d2*d2) * exp(-ln_width);
+               arg = (d1*d1 + d2*d2) * inv_2w;
         return exp(-arg) * arg;
