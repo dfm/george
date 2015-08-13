@@ -13,16 +13,17 @@ doc: |
     :param alpha:
         The Gamma distribution parameter.
 
+reparams:
+    alpha:
+        return exp(ln_alpha);
+
 value: |
-    double alpha = exp(ln_alpha);
     return pow(1 + 0.5 * r2 / alpha, -alpha);
 
 grad:
     r2: |
-        double alpha = exp(ln_alpha);
         return -0.5 * pow(1 + 0.5 * r2 / alpha, -alpha-1);
     ln_alpha: |
-        double alpha = exp(ln_alpha),
-               t1 = 1.0 + 0.5 * r2 / alpha,
+        double t1 = 1.0 + 0.5 * r2 / alpha,
                t2 = 2.0 * alpha * t1;
         return alpha * pow(t1, -alpha) * (r2 / t2 - log(t1));

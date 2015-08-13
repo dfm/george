@@ -8,33 +8,15 @@ DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t
 
 
-cdef extern from "subspace.h" namespace "george::subspace":
-
-    cdef cppclass Subspace:
-        Subspace(const unsigned ndim, const unsigned naxes)
-        void set_axis (const unsigned i, const unsigned value)
-
-
 cdef extern from "metrics.h" namespace "george::metrics":
-
     cdef cppclass Metric:
-        void set_axis (const unsigned i, const unsigned value)
-        void set_parameter (const unsigned i, const double value)
-
+        pass
     cdef cppclass IsotropicMetric(Metric):
-        IsotropicMetric(const unsigned ndim, const unsigned naxes)
-        void set_axis (const unsigned i, const unsigned value)
-        void set_parameter (const unsigned i, const double value)
-
+        pass
     cdef cppclass AxisAlignedMetric(Metric):
-        AxisAlignedMetric(const unsigned ndim, const unsigned ndim)
-        void set_axis (const unsigned i, const unsigned value)
-        void set_parameter (const unsigned i, const double value)
-
+        pass
     cdef cppclass GeneralMetric(Metric):
-        GeneralMetric(const unsigned ndim, const unsigned int ndim)
-        void set_axis (const unsigned i, const unsigned value)
-        void set_parameter (const unsigned i, const double value)
+        pass
 
 
 cdef extern from "kernels.h" namespace "george::kernels":
@@ -45,6 +27,8 @@ cdef extern from "kernels.h" namespace "george::kernels":
         unsigned int get_ndim () const
         unsigned int size () const
         void set_vector (const double*)
+        void set_axis (unsigned i, unsigned value)
+        void set_metric_parameter (unsigned i, double value)
 
     # Operators.
     cdef cppclass Operator(Kernel):
@@ -57,58 +41,20 @@ cdef extern from "kernels.h" namespace "george::kernels":
         Product(Kernel* k1, Kernel* k2)
 
     {% for spec in specs %}
-    cdef cppclass {{ spec.name }}(Kernel):
+    cdef cppclass {{ spec.name }}{%- if spec.stationary -%}[M]{%- endif -%}(Kernel):
         {{ spec.name }} (
             {%- if spec.params -%}{% for param in spec.params %}
             double {{ param }},
             {%- endfor %}{% endif %}
-            {%- if spec.stationary %}
-            Metric* metric
-            {%- else %}
-            Subspace* subspace
-            {%- endif %}
+            unsigned ndim,
+            unsigned naxes
         )
+
+        void set_axis (unsigned i, unsigned value)
+        {% if spec.stationary %}
+        void set_metric_parameter (unsigned i, double value)
+        {% endif %}
     {% endfor %}
-
-
-cdef inline double eval_python_kernel (const double* pars,
-                                       const unsigned int size, void* meta,
-                                       const double* x1, const double* x2,
-                                       const unsigned int ndim):
-    # Build the arguments for calling the function.
-    cdef np.npy_intp shape[1]
-    shape[0] = <np.npy_intp>ndim
-    x1_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>x1)
-    x2_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>x2)
-
-    shape[0] = <np.npy_intp>size
-    pars_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>pars)
-
-    # Call the Python function and return the value.
-    cdef object self = <object>meta
-    return self.f(x1_arr, x2_arr, pars_arr)
-
-
-cdef inline void eval_python_kernel_grad (const double* pars,
-                                          const unsigned int size,
-                                          void* meta,
-                                          const double* x1, const double* x2,
-                                          const unsigned int ndim, double* grad):
-    # Build the arguments for calling the function.
-    cdef np.npy_intp shape[1]
-    shape[0] = <np.npy_intp>ndim
-    x1_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>x1)
-    x2_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>x2)
-
-    shape[0] = <np.npy_intp>size
-    pars_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>pars)
-
-    # Call the Python function and update the gradient values in place.
-    cdef object self = <object>meta
-    cdef np.ndarray[DTYPE_t, ndim=1] grad_arr = \
-        np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, <void*>grad)
-    grad_arr[:] = self.g(x1_arr, x2_arr, pars_arr)
-
 
 cdef inline Kernel* parse_kernel(kernel_spec) except *:
     if not hasattr(kernel_spec, "is_kernel"):
@@ -137,52 +83,67 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
     cdef unsigned i
     cdef np.ndarray[DTYPE_t, ndim=1] pars = kernel_spec._parameter_vector
     cdef Kernel* kernel
-    cdef Metric* metric
-    cdef Subspace* subspace
 
     if kernel_spec.stationary:
-        metric_spec = kernel_spec.metric
-        if metric_spec.metric_type == 0:
-            metric = new IsotropicMetric(metric_spec.ndim,
-                                         len(metric_spec.axes))
-        elif metric_spec.metric_type == 1:
-            metric = new AxisAlignedMetric(metric_spec.ndim,
-                                           len(metric_spec.axes))
-        elif metric_spec.metric_type == 2:
-            metric = new GeneralMetric(metric_spec.ndim,
-                                       len(metric_spec.axes))
-        else:
-            raise TypeError("Unknown metric type: {0}".format(
-                kernel_spec.__class__.__name__))
-
-        for i, (a, p) in enumerate(zip(metric_spec.axes,
-                                       metric_spec.parameters)):
-            metric.set_axis(i, a)
-            metric.set_parameter(i, p)
-
+        ndim = kernel_spec.metric.ndim
+        axes = kernel_spec.metric.axes
     else:
-        subspace = new Subspace(kernel_spec.ndim, len(kernel_spec.axes))
-        for i, a in enumerate(kernel_spec.axes):
-            subspace.set_axis(i, a)
+        ndim = kernel_spec.ndim
+        axes = kernel_spec.axes
 
     if False:
         pass
     {% for spec in specs %}
     elif kernel_spec.kernel_type == {{ spec.index }}:
+
+        {% if spec.stationary %}
+        metric_spec = kernel_spec.metric
+        if metric_spec.metric_type == 0:
+            kernel = new {{ spec.name }}[IsotropicMetric] (
+                {%- if spec.params -%}{% for param in spec.params %}
+                kernel_spec.{{ param }},
+                {%- endfor %}{% endif %}
+                ndim,
+                len(axes)
+            )
+        elif metric_spec.metric_type == 1:
+            kernel = new {{ spec.name }}[AxisAlignedMetric] (
+                {%- if spec.params -%}{% for param in spec.params %}
+                kernel_spec.{{ param }},
+                {%- endfor %}{% endif %}
+                ndim,
+                len(axes)
+            )
+        elif metric_spec.metric_type == 2:
+            kernel = new {{ spec.name }}[GeneralMetric] (
+                {%- if spec.params -%}{% for param in spec.params %}
+                kernel_spec.{{ param }},
+                {%- endfor %}{% endif %}
+                ndim,
+                len(axes)
+            )
+        else:
+            raise TypeError("Unknown metric type: {0}".format(
+                kernel_spec.__class__.__name__))
+
+        for i, p in enumerate(metric_spec.parameters):
+            kernel.set_metric_parameter(i, p)
+        {% else %}
         kernel = new {{ spec.name }} (
             {%- if spec.params -%}{% for param in spec.params %}
             kernel_spec.{{ param }},
             {%- endfor %}{% endif %}
-            {%- if spec.stationary %}
-            metric
-            {%- else %}
-            subspace
-            {%- endif %}
+            ndim,
+            len(axes)
         )
+        {% endif %}
+
+        for i, a in enumerate(axes):
+            kernel.set_axis(i, a)
+
     {% endfor %}
     else:
         raise TypeError("Unknown kernel: {0}".format(
                         kernel_spec.__class__.__name__))
 
-    # kernel.set_vector(<double*>pars.data)
     return kernel

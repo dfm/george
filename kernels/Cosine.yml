@@ -16,10 +16,14 @@ doc: |
     :param period:
         The period of the oscillation.
 
+reparams:
+    factor:
+        return 2 * M_PI * exp(-ln_period);
+
 value: |
-    return cos(2 * M_PI * (x1 - x2) * exp(-ln_period));
+    return cos((x1 - x2) * factor);
 
 grad:
     ln_period: |
-        double r = 2 * M_PI * exp(-ln_period) * (x1 - x2);
+        double r = factor * (x1 - x2);
         return r * sin(r);

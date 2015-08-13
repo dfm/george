@@ -19,7 +19,8 @@ namespace metrics {
 class Metric {
 public:
     Metric (const unsigned ndim, const unsigned naxes, const unsigned size)
-        : status_(METRIC_OK), updated_(true), vector_(size), subspace_(ndim, naxes) {};
+        : status_(METRIC_OK), updated_(true), vector_(size),
+          subspace_(ndim, naxes) {};
     virtual ~Metric () {};
 
     // Return the distance between two vectors.
@@ -34,12 +35,12 @@ public:
 
     // Parameter vector specification.
     unsigned int size () const { return this->vector_.size(); };
-    void set_parameter (const unsigned int i, const double value) {
+    virtual void set_parameter (const unsigned int i, const double value) {
         this->updated_ = true;
-        this->vector_[i] = value;
+        this->vector_[i] = exp(-value);
     };
-    double get_parameter (const unsigned int i) const {
-        return this->vector_[i];
+    virtual double get_parameter (const unsigned int i) const {
+        return -log(this->vector_[i]);
     };
 
     // Axes specification.
@@ -73,7 +74,7 @@ public:
             d = x1[j] - x2[j];
             r2 += d*d;
         }
-        return r2 * exp(-this->vector_[0]);
+        return r2 * this->vector_[0];
     };
 
     double gradient (const double* x1, const double* x2, double* grad) {
@@ -95,7 +96,7 @@ public:
         for (i = 0; i < this->subspace_.get_naxes(); ++i) {
             j = this->subspace_.get_axis(i);
             d = x1[j] - x2[j];
-            r2 += d * d * exp(-this->vector_[i]);
+            r2 += d * d * this->vector_[i];
         }
         return r2;
     };
@@ -106,7 +107,7 @@ public:
         for (i = 0; i < this->subspace_.get_naxes(); ++i) {
             j = this->subspace_.get_axis(i);
             d = x1[j] - x2[j];
-            d = d * d * exp(-this->vector_[i]);
+            d = d * d * this->vector_[i];
             r2 += d;
             grad[i] = -d;
         }
@@ -122,7 +123,7 @@ inline void _custom_forward_sub (int n, double* L, double* b) {
     for (i = 0, k = 0; i < n; ++i) {
         for (j = 0; j < i; ++j, ++k)
             b[i] -= L[k] * b[j];
-        b[i] *= exp(-L[k++]);
+        b[i] *= L[k++];  // The inverse has already been taken along the diagonal.
     }
 }
 
@@ -134,7 +135,7 @@ inline void _custom_backward_sub (int n, double* L, double* b) {
             b[i] -= L[k] * b[j];
             k -= j;
         }
-        b[i] *= exp(-L[k]);
+        b[i] *= L[k];  // The inverse has already been taken along the diagonal.
     }
 }
 
@@ -142,6 +143,25 @@ class GeneralMetric : public Metric {
 public:
     GeneralMetric (const unsigned ndim, const unsigned naxes)
         : Metric(ndim, naxes, naxes*(naxes+1)/2) {};
+
+    void set_parameter (const unsigned int i, const double value) {
+        unsigned j;
+        this->updated_ = true;
+        for (j = 0; j <= i; j += j + 1) {
+            if (i == j) {
+                this->vector_[i] = exp(-value);
+                return;
+            }
+        }
+        this->vector_[i] = value;
+    };
+    double get_parameter (const unsigned int i) const {
+        unsigned j;
+        for (j = 0; j <= i; j += j + 1)
+            if (i == j)
+                return -log(this->vector_[i]);
+        return this->vector_[i];
+    };
 
     double value (const double* x1, const double* x2) {
         unsigned i, j, n = this->subspace_.get_naxes();

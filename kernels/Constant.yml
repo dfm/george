@@ -14,9 +14,13 @@ doc: |
     :param constant:
         The constant value :math:`c` in the above equation.
 
+reparams:
+    constant:
+        return exp(ln_constant);
+
 value: |
-    return exp(ln_constant);
+    return constant;
 
 grad:
     ln_constant: |
-        return exp(ln_constant);
+        return constant;

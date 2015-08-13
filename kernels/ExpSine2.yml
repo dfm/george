@@ -20,16 +20,20 @@ doc: |
         The period :math:`P` of the oscillation (in the same units as
         :math:`\mathbf{x}`).
 
+reparams:
+    factor:
+        return M_PI * exp(-ln_period);
+
 value: |
-    double s = sin((x1 - x2) * M_PI * exp(-ln_period));
+    double s = sin((x1 - x2) * factor);
     return exp(-gamma * s * s);
 
 grad:
     gamma: |
-        double s = sin(M_PI * (x1 - x2) * exp(-ln_period)), s2 = s * s;
+        double s = sin((x1 - x2) * factor), s2 = s * s;
         return -s2 * exp(-gamma * s2);
     ln_period: |
-        double arg = M_PI * (x1 - x2) * exp(-ln_period),
+        double arg = (x1 - x2) * factor,
                s = sin(arg), c = cos(arg),
                A = exp(-gamma * s * s);
         return 2 * gamma * arg * c * s * A;

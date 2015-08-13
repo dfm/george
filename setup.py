@@ -31,6 +31,7 @@ def compile_kernels(fns):
             spec = yaml.load(f.read())
         print("Found kernel '{0}'".format(spec["name"]))
         spec["index"] = i
+        spec["reparams"] = spec.get("reparams", {})
         specs.append(spec)
     print("Found {0} kernel specifications".format(len(specs)))
 

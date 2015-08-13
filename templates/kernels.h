@@ -28,6 +28,8 @@ public:
     virtual unsigned get_ndim () const { return 0; }
     virtual void set_parameter (unsigned i, double v) {};
     virtual double get_parameter (unsigned i) const { return 0.0; };
+    virtual void set_metric_parameter (unsigned i, double v) {};
+    virtual void set_axis (unsigned i, unsigned v) {};
 };
 
 
@@ -99,38 +101,62 @@ public:
 */
 {%- if spec.stationary %}
 
+template <typename M>
 class {{ spec.name }} : public Kernel {
 public:
     {{ spec.name }} (
         {%- for param in spec.params %}
         double {{ param }},
         {%- endfor %}
-        Metric* metric
+        const unsigned ndim,
+        const unsigned naxes
     ) :
         size_({{ spec.params|length }}),
-        metric_(metric)
+        metric_(ndim, naxes)
         {% for param in spec.params -%}
         , param_{{ param }}_({{param}})
-        {% endfor -%} {};
-    ~{{ spec.name }} () { delete metric_; };
+        {% endfor -%}
+    {
+        update_reparams();
+    };
 
-    unsigned get_ndim () const { return this->metric_->get_ndim(); };
+    unsigned get_ndim () const { return metric_.get_ndim(); };
 
     double get_parameter (unsigned i) const {
         {% for param in spec.params -%}
-        if (i == {{ loop.index - 1 }}) return this->param_{{ param }}_;
+        if (i == {{ loop.index - 1 }}) return param_{{ param }}_;
         {% endfor -%}
-        return this->metric_->get_parameter(i - this->size_);
+        return metric_.get_parameter(i - size_);
     };
     void set_parameter (unsigned i, double value) {
         {% for param in spec.params -%}
-        if (i == {{ loop.index - 1 }}) this->param_{{ param }}_ = value; else
+        if (i == {{ loop.index - 1 }}) {
+            param_{{ param }}_ = value;
+            update_reparams();
+        } else
         {% endfor -%}
-        this->metric_->set_parameter(i - this->size_, value);
+        metric_.set_parameter(i - size_, value);
+    };
+
+    double get_metric_parameter (unsigned i) const {
+        return metric_.get_parameter(i);
+    };
+    void set_metric_parameter (unsigned i, double value) {
+        metric_.set_parameter(i, value);
+    };
+
+    unsigned get_axis (unsigned i) const {
+        return metric_.get_axis(i);
+    };
+    void set_axis (unsigned i, unsigned value) {
+        metric_.set_axis(i, value);
     };
 
     double get_value (
             {% for param in spec.params -%}
+            double {{ param }},
+            {% endfor -%}
+            {% for param in spec.reparams -%}
             double {{ param }},
             {% endfor -%}
             double r2) {
@@ -138,10 +164,13 @@ public:
     };
 
     double value (const double* x1, const double* x2) {
-        double r2 = this->metric_->value(x1, x2);
-        return this->get_value(
+        double r2 = metric_.value(x1, x2);
+        return get_value(
             {% for param in spec.params -%}
-            this->param_{{ param }}_,
+            param_{{ param }}_,
+            {% endfor -%}
+            {% for param in spec.reparams -%}
+            reparam_{{ param }}_,
             {% endfor -%}
             r2);
     };
@@ -149,6 +178,9 @@ public:
     {% for param in spec.params -%}
     double {{ param }}_gradient (
             {% for param in spec.params -%}
+            double {{ param }},
+            {% endfor -%}
+            {% for param in spec.reparams -%}
             double {{ param }},
             {% endfor -%}
             double r2) {
@@ -160,37 +192,69 @@ public:
             {% for param in spec.params -%}
             double {{ param }},
             {% endfor -%}
+            {% for param in spec.reparams -%}
+            double {{ param }},
+            {% endfor -%}
             double r2) {
         {{ spec.grad["r2"] | indent(8) }}
     };
 
     void gradient (const double* x1, const double* x2, double* grad) {
-        unsigned i, n = this->size();
-        double r2 = this->metric_->value(x1, x2),
-               r2grad = this->radial_gradient(
+        unsigned i, n = size();
+        double r2 = metric_.value(x1, x2),
+               r2grad = radial_gradient(
                     {% for param in spec.params -%}
-                    this->param_{{ param }}_,
+                    param_{{ param }}_,
                     {% endfor %}
+                    {% for param in spec.reparams -%}
+                    reparam_{{ param }}_,
+                    {% endfor -%}
                     r2);
 
         {% for param in spec.params -%}
         grad[{{ loop.index - 1 }}] = {{ param }}_gradient(
                 {% for param in spec.params -%}
-                this->param_{{ param }}_,
+                param_{{ param }}_,
+                {% endfor -%}
+                {% for param in spec.reparams -%}
+                reparam_{{ param }}_,
                 {% endfor -%}
                 r2);
         {% endfor %}
-        this->metric_->gradient(x1, x2, &(grad[this->size_]));
-        for (i = this->size_; i < n; ++i) grad[i] *= r2grad;
+        metric_.gradient(x1, x2, &(grad[size_]));
+        for (i = size_; i < n; ++i) grad[i] *= r2grad;
     };
 
-    unsigned size () const { return this->metric_->size() + this->size_; };
+    unsigned size () const { return metric_.size() + size_; };
+
+    void update_reparams () {
+        {% for param in spec.reparams -%}
+        reparam_{{ param }}_ = get_reparam_{{ param }} (
+            {% for param in spec.params -%}
+            param_{{ param }}_{%- if not loop.last %},{% endif -%}
+            {% endfor %}
+        );
+        {% endfor %}
+    };
+
+    {% for param in spec.reparams -%}
+    double get_reparam_{{ param }} (
+        {% for param in spec.params -%}
+        double {{ param }}{%- if not loop.last %},{% endif -%}
+        {% endfor %}
+    ) {
+        {{ spec.reparams[param] | indent(8) }}
+    }
+    {% endfor %}
 
 private:
     unsigned size_;
-    Metric* metric_;
+    M metric_;
     {% for param in spec.params -%}
     double param_{{ param }}_;
+    {% endfor %}
+    {% for param in spec.reparams -%}
+    double reparam_{{ param }}_;
     {% endfor %}
 };
 
@@ -202,27 +266,34 @@ public:
         {%- for param in spec.params %}
         double {{ param }},
         {%- endfor %}
-        Subspace* subspace
+        unsigned ndim,
+        unsigned naxes
     ) :
         size_({{ spec.params|length }}),
-        subspace_(subspace)
+        subspace_(ndim, naxes)
         {%- for param in spec.params %}
         , param_{{ param }}_({{param}})
         {%- endfor %}
-        {};
-    ~{{ spec.name }} () { delete subspace_; };
+    {
+        update_reparams();
+    };
 
-    unsigned get_ndim () const { return this->subspace_->get_ndim(); };
+    unsigned get_ndim () const { return subspace_.get_ndim(); };
+    unsigned get_axis (const unsigned i) const { return subspace_.get_axis(i); };
+    void set_axis (const unsigned i, const unsigned value) { subspace_.set_axis(i, value); };
 
     double get_parameter (unsigned i) const {
         {% for param in spec.params -%}
-        if (i == {{ loop.index - 1 }}) return this->param_{{ param }}_;
+        if (i == {{ loop.index - 1 }}) return param_{{ param }}_;
         {% endfor -%}
         return 0.0;
     };
     void set_parameter (unsigned i, double value) {
         {% for param in spec.params -%}
-        if (i == {{ loop.index - 1 }}) this->param_{{ param }}_ = value; else
+        if (i == {{ loop.index - 1 }}) {
+            param_{{ param }}_ = value;
+            update_reparams();
+        } else
         {% endfor -%};
     };
 
@@ -230,18 +301,24 @@ public:
             {% for param in spec.params -%}
             double {{ param }},
             {% endfor -%}
+            {% for param in spec.reparams -%}
+            double {{ param }},
+            {% endfor -%}
             const double x1, const double x2) {
         {{ spec.value | indent(8) }}
     };
 
     double value (const double* x1, const double* x2) {
-        unsigned i, j, n = this->subspace_->get_naxes();
+        unsigned i, j, n = subspace_.get_naxes();
         double value = 0.0;
         for (i = 0; i < n; ++i) {
-            j = this->subspace_->get_axis(i);
-            value += this->get_value(
+            j = subspace_.get_axis(i);
+            value += get_value(
                 {% for param in spec.params -%}
-                this->param_{{ param }}_,
+                param_{{ param }}_,
+                {% endfor -%}
+                {% for param in spec.reparams -%}
+                reparam_{{ param }}_,
                 {% endfor -%}
                 x1[j], x2[j]);
         }
@@ -251,6 +328,9 @@ public:
     {% for param in spec.params -%}
     double {{ param }}_gradient (
             {% for param in spec.params -%}
+            double {{ param }},
+            {% endfor -%}
+            {% for param in spec.reparams -%}
             double {{ param }},
             {% endfor -%}
             const double x1, const double x2) {
@@ -264,13 +344,16 @@ public:
         {% endfor %}
 
         {% if spec.params -%}
-        unsigned i, j, n = this->subspace_->get_naxes();
+        unsigned i, j, n = subspace_.get_naxes();
         for (i = 0; i < n; ++i) {
-            j = this->subspace_->get_axis(i);
+            j = subspace_.get_axis(i);
             {% for param in spec.params -%}
             grad[{{ loop.index - 1 }}] += {{ param }}_gradient(
                 {% for param in spec.params -%}
-                this->param_{{ param }}_,
+                param_{{ param }}_,
+                {% endfor -%}
+                {% for param in spec.reparams -%}
+                reparam_{{ param }}_,
                 {% endfor -%}
                 x1[j], x2[j]);
             {% endfor %}
@@ -278,13 +361,36 @@ public:
         {% endif %}
     };
 
-    unsigned size () const { return this->size_; };
+    void update_reparams () {
+        {% for param in spec.reparams -%}
+        reparam_{{ param }}_ = get_reparam_{{ param }} (
+            {% for param in spec.params -%}
+            param_{{ param }}_{%- if not loop.last %},{% endif -%}
+            {% endfor %}
+        );
+        {% endfor %}
+    };
+
+    {% for param in spec.reparams -%}
+    double get_reparam_{{ param }} (
+        {% for param in spec.params -%}
+        double {{ param }}{%- if not loop.last %},{% endif -%}
+        {% endfor %}
+    ) {
+        {{ spec.reparams[param] | indent(8) }}
+    }
+    {% endfor %}
+
+    unsigned size () const { return size_; };
 
 private:
     unsigned size_;
-    Subspace* subspace_;
+    Subspace subspace_;
     {% for param in spec.params -%}
     double param_{{ param }}_;
+    {% endfor %}
+    {% for param in spec.reparams -%}
+    double reparam_{{ param }}_;
     {% endfor %}
 };
 
