@@ -58,7 +58,7 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-dirhtml: tutorials/hyper.rst tutorials/model.rst
+dirhtml: tutorials/hyper.rst tutorials/model.rst tutorials/new_kernel.rst
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."

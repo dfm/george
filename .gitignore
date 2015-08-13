@@ -14,3 +14,4 @@ george/*.cpp
 george/kernels.py
 george/kerneldefs.pxd
 george/include/kernels.h
+kernels/MyLocalGaussian.yml
