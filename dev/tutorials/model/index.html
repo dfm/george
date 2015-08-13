@@ -76,7 +76,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Implementing a new kernel function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Tutorial: writing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#common-parameters">Common parameters</a></li>
@@ -131,11 +135,14 @@
 </div>
           <div role="main">
             
-  <div class="section" id="tutorial-model-fitting-with-correlated-noise">
-<h1>Tutorial: model fitting with correlated noise<a class="headerlink" href="#tutorial-model-fitting-with-correlated-noise" title="Permalink to this headline">¶</a></h1>
-<p>This tutorial was generated from an IPython notebook that <a class="reference external" href="../../_static/notebooks/model.ipynb">can be
-downloaded here</a>. It was made
-with the following version of george:</p>
+  <span class="target" id="module-george"></span><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This tutorial was generated from an IPython notebook that can be
+downloaded <a class="reference external" href="../_static/notebooks/model.ipynb">here</a>.</p>
+</div>
+<div class="section" id="tutorial-model-fitting-with-correlated-noise">
+<span id="model"></span><h1>Tutorial: model fitting with correlated noise<a class="headerlink" href="#tutorial-model-fitting-with-correlated-noise" title="Permalink to this headline">¶</a></h1>
+<p>This notebook was made with the following version of george:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
 <span class="n">george</span><span class="o">.</span><span class="n">__version__</span>
 </pre></div>

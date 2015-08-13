@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Implementing a new kernel function &mdash; George 1.0.0.dev0 documentation</title>
+  <title>Tutorial: writing new kernels &mdash; George 1.0.0.dev0 documentation</title>
   
 
   
@@ -76,7 +76,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Implementing a new kernel function</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial: writing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#common-parameters">Common parameters</a></li>
@@ -120,7 +124,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../../">Docs</a> &raquo;</li>
       
-    <li>Implementing a new kernel function</li>
+    <li>Tutorial: writing new kernels</li>
       <li class="wy-breadcrumbs-aside">
         
           <a href="https://github.com/dfm/george/blob/master/docs/tutorials/new_kernel.rst" class="fa fa-github"> Edit on GitHub</a>
@@ -131,9 +135,166 @@
 </div>
           <div role="main">
             
-  <div class="section" id="implementing-a-new-kernel-function">
-<span id="new-kernel"></span><h1>Implementing a new kernel function<a class="headerlink" href="#implementing-a-new-kernel-function" title="Permalink to this headline">¶</a></h1>
-<p>Blah.</p>
+  <span class="target" id="module-george"></span><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This tutorial was generated from an IPython notebook that can be
+downloaded <a class="reference external" href="../_static/notebooks/new_kernel.ipynb">here</a>.</p>
+</div>
+<div class="section" id="tutorial-writing-new-kernels">
+<span id="new-kernel"></span><h1>Tutorial: writing new kernels<a class="headerlink" href="#tutorial-writing-new-kernels" title="Permalink to this headline">¶</a></h1>
+<p>This notebook was made with the following version of george:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
+<span class="n">george</span><span class="o">.</span><span class="n">__version__</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&#39;1.0.0.dev0&#39;</span>
+</pre></div>
+</div>
+<p>All the kernels used by george must be implemented in C++ with Python
+bindings. This means that you need to recompile the code anytime you
+want to add a new kernel. This is an unavoidable PITA but—as of version
+1.0—george comes with a kernel specification language that is designed
+to make this process as painless as possible.</p>
+<p>To follow this tutorial, you&#8217;ll need the development version of george.
+You should <a class="reference external" href="../quickstart/">follow the instructions here</a> to get that
+set up and once you can build the code, let&#8217;s start implementing a new
+kernel.</p>
+<div class="section" id="the-kernel-function">
+<h2>The kernel function<a class="headerlink" href="#the-kernel-function" title="Permalink to this headline">¶</a></h2>
+<p>In this tutorial, we will work through the implementation of a kernel
+that wasn&#8217;t available in early versions of the code: the
+<tt class="docutils literal"><span class="pre">LocalGaussianKernel</span></tt>. This kernel has been used by <a class="reference external" href="http://iancze.github.io">Ian
+Czekala</a> in his stellar spectrum fitting
+algorithm <a class="reference external" href="http://iancze.github.io/Starfish/">Starfish</a>.</p>
+<p>This kernel is not stationary and its value is given by the following
+equation:</p>
+<div class="math">
+\[k(x_i,\,x_j) = \exp \left(
+-\frac{(x_i - x_0)^2 + (x_j - x_0)^2}{2\,w}
+\right)\]</div>
+<p>where the parameters <span class="math">\(x_0\)</span> and <span class="math">\(w\)</span> are the location and
+width of the Gaussian respectively. We&#8217;re actually going to parameterize
+this kernel using <span class="math">\(\ln w\)</span> instead of <span class="math">\(w\)</span> because it must be
+strictly positive.</p>
+<p>In our implementation, we&#8217;ll also need the derivatives of this function
+with respect to the hyperparameters so let&#8217;s list those now:</p>
+<div class="math">
+\[\frac{\mathrm{d}k(x_i,\,x_j)}{\mathrm{d}x_0} = \exp \left(
+-\frac{(x_i - x_0)^2 + (x_j - x_0)^2}{2\,w}
+\right) \, \frac{x_i + x_j - 2\,x_0}{w}\]</div>
+<p>and</p>
+<div class="math">
+\[\frac{\mathrm{d}k(x_i,\,x_j)}{\mathrm{d}\ln w} = \exp \left(
+-\frac{(x_i - x_0)^2 + (x_j - x_0)^2}{2\,w}
+\right) \, \frac{(x_i - x_0)^2 + (x_j - x_0)^2}{2\,w} \quad.\]</div>
+</div>
+<div class="section" id="kernel-specification">
+<h2>Kernel specification<a class="headerlink" href="#kernel-specification" title="Permalink to this headline">¶</a></h2>
+<p>In the root directory of your development version of george, there
+should be a directory called <tt class="docutils literal"><span class="pre">kernels</span></tt>. In this directory, create a
+new file called <tt class="docutils literal"><span class="pre">MyLocalGaussian.yml</span></tt> and edit it to have the
+following contents:</p>
+<div class="highlight-python"><div class="highlight"><pre>name: MyLocalGaussianKernel
+doc: You should always document your code.
+stationary: false
+params: [x0, ln_w]
+
+reparams:
+    inv_2w: return 0.5 * exp(-ln_w);
+
+value: |
+    double d1 = x1 - x0, d2 = x2 - x0;
+    return exp(-(d1*d1 + d2*d2) * inv_2w);
+
+grad:
+    x0: |
+        double d1 = x1 - x0, d2 = x2 - x0;
+        return 2 * exp(-(d1*d1 + d2*d2) * inv_2w) * inv_2w * (d1 + d2);
+    ln_w: |
+        double d1 = x1 - x0, d2 = x2 - x0,
+               arg = (d1*d1 + d2*d2) * inv_2w;
+        return exp(-arg) * arg;
+</pre></div>
+</div>
+<p>This file is written in a markup language called YAML and there are a
+lot of online resources for the details of the syntax but let&#8217;s go
+through it line-by-line now to explain what&#8217;s going on.</p>
+<ol class="arabic simple">
+<li>The <tt class="docutils literal"><span class="pre">name</span></tt> field is the name that you want the Python class to
+have. The convention is to have it end in <tt class="docutils literal"><span class="pre">Kernel</span></tt> but I guess you
+can call it more-or-less anything.</li>
+<li>The <tt class="docutils literal"><span class="pre">doc</span></tt> field let&#8217;s you write a docstring for the class. This is
+always a good idea and you can look at the existing kernels for
+inspiration.</li>
+<li>This kernel is not stationary and you specify that using the
+<tt class="docutils literal"><span class="pre">stationary</span></tt> field.</li>
+<li><tt class="docutils literal"><span class="pre">params</span></tt> lists the &#8220;natural&#8221; parameters of the kernel. The
+derivatives should be computed with respect to these parameters. By
+convention, if a parameter name starts with <tt class="docutils literal"><span class="pre">ln_</span></tt>, the user can
+also initialize the kernel with the linear version. For example, in
+this case, you could initialize the kernel object as
+<tt class="docutils literal"><span class="pre">MyLocalGaussianKernel(x0=0.0,</span> <span class="pre">w=1.0)</span></tt> or, equivalently,
+<tt class="docutils literal"><span class="pre">MyLocalGaussianKernel(x0=0.0,</span> <span class="pre">ln_w=0.0)</span></tt>.</li>
+<li>It is often useful (for speed) to pre-compute a reparameterized form
+of the parameters. In this case, we don&#8217;t want to make too many calls
+to the <tt class="docutils literal"><span class="pre">exp</span></tt> function so we&#8217;ll pre-compute <span class="math">\((2\,w)^{-1}\)</span>. To
+do this, we add an entry to the <tt class="docutils literal"><span class="pre">reparams</span></tt> dictionary with raw C++
+code for a function that returns the reparameterization. This
+function will take the natural parameters as input so you can use
+them directly by name.</li>
+<li>The <tt class="docutils literal"><span class="pre">value</span></tt> entry gives the raw C++ code for evaluating the kernel
+function at input <tt class="docutils literal"><span class="pre">double</span></tt>s <tt class="docutils literal"><span class="pre">x1</span></tt> and <tt class="docutils literal"><span class="pre">x2</span></tt>. This function will
+take the parameters and the reparameterizations as inputs so you can
+use them by name.</li>
+<li>Finally, the <tt class="docutils literal"><span class="pre">grad</span></tt> dictionary gives the raw C++ code for computing
+the gradient as a function of each parameter.</li>
+</ol>
+<p>After you save this file and recompile george, you should now have
+access to this kernel as follows:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">george</span> <span class="kn">import</span> <span class="n">kernels</span>
+
+<span class="n">kernel</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">MyLocalGaussianKernel</span><span class="p">(</span><span class="n">x0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">kernel</span> <span class="o">+=</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">Matern32Kernel</span><span class="p">(</span><span class="mf">100.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Whenever you implement a new kernel, you should numerically test that
+you&#8217;ve implemented the gradients correctly. The <tt class="docutils literal"><span class="pre">Kernel</span></tt>
+implementation includes a function for doing exactly that and here&#8217;s how
+you would call it:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+<span class="n">kernel</span><span class="o">.</span><span class="n">test_gradient</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If our implementation was wrong, this would have raised an exception so
+this looks pretty promising!</p>
+<p>Now, we can plot the covariance matrix given by this kernel as follows:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pl</span>
+
+<span class="n">k</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s">&quot;gray&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&quot;nearest&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([])</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([]);</span>
+</pre></div>
+</div>
+<img alt="../../_images/new_kernel_8_0.png" src="../../_images/new_kernel_8_0.png" />
+<p>From this covariance function, we can sample some representative
+functions:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+<span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="../../_images/new_kernel_10_0.png" src="../../_images/new_kernel_10_0.png" />
+<p>George already includes an implementation of this kernel (called the
+<tt class="docutils literal"><span class="pre">LocalGaussianKernel</span></tt>) so we&#8217;ll finish here but when you implement
+your own favorite kernel, you should now open a pull request to include
+the kernel in the released version of george.</p>
+</div>
 </div>
 
 

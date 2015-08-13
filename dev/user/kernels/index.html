@@ -76,7 +76,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/new_kernel/">Implementing a new kernel function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/new_kernel/">Tutorial: writing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../gp/">The GP object</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#common-parameters">Common parameters</a></li>
@@ -447,7 +451,7 @@ constructed as follows:</p>
                          <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">3.4</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>As demonstrated in <em class="xref std std-ref">hyper</em>, a mixture of kernels can be implemented with
+<p>As demonstrated in <a class="reference internal" href="../../tutorials/hyper/#hyper"><em>Tutorial: hyperparameter optimization</em></a>, a mixture of kernels can be implemented with
 addition:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">k1</span> <span class="o">=</span> <span class="mf">1e-3</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">3.4</span><span class="p">)</span>
 <span class="n">k2</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">Matern32Kernel</span><span class="p">(</span><span class="mf">14.53</span><span class="p">)</span>

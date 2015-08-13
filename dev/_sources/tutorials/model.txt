@@ -1,11 +1,16 @@
 
+.. module:: george
+
+.. note:: This tutorial was generated from an IPython notebook that can be
+          downloaded `here <../_static/notebooks/model.ipynb>`_.
+
+.. _model:
+
 
 Tutorial: model fitting with correlated noise
 =============================================
 
-This tutorial was generated from an IPython notebook that `can be
-downloaded here <../../_static/notebooks/model.ipynb>`__. It was made
-with the following version of george:
+This notebook was made with the following version of george:
 
 .. code:: python
 

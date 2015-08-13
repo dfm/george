@@ -1,11 +1,16 @@
 
+.. module:: george
+
+.. note:: This tutorial was generated from an IPython notebook that can be
+          downloaded `here <../_static/notebooks/hyper.ipynb>`_.
+
+.. _hyper:
+
 
 Tutorial: hyperparameter optimization
 =====================================
 
-This tutorial was generated from an IPython notebook that `can be
-downloaded here <../../_static/notebooks/hyper.ipynb>`__. It was made
-with the following version of george:
+This notebook was made with the following version of george:
 
 .. code:: python
 

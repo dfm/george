@@ -29,7 +29,7 @@
 
   
     <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
-        <link rel="next" title="Implementing a new kernel function" href="../new_kernel/"/>
+        <link rel="next" title="Tutorial: writing new kernels" href="../new_kernel/"/>
         <link rel="prev" title="Tutorial: model fitting with correlated noise" href="../model/"/> 
 
   
@@ -76,7 +76,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#sampling-marginalization">Sampling &amp; Marginalization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Implementing a new kernel function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Tutorial: writing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#common-parameters">Common parameters</a></li>
@@ -131,11 +135,14 @@
 </div>
           <div role="main">
             
-  <div class="section" id="tutorial-hyperparameter-optimization">
-<h1>Tutorial: hyperparameter optimization<a class="headerlink" href="#tutorial-hyperparameter-optimization" title="Permalink to this headline">¶</a></h1>
-<p>This tutorial was generated from an IPython notebook that <a class="reference external" href="../../_static/notebooks/hyper.ipynb">can be
-downloaded here</a>. It was made
-with the following version of george:</p>
+  <span class="target" id="module-george"></span><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This tutorial was generated from an IPython notebook that can be
+downloaded <a class="reference external" href="../_static/notebooks/hyper.ipynb">here</a>.</p>
+</div>
+<div class="section" id="tutorial-hyperparameter-optimization">
+<span id="hyper"></span><h1>Tutorial: hyperparameter optimization<a class="headerlink" href="#tutorial-hyperparameter-optimization" title="Permalink to this headline">¶</a></h1>
+<p>This notebook was made with the following version of george:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
 <span class="n">george</span><span class="o">.</span><span class="n">__version__</span>
 </pre></div>
@@ -367,7 +374,7 @@ account.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../new_kernel/" class="btn btn-neutral float-right" title="Implementing a new kernel function"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../new_kernel/" class="btn btn-neutral float-right" title="Tutorial: writing new kernels"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../model/" class="btn btn-neutral" title="Tutorial: model fitting with correlated noise"><span class="fa fa-arrow-circle-left"></span> Previous</a>
