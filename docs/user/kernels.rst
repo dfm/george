@@ -254,7 +254,7 @@ This is equivalent to:
 .. code-block:: python
 
     from math import sqrt
-    kernel = kernels.Product(kernels.ConstantKernel(sqrt(1e-3)),
+    kernel = kernels.Product(kernels.ConstantKernel(constant=sqrt(1e-3)),
                              kernels.ExpSquaredKernel(3.4))
 
 As demonstrated in :ref:`hyper`, a mixture of kernels can be implemented with
@@ -274,4 +274,4 @@ Implementing new kernels
 
 As mentioned previously, because of technical limitations, new kernels can
 only be implemented by re-compiling george.
-See
+See :ref:`new_kernel` for a detailed example of implementing a new kernel.

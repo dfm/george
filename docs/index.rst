@@ -11,20 +11,29 @@ George is being actively developed in `a public repository on GitHub
 <https://github.com/dfm/george/issues>`_ there.
 
 
-User guide
-----------
-
 .. toctree::
    :maxdepth: 2
+   :caption: User Guide
 
-   tutorials/quickstart
-   tutorials/model
-   tutorials/hyper
-   tutorials/new_kernel
+   user/quickstart
    user/gp
    user/kernels
    user/modeling
    user/solvers
+
+
+.. toctree::
+   :maxdepth: 1
+   :glob:
+   :caption: Tutorials
+
+   tutorials/*
+
+
+Contributors
+------------
+
+.. include:: ../AUTHORS.rst
 
 
 License & Attribution
@@ -44,9 +53,14 @@ ArXiv <http://arxiv.org/abs/1403.6015>`_:
     @article{hodlr,
         author = {{Ambikasaran}, S. and {Foreman-Mackey}, D. and
                   {Greengard}, L. and {Hogg}, D.~W. and {O'Neil}, M.},
-         title = "{Fast Direct Methods for Gaussian Processes and the Analysis
-                   of NASA Kepler Mission Data}",
+         title = "{Fast Direct Methods for Gaussian Processes}",
           year = 2014,
          month = mar,
            url = http://arxiv.org/abs/1403.6015
     }
+
+
+Changelog
+---------
+
+.. include:: ../HISTORY.rst
