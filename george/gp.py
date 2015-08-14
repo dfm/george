@@ -8,6 +8,8 @@ import numpy as np
 from scipy.linalg import LinAlgError
 
 from .basic import BasicSolver
+from .modeling import supports_modeling_protocol
+from .mean_functions import ConstantMean, CallableMean
 from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 
@@ -40,16 +42,23 @@ class GP(object):
 
     def __init__(self,
                  kernel,
+                 fit_kernel=True,
                  mean=None,
+                 fit_mean=False,
                  white_noise=TINY,
                  fit_white_noise=False,
                  solver=BasicSolver,
                  **kwargs):
-        self.kernel = kernel
         self._computed = False
         self._alpha = None
         self._y = None
+
+        self.kernel = kernel
+        self.fit_kernel = fit_kernel
+
         self.mean = mean
+        self.fit_mean = fit_mean
+
         self.ln_sigma2 = np.log(white_noise) if white_noise > 0.0 else -np.inf
         self.fit_white_noise = fit_white_noise
 
@@ -64,14 +73,23 @@ class GP(object):
     @mean.setter
     def mean(self, mean):
         if mean is None:
-            self._mean = _default_mean(0.)
+            self._mean = ConstantMean(0.)
         else:
             try:
                 val = float(mean)
+
             except TypeError:
-                self._mean = mean
+                if supports_modeling_protocol(mean):
+                    self._mean = mean
+                elif callable(mean):
+                    self._mean = CallableMean(mean)
+                else:
+                    raise ValueError("invalid mean function")
+
             else:
-                self._mean = _default_mean(val)
+                self._mean = ConstantMean(val)
+
+        self.computed = False
 
     @property
     def ln_sigma2(self):
@@ -80,7 +98,7 @@ class GP(object):
     @ln_sigma2.setter
     def ln_sigma2(self, value):
         self._ln_sigma2 = value
-        self._computed = False
+        self.computed = False
 
     @property
     def computed(self):
@@ -163,7 +181,8 @@ class GP(object):
         if self._alpha is None or not np.array_equiv(y, self._y):
             self._y = y
             r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                     - self.mean(self._x), dtype=np.float64)
+                                     - self.mean.get_value(self._x),
+                                     dtype=np.float64)
             self._alpha = self.solver.apply_inverse(r, in_place=True)
 
     def apply_inverse(self, y):
@@ -179,7 +198,8 @@ class GP(object):
         """
         self.recompute(quiet=False)
         r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self.mean(self._x), dtype=np.float64)
+                                 - self.mean.get_value(self._x),
+                                 dtype=np.float64)
         b = np.empty_like(r)
         b[self.inds] = self.solver.apply_inverse(r, in_place=True)
         return b
@@ -265,7 +285,8 @@ class GP(object):
 
         """
         r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self.mean(self._x), dtype=np.float64)
+                                 - self.mean.get_value(self._x),
+                                 dtype=np.float64)
         if not self.recompute(quiet=quiet):
             return -np.inf
         ll = self._const - 0.5 * np.dot(r, self.solver.apply_inverse(r))
@@ -289,22 +310,33 @@ class GP(object):
         # Make sure that the model is computed and try to recompute it if it's
         # dirty.
         if not self.recompute(quiet=quiet):
-            return np.zeros(len(self), dtype=float)
+            return np.zeros(len(self), dtype=np.float64)
 
         # Pre-compute some factors.
         self._compute_alpha(y)
-        K_inv = self.solver.apply_inverse(np.eye(self._alpha.size),
-                                          in_place=True)
-        Kg = self.kernel.get_gradient(self._x)
+        if self.fit_white_noise or self.fit_kernel:
+            K_inv = self.solver.apply_inverse(np.eye(self._alpha.size),
+                                              in_place=True)
+            A = np.outer(self._alpha, self._alpha) - K_inv
 
-        # Calculate the gradient.
-        A = np.outer(self._alpha, self._alpha) - K_inv
-        g = 0.5 * np.einsum("ijk,ij", Kg, A)
-
+        # Compute each component of the gradient.
+        grad = np.empty(len(self))
+        n = 0
         if self.fit_white_noise:
-            g = np.append(0.5*np.exp(self.ln_sigma2)*np.sum(np.diag(A)), g)
+            grad[0] = 0.5*np.exp(self.ln_sigma2)*np.sum(np.diag(A))
+            n += 1
 
-        return g
+        if self.fit_mean:
+            l = len(self.mean)
+            grad[n:n+l] = -np.dot(self.mean.get_gradient(self._x), self._alpha)
+            n += l
+
+        if self.fit_kernel:
+            l = len(self.kernel)
+            Kg = self.kernel.get_gradient(self._x)
+            grad[n:n+l] = 0.5 * np.einsum("ijk,ij", Kg, A)
+
+        return grad
 
     def predict(self, y, t,
                 return_cov=True,
@@ -331,7 +363,7 @@ class GP(object):
 
         # Compute the predictive mean.
         Kxs = self.kernel.get_value(xs, self._x)
-        mu = np.dot(Kxs, self._alpha) + self.mean(xs)
+        mu = np.dot(Kxs, self._alpha) + self.mean.get_value(xs)
         if not (return_var or return_cov):
             return mu
 
@@ -390,7 +422,7 @@ class GP(object):
 
             # Generate samples using the precomputed factorization.
             samples = self.solver.apply_sqrt(np.random.randn(size, n))
-            samples += self.mean(self._x)
+            samples += self.mean.get_value(self._x)
 
             # Reorder the samples correctly.
             results = np.empty_like(samples)
@@ -400,7 +432,8 @@ class GP(object):
         x, _ = self.parse_samples(t, False)
         cov = self.get_matrix(x)
         cov[np.diag_indices_from(cov)] += TINY
-        return multivariate_gaussian_samples(cov, size, mean=self.mean(x))
+        return multivariate_gaussian_samples(cov, size,
+                                             mean=self.mean.get_value(x))
 
     def get_matrix(self, x1, x2=None):
         """
@@ -418,57 +451,73 @@ class GP(object):
 
     # Modeling protocol.
     def __len__(self):
-        return len(self.kernel) + int(self.fit_white_noise)
+        n = int(self.fit_white_noise)
+        if self.fit_mean:
+            n += len(self.mean)
+        if self.fit_kernel:
+            n += len(self.kernel)
+        return n
 
     def get_parameter_names(self):
         n = []
         if self.fit_white_noise:
-            n = ["ln_sigma2"]
-        return n + self.kernel.get_parameter_names()
+            n += ["ln_sigma2"]
+        if self.fit_mean:
+            n += map("mean:{0}".format, self.mean.get_parameter_names())
+        if self.fit_kernel:
+            n += map("kernel:{0}".format, self.kernel.get_parameter_names())
+        return n
 
     def get_vector(self):
+        v = np.empty(len(self))
+        n = 0
         if self.fit_white_noise:
-            return np.append(self.ln_sigma2, self.kernel.get_vector())
-        return self.kernel.get_vector()
+            v[0] = self.ln_sigma2
+            n = 1
+        if self.fit_mean:
+            l = len(self.mean)
+            v[n:n+l] = self.mean.get_vector()
+            n += l
+        if self.fit_kernel:
+            l = len(self.kernel)
+            v[n:n+l] = self.kernel.get_vector()
+        return v
 
     def set_vector(self, vector):
+        n = 0
         if self.fit_white_noise:
             self.ln_sigma2 = vector[0]
-            self.kernel.set_vector(vector[1:])
-        else:
-            self.kernel.set_vector(vector)
+            n = 1
+        if self.fit_mean:
+            l = len(self.mean)
+            self.mean.set_vector(vector[n:n+l])
+            n += l
+        if self.fit_kernel:
+            l = len(self.kernel)
+            self.kernel.set_vector(vector[n:n+l])
 
     def freeze_parameter(self, parameter_name):
         if parameter_name == "ln_sigma2":
             self.fit_white_noise = False
         else:
-            self.kernel.freeze_parameter(parameter_name)
+            names = parameter_name.split(":")
+            if names[0] == "mean":
+                self.mean.freeze_parameter(":".join(names[1:]))
+            elif names[0] == "kernel":
+                self.kernel.freeze_parameter(":".join(names[1:]))
+            else:
+                raise ValueError("invalid parameter name '{0}'"
+                                 .format(parameter_name))
 
     def thaw_parameter(self, parameter_name):
         if parameter_name == "ln_sigma2":
             self.fit_white_noise = True
         else:
-            self.kernel.thaw_parameter(parameter_name)
-
-
-class _default_mean(object):
-
-    def __init__(self, value):
-        self.value = value
-
-    def __call__(self, t):
-        return self.value + np.zeros(len(t), dtype=float)
-
-    def __len__(self):
-        return 1
-
-    @property
-    def vector(self):
-        return np.array([self.value])
-
-    @vector.setter
-    def vector(self, value):
-        self.value = float(value)
-
-    def lnprior(self):
-        return 0.0
+            names = parameter_name.split(":")
+            if names[0] == "mean":
+                self.mean.thaw_parameter(":".join(names[1:]))
+            elif names[0] == "kernel":
+                self.kernel.thaw_parameter(":".join(names[1:]))
+            else:
+                raise ValueError("invalid parameter name '{0}'"
+                                 .format(parameter_name))

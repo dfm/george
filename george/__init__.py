@@ -12,9 +12,12 @@ if not __GEORGE_SETUP__:
         "kernels",
         "GP",
         "BasicSolver", "HODLRSolver",
+        "ModelingMixin",
     ]
 
     from . import kernels
     from .gp import GP
     from .basic import BasicSolver
     from .hodlr import HODLRSolver
+
+    from .modeling import ModelingMixin

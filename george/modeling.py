@@ -2,7 +2,7 @@
 
 from __future__ import division, print_function
 
-__all__ = ["ModelingMixin"]
+__all__ = ["ModelingMixin", "supports_modeling_protocol"]
 
 import numpy as np
 from collections import OrderedDict
@@ -62,20 +62,15 @@ class ModelingMixin(object):
 
     def get_gradient(self, *args, **kwargs):
         vector = self.get_vector()
-        grad = np.empty_like(vector, dtype=np.float64)
+        value0 = self.get_value(*args, **kwargs)
+        grad = np.empty([len(vector)] + list(value0.shape), dtype=np.float64)
         for i, v in enumerate(vector):
             vector[i] = v + _EPS
             self.set_vector(vector)
-            p = self.get_value(*args, **kwargs)
-
-            vector[i] = v - _EPS
-            self.set_vector(vector)
-            m = self.get_value(*args, **kwargs)
-
+            value = self.get_value(*args, **kwargs)
             vector[i] = v
             self.set_vector(vector)
-            grad[i] = 0.5 * (p - m) / _EPS
-
+            grad[i] = (value - value0) / _EPS
         return grad
 
     def freeze_parameter(self, parameter_name):
@@ -83,3 +78,26 @@ class ModelingMixin(object):
 
     def thaw_parameter(self, parameter_name):
         self._frozen[parameter_name] = False
+
+
+def supports_modeling_protocol(obj):
+    # The modeling protocol requires the object to have a length.
+    try:
+        len(obj)
+    except TypeError:
+        return False
+
+    # Check that all of the methods are implemented.
+    methods = [
+        "get_value",
+        "get_gradient",
+        "get_parameter_names",
+        "get_vector",
+        "set_vector",
+        "freeze_parameter",
+        "thaw_parameter",
+    ]
+    for method in methods:
+        if not callable(getattr(obj, method, None)):
+            return False
+    return True
