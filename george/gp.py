@@ -326,12 +326,12 @@ class GP(object):
             grad[0] = 0.5*np.exp(self.ln_sigma2)*np.sum(np.diag(A))
             n += 1
 
-        if self.fit_mean:
+        if self.fit_mean and len(self.mean):
             l = len(self.mean)
-            grad[n:n+l] = -np.dot(self.mean.get_gradient(self._x), self._alpha)
+            grad[n:n+l] = np.dot(self.mean.get_gradient(self._x), self._alpha)
             n += l
 
-        if self.fit_kernel:
+        if self.fit_kernel and len(self.kernel):
             l = len(self.kernel)
             Kg = self.kernel.get_gradient(self._x)
             grad[n:n+l] = 0.5 * np.einsum("ijk,ij", Kg, A)
@@ -467,6 +467,12 @@ class GP(object):
         if self.fit_kernel:
             n += map("kernel:{0}".format, self.kernel.get_parameter_names())
         return n
+
+    def get_value(self, *args, **kwargs):
+        return self.lnlikelihood(*args, **kwargs)
+
+    def get_gradient(self, *args, **kwargs):
+        return self.grad_lnlikelihood(*args, **kwargs)
 
     def get_vector(self):
         v = np.empty(len(self))

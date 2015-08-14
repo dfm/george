@@ -2,7 +2,8 @@
 
 from __future__ import division, print_function
 
-__all__ = ["ModelingMixin", "supports_modeling_protocol"]
+__all__ = ["ModelingMixin", "supports_modeling_protocol",
+           "check_gradient"]
 
 import numpy as np
 from collections import OrderedDict
@@ -101,3 +102,27 @@ def supports_modeling_protocol(obj):
         if not callable(getattr(obj, method, None)):
             return False
     return True
+
+
+def check_gradient(obj, *args, **kwargs):
+    eps = kwargs.pop("eps", 1.23e-5)
+
+    grad0 = obj.get_gradient(*args, **kwargs)
+    vector = obj.get_vector()
+    for i, v in enumerate(vector):
+        # Compute the centered finite difference approximation to the gradient.
+        vector[i] = v + eps
+        obj.set_vector(vector)
+        p = obj.get_value(*args, **kwargs)
+
+        vector[i] = v - eps
+        obj.set_vector(vector)
+        m = obj.get_value(*args, **kwargs)
+
+        vector[i] = v
+        obj.set_vector(vector)
+
+        grad = 0.5 * (p - m) / eps
+        assert np.allclose(grad0[i], grad), \
+            "grad computation failed for '{0}' ({1})" \
+            .format(obj.get_parameter_names()[i], i)
