@@ -2,7 +2,7 @@ name: DotProductKernel
 stationary: false
 
 doc: |
-    The linear regression kernel
+    The dot product kernel
 
     .. math::
 

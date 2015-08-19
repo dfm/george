@@ -43,9 +43,12 @@ cdef extern from "kernels.h" namespace "george::kernels":
     {% for spec in specs %}
     cdef cppclass {{ spec.name }}{%- if spec.stationary -%}[M]{%- endif -%}(Kernel):
         {{ spec.name }} (
-            {%- if spec.params -%}{% for param in spec.params %}
+            {% for param in spec.params %}
             double {{ param }},
-            {%- endfor %}{% endif %}
+            {%- endfor %}
+            {% for con in spec.constants %}
+            {{ con.type }} {{ con.name }},
+            {%- endfor %}
             unsigned ndim,
             unsigned naxes
         )
@@ -100,25 +103,34 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
         metric_spec = kernel_spec.metric
         if metric_spec.metric_type == 0:
             kernel = new {{ spec.name }}[IsotropicMetric] (
-                {%- if spec.params -%}{% for param in spec.params %}
+                {% for param in spec.params %}
                 kernel_spec.{{ param }},
-                {%- endfor %}{% endif %}
+                {%- endfor %}
+                {% for con in spec.constants %}
+                kernel_spec.{{ con.name }},
+                {%- endfor %}
                 ndim,
                 len(axes)
             )
         elif metric_spec.metric_type == 1:
             kernel = new {{ spec.name }}[AxisAlignedMetric] (
-                {%- if spec.params -%}{% for param in spec.params %}
+                {% for param in spec.params %}
                 kernel_spec.{{ param }},
-                {%- endfor %}{% endif %}
+                {%- endfor %}
+                {% for con in spec.constants %}
+                kernel_spec.{{ con.name }},
+                {%- endfor %}
                 ndim,
                 len(axes)
             )
         elif metric_spec.metric_type == 2:
             kernel = new {{ spec.name }}[GeneralMetric] (
-                {%- if spec.params -%}{% for param in spec.params %}
+                {% for param in spec.params %}
                 kernel_spec.{{ param }},
-                {%- endfor %}{% endif %}
+                {%- endfor %}
+                {% for con in spec.constants %}
+                kernel_spec.{{ con.name }},
+                {%- endfor %}
                 ndim,
                 len(axes)
             )
@@ -130,9 +142,12 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
             kernel.set_metric_parameter(i, p)
         {% else %}
         kernel = new {{ spec.name }} (
-            {%- if spec.params -%}{% for param in spec.params %}
+            {% for param in spec.params %}
             kernel_spec.{{ param }},
-            {%- endfor %}{% endif %}
+            {%- endfor %}
+            {% for con in spec.constants %}
+            kernel_spec.{{ con.name }},
+            {%- endfor %}
             ndim,
             len(axes)
         )

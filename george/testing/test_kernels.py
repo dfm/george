@@ -122,6 +122,13 @@ def test_local():
                                             axes=[2, 3]))
 
 
+def test_linear():
+    do_kernel_t(kernels.LinearKernel(order=2, ln_gamma2=0.0))
+    do_kernel_t(kernels.LinearKernel(order=5, ln_gamma2=1.0, ndim=2))
+    do_kernel_t(kernels.LinearKernel(order=3, ln_gamma2=-1.0, ndim=5,
+                                     axes=2))
+
+
 def test_combine():
     do_kernel_t(12 * kernels.ExpSine2Kernel(gamma=0.4, period=1.0, ndim=5))
     do_kernel_t(12 * kernels.ExpSquaredKernel(0.4, ndim=3) + 0.1)

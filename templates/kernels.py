@@ -308,6 +308,8 @@ class {{ spec.name }} (Kernel):
                  {%- if p.startswith("ln_") %}
                  {{ p[3:] }}=None,{% endif %}
                  {% endfor -%}
+                 {% for con in spec.constants %}{{ con.name }}=None,
+                 {% endfor -%}
                  {% if spec.stationary -%}
                  metric=None,
                  lower=True,
@@ -327,6 +329,11 @@ class {{ spec.name }} (Kernel):
             {{ p }} = np.log({{ p[3:] }})
         {%- endif %}
         self.{{ p }} = {{ p }}
+        {% endfor %}
+        {% for con in spec.constants %}
+        if {{ con.name }} is None:
+            raise ValueError("missing required parameter '{{ con.name }}'")
+        self.{{ con.name }} = {{ con.name }}
         {% endfor %}
         {% if spec.stationary -%}
         if metric is None:

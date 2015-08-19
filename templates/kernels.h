@@ -108,6 +108,9 @@ public:
         {%- for param in spec.params %}
         double {{ param }},
         {%- endfor %}
+        {%- for con in spec.constants %}
+        {{ con.type }} {{ con.name }},
+        {%- endfor %}
         const unsigned ndim,
         const unsigned naxes
     ) :
@@ -116,6 +119,9 @@ public:
         {% for param in spec.params -%}
         , param_{{ param }}_({{param}})
         {% endfor -%}
+        {%- for con in spec.constants %}
+        , constant_{{ con.name }}_({{ con.name }}),
+        {%- endfor %}
     {
         update_reparams();
     };
@@ -159,6 +165,9 @@ public:
             {% for param in spec.reparams -%}
             double {{ param }},
             {% endfor -%}
+            {%- for con in spec.constants %}
+            {{ con.type }} {{ con.name }},
+            {%- endfor %}
             double r2) {
         {{ spec.value | indent(8) }}
     };
@@ -172,6 +181,9 @@ public:
             {% for param in spec.reparams -%}
             reparam_{{ param }}_,
             {% endfor -%}
+            {%- for con in spec.constants %}
+            constant_{{ con.name }}),
+            {%- endfor %}
             r2);
     };
 
@@ -183,6 +195,9 @@ public:
             {% for param in spec.reparams -%}
             double {{ param }},
             {% endfor -%}
+            {%- for con in spec.constants %}
+            {{ con.type }} {{ con.name }},
+            {%- endfor %}
             double r2) {
         {{ spec.grad[param] | indent(8) }}
     };
@@ -195,6 +210,9 @@ public:
             {% for param in spec.reparams -%}
             double {{ param }},
             {% endfor -%}
+            {%- for con in spec.constants %}
+            {{ con.type }} {{ con.name }},
+            {%- endfor %}
             double r2) {
         {{ spec.grad["r2"] | indent(8) }}
     };
@@ -209,6 +227,9 @@ public:
                     {% for param in spec.reparams -%}
                     reparam_{{ param }}_,
                     {% endfor -%}
+                    {%- for con in spec.constants %}
+                    constant_{{ con.name }}_,
+                    {%- endfor %}
                     r2);
 
         {% for param in spec.params -%}
@@ -219,6 +240,9 @@ public:
                 {% for param in spec.reparams -%}
                 reparam_{{ param }}_,
                 {% endfor -%}
+                {%- for con in spec.constants %}
+                constant_{{ con.name }}_,
+                {%- endfor %}
                 r2);
         {% endfor %}
         metric_.gradient(x1, x2, &(grad[size_]));
@@ -231,8 +255,11 @@ public:
         {% for param in spec.reparams -%}
         reparam_{{ param }}_ = get_reparam_{{ param }} (
             {% for param in spec.params -%}
-            param_{{ param }}_{%- if not loop.last %},{% endif -%}
+            param_{{ param }}_{%- if spec.constants or not loop.last %},{% endif -%}
             {% endfor %}
+            {%- for con in spec.constants %}
+            constant_{{ con.name }}{%- if not loop.last %},{% endif -%}
+            {%- endfor %}
         );
         {% endfor %}
     };
@@ -240,8 +267,11 @@ public:
     {% for param in spec.reparams -%}
     double get_reparam_{{ param }} (
         {% for param in spec.params -%}
-        double {{ param }}{%- if not loop.last %},{% endif -%}
+        double {{ param }}{%- if spec.constants or not loop.last %},{% endif -%}
         {% endfor %}
+        {%- for con in spec.constants %}
+        {{ con.type }} {{ con.name }}{%- if not loop.last %},{% endif -%}
+        {%- endfor %}
     ) {
         {{ spec.reparams[param] | indent(8) }}
     }
@@ -256,6 +286,9 @@ private:
     {% for param in spec.reparams -%}
     double reparam_{{ param }}_;
     {% endfor %}
+    {%- for con in spec.constants %}
+    {{ con.type }} constant_{{ con.name }}_;
+    {%- endfor %}
 };
 
 {% else %}
@@ -266,6 +299,9 @@ public:
         {%- for param in spec.params %}
         double {{ param }},
         {%- endfor %}
+        {%- for con in spec.constants %}
+        {{ con.type }} {{ con.name }},
+        {%- endfor %}
         unsigned ndim,
         unsigned naxes
     ) :
@@ -273,6 +309,9 @@ public:
         subspace_(ndim, naxes)
         {%- for param in spec.params %}
         , param_{{ param }}_({{param}})
+        {%- endfor %}
+        {%- for con in spec.constants %}
+        , constant_{{ con.name }}_({{ con.name }})
         {%- endfor %}
     {
         update_reparams();
@@ -304,6 +343,9 @@ public:
             {% for param in spec.reparams -%}
             double {{ param }},
             {% endfor -%}
+            {%- for con in spec.constants %}
+            {{ con.type }} {{ con.name }},
+            {%- endfor %}
             const double x1, const double x2) {
         {{ spec.value | indent(8) }}
     };
@@ -320,6 +362,9 @@ public:
                 {% for param in spec.reparams -%}
                 reparam_{{ param }}_,
                 {% endfor -%}
+                {%- for con in spec.constants %}
+                constant_{{ con.name }}_,
+                {%- endfor %}
                 x1[j], x2[j]);
         }
         return value;
@@ -333,6 +378,9 @@ public:
             {% for param in spec.reparams -%}
             double {{ param }},
             {% endfor -%}
+            {%- for con in spec.constants %}
+            {{ con.type }} {{ con.name }},
+            {%- endfor %}
             const double x1, const double x2) {
         {{ spec.grad[param] | indent(8) }}
     };
@@ -355,6 +403,9 @@ public:
                 {% for param in spec.reparams -%}
                 reparam_{{ param }}_,
                 {% endfor -%}
+                {%- for con in spec.constants %}
+                constant_{{ con.name }}_,
+                {%- endfor %}
                 x1[j], x2[j]);
             {% endfor %}
         }
@@ -365,8 +416,11 @@ public:
         {% for param in spec.reparams -%}
         reparam_{{ param }}_ = get_reparam_{{ param }} (
             {% for param in spec.params -%}
-            param_{{ param }}_{%- if not loop.last %},{% endif -%}
+            param_{{ param }}_{%- if spec.constants or not loop.last %},{% endif -%}
             {% endfor %}
+            {%- for con in spec.constants %}
+            constant_{{ con.name }}_{%- if not loop.last %},{% endif -%}
+            {%- endfor %}
         );
         {% endfor %}
     };
@@ -374,8 +428,11 @@ public:
     {% for param in spec.reparams -%}
     double get_reparam_{{ param }} (
         {% for param in spec.params -%}
-        double {{ param }}{%- if not loop.last %},{% endif -%}
+        double {{ param }}{%- if spec.constants or not loop.last %},{% endif -%}
         {% endfor %}
+        {%- for con in spec.constants %}
+        {{ con.type }} {{ con.name }}{%- if not loop.last %},{% endif -%}
+        {%- endfor %}
     ) {
         {{ spec.reparams[param] | indent(8) }}
     }
@@ -392,6 +449,9 @@ private:
     {% for param in spec.reparams -%}
     double reparam_{{ param }}_;
     {% endfor %}
+    {%- for con in spec.constants %}
+    {{ con.type }} constant_{{ con.name }}_;
+    {%- endfor %}
 };
 
 {% endif -%}
