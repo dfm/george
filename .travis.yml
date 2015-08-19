@@ -1,5 +1,3 @@
-# Much of this script was adapted from astropy/astropy.
-
 sudo: false
 
 language: python
