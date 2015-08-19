@@ -127,6 +127,10 @@ def test_linear():
     do_kernel_t(kernels.LinearKernel(order=5, ln_gamma2=1.0, ndim=2))
     do_kernel_t(kernels.LinearKernel(order=3, ln_gamma2=-1.0, ndim=5,
                                      axes=2))
+    k = kernels.LinearKernel(order=0, ln_gamma2=0.0)
+    k += kernels.LinearKernel(order=1, ln_gamma2=-1.0)
+    k += kernels.LinearKernel(order=2, ln_gamma2=-2.0)
+    do_kernel_t(k)
 
 
 def test_combine():
