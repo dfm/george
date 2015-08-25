@@ -1,6 +1,6 @@
 name: LinearKernel
 stationary: false
-constants: [{name: order, type: int}]
+constants: [{name: order, type: double}]
 params: [ln_gamma2]
 
 doc: |
@@ -12,7 +12,8 @@ doc: |
             \frac{(\mathbf{x}_i \cdot \mathbf{x}_j)^P}{\gamma^2}
 
     :param order:
-        The power :math:`P`.
+        The power :math:`P`. This parameter is a *constant*; it is not
+        included in the parameter vector.
 
     :param gamma2:
         The scale factor :math:`\gamma^2`.
@@ -22,10 +23,10 @@ reparams:
         return exp(-ln_gamma2);
 
 value: |
-    if (order == 0) return inv_gamma2;
+    if (order == 0.0) return inv_gamma2;
     return pow(x1 * x2, order) * inv_gamma2;
 
 grad:
     ln_gamma2: |
-        if (order == 0) return -inv_gamma2;
+        if (order == 0.0) return -inv_gamma2;
         return -pow(x1 * x2, order) * inv_gamma2;
