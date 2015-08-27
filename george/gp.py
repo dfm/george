@@ -91,6 +91,16 @@ class GP(object):
 
         self.computed = False
 
+    def call_mean(self, x):
+        if len(x.shape) == 2 and x.shape[1] == 1:
+            return self.mean.get_value(x[:, 0])
+        return self.mean.get_value(x)
+
+    def call_mean_gradient(self, x):
+        if len(x.shape) == 2 and x.shape[1] == 1:
+            return self.mean.get_gradient(x[:, 0])
+        return self.mean.get_gradient(x)
+
     @property
     def ln_sigma2(self):
         return self._ln_sigma2
@@ -181,7 +191,7 @@ class GP(object):
         if self._alpha is None or not np.array_equiv(y, self._y):
             self._y = y
             r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                     - self.mean.get_value(self._x),
+                                     - self.call_mean(self._x),
                                      dtype=np.float64)
             self._alpha = self.solver.apply_inverse(r, in_place=True)
 
@@ -198,7 +208,7 @@ class GP(object):
         """
         self.recompute(quiet=False)
         r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self.mean.get_value(self._x),
+                                 - self.call_mean(self._x),
                                  dtype=np.float64)
         b = np.empty_like(r)
         b[self.inds] = self.solver.apply_inverse(r, in_place=True)
@@ -285,7 +295,7 @@ class GP(object):
 
         """
         r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self.mean.get_value(self._x),
+                                 - self.call_mean(self._x),
                                  dtype=np.float64)
         if not self.recompute(quiet=quiet):
             return -np.inf
@@ -328,7 +338,7 @@ class GP(object):
 
         if self.fit_mean and len(self.mean):
             l = len(self.mean)
-            grad[n:n+l] = np.dot(self.mean.get_gradient(self._x), self._alpha)
+            grad[n:n+l] = np.dot(self._alpha, self.call_mean_gradient(self._x))
             n += l
 
         if self.fit_kernel and len(self.kernel):
@@ -363,7 +373,7 @@ class GP(object):
 
         # Compute the predictive mean.
         Kxs = self.kernel.get_value(xs, self._x)
-        mu = np.dot(Kxs, self._alpha) + self.mean.get_value(xs)
+        mu = np.dot(Kxs, self._alpha) + self.call_mean(xs)
         if not (return_var or return_cov):
             return mu
 
@@ -392,7 +402,7 @@ class GP(object):
         :param size: (optional)
             The number of samples to draw. (default: ``1``)
 
-        Returns **samples** ``(N, ntest)``, a list of predictions at
+        Returns **samples** ``(size, ntest)``, a list of predictions at
         coordinates given by ``t``.
 
         """
@@ -422,7 +432,7 @@ class GP(object):
 
             # Generate samples using the precomputed factorization.
             samples = self.solver.apply_sqrt(np.random.randn(size, n))
-            samples += self.mean.get_value(self._x)
+            samples += self.call_mean(self._x)
 
             # Reorder the samples correctly.
             results = np.empty_like(samples)
@@ -433,7 +443,7 @@ class GP(object):
         cov = self.get_matrix(x)
         cov[np.diag_indices_from(cov)] += TINY
         return multivariate_gaussian_samples(cov, size,
-                                             mean=self.mean.get_value(x))
+                                             mean=self.call_mean(x))
 
     def get_matrix(self, x1, x2=None):
         """
