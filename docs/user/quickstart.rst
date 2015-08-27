@@ -15,7 +15,7 @@ Prerequisites
 
 Whichever method you choose, you'll need to make sure that you first have
 `Eigen <http://eigen.tuxfamily.org/>`_ installed.
-On Linux:
+On Debian-based Linux distributions:
 
 .. code-block:: bash
 
