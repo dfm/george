@@ -2,17 +2,17 @@
 
 from __future__ import division, print_function
 
-__all__ = ["ConstantMean", "CallableMean"]
+__all__ = ["ConstantModel", "CallableModel"]
 
 import numpy as np
 
 from .modeling import ModelingMixin
 
 
-class ConstantMean(ModelingMixin):
+class ConstantModel(ModelingMixin):
 
     def __init__(self, value):
-        super(ConstantMean, self).__init__(value=float(value))
+        super(ConstantModel, self).__init__(value=float(value))
 
     def get_value(self, x):
         return self["value"] + np.zeros(len(x), dtype=np.float64)
@@ -21,10 +21,11 @@ class ConstantMean(ModelingMixin):
         return np.ones((1, len(x)), dtype=np.float64)
 
 
-class CallableMean(ModelingMixin):
+class CallableModel(ModelingMixin):
 
-    def __init__(self, function):
+    def __init__(self, function, gradient=None):
         self.function = function
+        self.gradient = gradient
 
     def __len__(self):
         return 0
@@ -34,6 +35,11 @@ class CallableMean(ModelingMixin):
 
     def get_value(self, x):
         return self.function(x)
+
+    def get_gradient(self, x):
+        if self.gradient is not None:
+            return self.gradient(x)
+        return super(CallableModel, self).get_gradient(x)
 
     def get_vector(self):
         return np.empty(0)

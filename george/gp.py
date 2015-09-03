@@ -8,8 +8,8 @@ import numpy as np
 from scipy.linalg import LinAlgError
 
 from .basic import BasicSolver
+from .models import ConstantModel, CallableModel
 from .modeling import supports_modeling_protocol
-from .mean_functions import ConstantMean, CallableMean
 from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 
@@ -25,11 +25,35 @@ class GP(object):
     :param kernel:
         An instance of a subclass of :class:`kernels.Kernel`.
 
+    :param fit_kernel: (optional)
+        If ``True``, the parameters of the kernel will be included in all
+        the relevant methods (:func:`GP.get_vector`,
+        :func:`GP.grad_lnlikelihood`, etc.).
+        (default: ``True``)
+
     :param mean: (optional)
-        A description of the mean function; can be a callable or a scalar. If
-        scalar, the mean is assumed constant. Otherwise, the function will be
-        called with the array of independent coordinates as the only argument.
+        A description of the mean function; can be a callable, a scalar, or an
+        instance of a class implementing the modeling protocol. If scalar,
+        the mean is assumed constant. If callable, ``mean`` will be called
+        with the array of independent coordinates as the only argument.
+        Finally, for an object satisfying the modeling protocol,
+        :func:`mean.get_value()` will be called with the input coordinates.
         (default: ``0.0``)
+
+    :param fit_mean: (optional)
+        If ``True``, the parameters of the mean model will be included in all
+        the relevant methods (:func:`GP.get_vector`,
+        :func:`GP.grad_lnlikelihood`, etc.).
+        (default: ``False``)
+
+    :param white_noise: (optional)
+        (default: ``TINY``)
+
+    :param fit_mean: (optional)
+        If ``True``, the parameters of the mean model will be included in all
+        the relevant methods (:func:`GP.get_vector`,
+        :func:`GP.grad_lnlikelihood`, etc.).
+        (default: ``False``)
 
     :param solver: (optional)
         The solver to use for linear algebra as documented in :ref:`solvers`.
@@ -45,7 +69,7 @@ class GP(object):
                  fit_kernel=True,
                  mean=None,
                  fit_mean=False,
-                 white_noise=TINY,
+                 white_noise=np.log(TINY),
                  fit_white_noise=False,
                  solver=BasicSolver,
                  **kwargs):
@@ -59,7 +83,7 @@ class GP(object):
         self.mean = mean
         self.fit_mean = fit_mean
 
-        self.ln_sigma2 = np.log(white_noise) if white_noise > 0.0 else -np.inf
+        self.white_noise = white_noise
         self.fit_white_noise = fit_white_noise
 
         self.solver_type = solver
@@ -73,7 +97,7 @@ class GP(object):
     @mean.setter
     def mean(self, mean):
         if mean is None:
-            self._mean = ConstantMean(0.)
+            self._mean = ConstantModel(0.)
         else:
             try:
                 val = float(mean)
@@ -82,33 +106,54 @@ class GP(object):
                 if supports_modeling_protocol(mean):
                     self._mean = mean
                 elif callable(mean):
-                    self._mean = CallableMean(mean)
+                    self._mean = CallableModel(mean)
                 else:
                     raise ValueError("invalid mean function")
 
             else:
-                self._mean = ConstantMean(val)
+                self._mean = ConstantModel(val)
 
-        self.computed = False
-
-    def call_mean(self, x):
+    def _call_mean(self, x):
         if len(x.shape) == 2 and x.shape[1] == 1:
-            return self.mean.get_value(x[:, 0])
-        return self.mean.get_value(x)
+            return self.mean.get_value(x[:, 0]).flatten()
+        return self.mean.get_value(x).flatten()
 
-    def call_mean_gradient(self, x):
+    def _call_mean_gradient(self, x):
         if len(x.shape) == 2 and x.shape[1] == 1:
             return self.mean.get_gradient(x[:, 0])
         return self.mean.get_gradient(x)
 
     @property
-    def ln_sigma2(self):
-        return self._ln_sigma2
+    def white_noise(self):
+        return self._white_noise
 
-    @ln_sigma2.setter
-    def ln_sigma2(self, value):
-        self._ln_sigma2 = value
+    @white_noise.setter
+    def white_noise(self, white_noise):
+        try:
+            val = float(white_noise)
+
+        except TypeError:
+            if supports_modeling_protocol(white_noise):
+                self._white_noise = white_noise
+            elif callable(white_noise):
+                self._mean = CallableModel(white_noise)
+            else:
+                raise ValueError("invalid white noise function")
+
+        else:
+            self._white_noise = ConstantModel(val)
+
         self.computed = False
+
+    def _call_white_noise(self, x):
+        if len(x.shape) == 2 and x.shape[1] == 1:
+            return self.white_noise.get_value(x[:, 0]).flatten()
+        return self.white_noise.get_value(x).flatten()
+
+    def _call_white_noise_gradient(self, x):
+        if len(x.shape) == 2 and x.shape[1] == 1:
+            return self.white_noise.get_gradient(x[:, 0])
+        return self.white_noise.get_gradient(x)
 
     @property
     def computed(self):
@@ -191,7 +236,7 @@ class GP(object):
         if self._alpha is None or not np.array_equiv(y, self._y):
             self._y = y
             r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                     - self.call_mean(self._x),
+                                     - self._call_mean(self._x),
                                      dtype=np.float64)
             self._alpha = self.solver.apply_inverse(r, in_place=True)
 
@@ -208,7 +253,7 @@ class GP(object):
         """
         self.recompute(quiet=False)
         r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self.call_mean(self._x),
+                                 - self._call_mean(self._x),
                                  dtype=np.float64)
         b = np.empty_like(r)
         b[self.inds] = self.solver.apply_inverse(r, in_place=True)
@@ -248,7 +293,7 @@ class GP(object):
         self.solver = self.solver_type(self.kernel, **(self.solver_kwargs))
 
         # Include the white noise term.
-        yerr = np.sqrt(self._yerr2 + np.exp(self.ln_sigma2))
+        yerr = np.sqrt(self._yerr2 + np.exp(self._call_white_noise(self._x)))
         self.solver.compute(self._x, yerr, **kwargs)
 
         self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
@@ -295,7 +340,7 @@ class GP(object):
 
         """
         r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self.call_mean(self._x),
+                                 - self._call_mean(self._x),
                                  dtype=np.float64)
         if not self.recompute(quiet=quiet):
             return -np.inf
@@ -332,13 +377,19 @@ class GP(object):
         # Compute each component of the gradient.
         grad = np.empty(len(self))
         n = 0
-        if self.fit_white_noise:
-            grad[0] = 0.5*np.exp(self.ln_sigma2)*np.sum(np.diag(A))
-            n += 1
 
         if self.fit_mean and len(self.mean):
             l = len(self.mean)
-            grad[n:n+l] = np.dot(self._alpha, self.call_mean_gradient(self._x))
+            grad[n:n+l] = np.dot(self._alpha,
+                                 self._call_mean_gradient(self._x))
+            n += l
+
+        if self.fit_white_noise:
+            l = len(self.white_noise)
+            wn = self._call_white_noise(self._x)
+            wng = self._call_white_noise_gradient(self._x)
+            grad[n:n+l] = 0.5 * np.sum((np.exp(wn)*np.diag(A))[None, :]*wng,
+                                       axis=1)
             n += l
 
         if self.fit_kernel and len(self.kernel):
@@ -373,7 +424,7 @@ class GP(object):
 
         # Compute the predictive mean.
         Kxs = self.kernel.get_value(xs, self._x)
-        mu = np.dot(Kxs, self._alpha) + self.call_mean(xs)
+        mu = np.dot(Kxs, self._alpha) + self._call_mean(xs)
         if not (return_var or return_cov):
             return mu
 
@@ -432,7 +483,7 @@ class GP(object):
 
             # Generate samples using the precomputed factorization.
             samples = self.solver.apply_sqrt(np.random.randn(size, n))
-            samples += self.call_mean(self._x)
+            samples += self._call_mean(self._x)
 
             # Reorder the samples correctly.
             results = np.empty_like(samples)
@@ -443,7 +494,7 @@ class GP(object):
         cov = self.get_matrix(x)
         cov[np.diag_indices_from(cov)] += TINY
         return multivariate_gaussian_samples(cov, size,
-                                             mean=self.call_mean(x))
+                                             mean=self._call_mean(x))
 
     def get_matrix(self, x1, x2=None):
         """
@@ -459,21 +510,26 @@ class GP(object):
         x2, _ = self.parse_samples(x2, False)
         return self.kernel.get_value(x1, x2)
 
+    #
     # Modeling protocol.
+    #
     def __len__(self):
-        n = int(self.fit_white_noise)
+        n = 0
         if self.fit_mean:
             n += len(self.mean)
+        if self.fit_white_noise:
+            n += len(self.white_noise)
         if self.fit_kernel:
             n += len(self.kernel)
         return n
 
     def get_parameter_names(self):
         n = []
-        if self.fit_white_noise:
-            n += ["ln_sigma2"]
         if self.fit_mean:
             n += map("mean:{0}".format, self.mean.get_parameter_names())
+        if self.fit_white_noise:
+            n += map("white:{0}".format,
+                     self.white_noise.get_parameter_names())
         if self.fit_kernel:
             n += map("kernel:{0}".format, self.kernel.get_parameter_names())
         return n
@@ -487,12 +543,13 @@ class GP(object):
     def get_vector(self):
         v = np.empty(len(self))
         n = 0
-        if self.fit_white_noise:
-            v[0] = self.ln_sigma2
-            n = 1
         if self.fit_mean:
             l = len(self.mean)
             v[n:n+l] = self.mean.get_vector()
+            n += l
+        if self.fit_white_noise:
+            l = len(self.white_noise)
+            v[n:n+l] = self.white_noise.get_vector()
             n += l
         if self.fit_kernel:
             l = len(self.kernel)
@@ -501,39 +558,40 @@ class GP(object):
 
     def set_vector(self, vector):
         n = 0
-        if self.fit_white_noise:
-            self.ln_sigma2 = vector[0]
-            n = 1
         if self.fit_mean:
             l = len(self.mean)
             self.mean.set_vector(vector[n:n+l])
             n += l
+        if self.fit_white_noise:
+            l = len(self.white_noise)
+            self.white_noise.set_vector(vector[n:n+l])
+            n += l
+            self.computed = False
         if self.fit_kernel:
             l = len(self.kernel)
             self.kernel.set_vector(vector[n:n+l])
+            self.computed = False
 
     def freeze_parameter(self, parameter_name):
-        if parameter_name == "ln_sigma2":
-            self.fit_white_noise = False
+        names = parameter_name.split(":")
+        if names[0] == "white":
+            self.white_noise.freeze_parameter(":".join(names[1:]))
+        elif names[0] == "mean":
+            self.mean.freeze_parameter(":".join(names[1:]))
+        elif names[0] == "kernel":
+            self.kernel.freeze_parameter(":".join(names[1:]))
         else:
-            names = parameter_name.split(":")
-            if names[0] == "mean":
-                self.mean.freeze_parameter(":".join(names[1:]))
-            elif names[0] == "kernel":
-                self.kernel.freeze_parameter(":".join(names[1:]))
-            else:
-                raise ValueError("invalid parameter name '{0}'"
-                                 .format(parameter_name))
+            raise ValueError("invalid parameter name '{0}'"
+                             .format(parameter_name))
 
     def thaw_parameter(self, parameter_name):
-        if parameter_name == "ln_sigma2":
-            self.fit_white_noise = True
+        names = parameter_name.split(":")
+        if names[0] == "white":
+            self.white_noise.thaw_parameter(":".join(names[1:]))
+        elif names[0] == "mean":
+            self.mean.thaw_parameter(":".join(names[1:]))
+        elif names[0] == "kernel":
+            self.kernel.thaw_parameter(":".join(names[1:]))
         else:
-            names = parameter_name.split(":")
-            if names[0] == "mean":
-                self.mean.thaw_parameter(":".join(names[1:]))
-            elif names[0] == "kernel":
-                self.kernel.thaw_parameter(":".join(names[1:]))
-            else:
-                raise ValueError("invalid parameter name '{0}'"
-                                 .format(parameter_name))
+            raise ValueError("invalid parameter name '{0}'"
+                             .format(parameter_name))
