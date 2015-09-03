@@ -15,16 +15,16 @@ import numpy as np
 from ..gp import GP
 from .. import kernels
 from ..modeling import check_gradient
-from ..mean_functions import ConstantMean, CallableMean
+from ..models import ConstantModel, CallableModel
 
 
 def test_constant_mean():
-    m = ConstantMean(5.0)
+    m = ConstantModel(5.0)
     check_gradient(m, np.zeros(4))
 
 
 def test_callable_mean():
-    m = CallableMean(lambda x: 5.0 * x)
+    m = CallableModel(lambda x: 5.0 * x)
     check_gradient(m, np.zeros(4))
 
 

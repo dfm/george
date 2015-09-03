@@ -92,6 +92,16 @@ class GP(object):
 
     @property
     def mean(self):
+        """
+        An object (following the modeling protocol) that specifies the mean
+        function of the GP. You can safely set this to a scalar, a callable,
+        or an instance of a class satisfying the modeling protocol. In each
+        case, the mean will be evaluated (either by calling the function or
+        evaluating the :func:`get_value` method) at the input coordinates and
+        it should return the one-dimensional mean evaluated at these
+        coordinates.
+
+        """
         return self._mean
 
     @mean.setter
@@ -125,6 +135,20 @@ class GP(object):
 
     @property
     def white_noise(self):
+        """
+        An object (following the modeling protocol) that specifies the
+        natural logarithm of the white noise variance added to the diagonal of
+        the covariance matrix. You can safely set this to a scalar, a callable,
+        or an instance of a class satisfying the modeling protocol. In each
+        case, it will be evaluated (either by calling the function or
+        evaluating the :func:`get_value` method) at the input coordinates and
+        it should return the one-dimensional log-variance evaluated at these
+        coordinates.
+
+        This functionality is preferred to the ``WhiteKernel`` class provided
+        by earlier versions of this module.
+
+        """
         return self._white_noise
 
     @white_noise.setter
