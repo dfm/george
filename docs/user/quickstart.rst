@@ -101,55 +101,8 @@ If any of the tests don't pass and if you can't sort out why, `open an issue
 on GitHub <https://github.com/dfm/george/issues>`_.
 
 
-A Simple Example
-----------------
+Examples
+--------
 
-The following code generates some fake data (from a sinusoidal model) with
-error bars:
-
-.. code-block:: python
-
-    import numpy as np
-
-    # Generate some fake noisy data.
-    x = 10 * np.sort(np.random.rand(10))
-    yerr = 0.2 * np.ones_like(x)
-    y = np.sin(x) + yerr * np.random.randn(len(x))
-
-Then, we'll choose a simple kernel function (see :ref:`kernels` for some other
-choices) and compute the log-likelihood of the fake data under a Gaussian
-process model with this kernel:
-
-.. code-block:: python
-
-    import george
-    from george.kernels import ExpSquaredKernel
-
-    # Set up the Gaussian process.
-    kernel = ExpSquaredKernel(1.0)
-    gp = george.GP(kernel)
-
-    # Pre-compute the factorization of the matrix.
-    gp.compute(x, yerr)
-
-    # Compute the log likelihood.
-    print(gp.lnlikelihood(y))
-
-Finally, we can compute the predicted values of the function at a fine grid of
-points conditioned on the observed data.
-This prediction will be an :math:`N_\mathrm{test} \times N_\mathrm{test}`
-multivariate Gaussian (where :math:`N_\mathrm{test}` is the number of points
-in the grid) with mean ``mu`` and covariance ``cov``:
-
-.. code-block:: python
-
-    t = np.linspace(0, 10, 500)
-    mu, cov = gp.predict(y, t)
-    std = np.sqrt(np.diag(cov))
-
-This should result in a constraint that looks something like:
-
-.. image:: ../_static/quickstart/conditional.png
-
-where the points with error bars are the simulated data and the filled gray
-patch is the mean and standard deviation of the prediction.
+Take a look at :ref:`first` to get started and then check out the other
+tutorials for some more advanced usage examples.

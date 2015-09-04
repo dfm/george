@@ -1,10 +1,18 @@
 George
 ======
 
-George is a fast and flexible Python library for Gaussian Process Regression.
-A full introduction to the theory of Gaussian Processes is beyond the scope of
-this documentation but the best resource is available for free online:
-`Rasmussen & Williams (2006) <http://www.gaussianprocess.org/gpml/>`_.
+George is a fast and flexible Python library for Gaussian Process (GP)
+Regression. A full introduction to the theory of Gaussian Processes is beyond
+the scope of this documentation but the best resource is available for free
+online: `Rasmussen & Williams (2006) <http://www.gaussianprocess.org/gpml/>`_.
+
+Unlike some other GP implementations, george is focused on efficiently
+evaluating the marginalized likelihood of a dataset under a GP prior, even as
+this dataset gets Big™. As you'll see in these pages of documentation, the
+module exposes quite a few other features but it is designed to be used
+alongside your favorite `non-linear optimization
+<http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
+or `posterior inference <http://dfm.io/emcee>`_ library for the best results.
 
 George is being actively developed in `a public repository on GitHub
 <https://github.com/dfm/george>`_ so if you have any trouble, `open an issue

@@ -406,8 +406,8 @@ class GP(object):
 
         if self.fit_mean and len(self.mean):
             l = len(self.mean)
-            grad[n:n+l] = np.dot(self._alpha,
-                                 self._call_mean_gradient(self._x))
+            grad[n:n+l] = np.dot(self._call_mean_gradient(self._x),
+                                 self._alpha)
             n += l
 
         if self.fit_white_noise:
