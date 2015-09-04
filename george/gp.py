@@ -210,9 +210,9 @@ class GP(object):
             one-dimensional samples otherwise, the size of the second
             dimension is assumed to be the dimension of the input space.
 
-        :param sort:
+        :param sort: (optional)
             A boolean flag indicating whether or not the samples should be
-            sorted.
+            sorted. (default: ``False``)
 
         Returns a tuple ``(samples, inds)`` where
 
@@ -323,13 +323,16 @@ class GP(object):
         self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
                               + self.solver.log_determinant)
         self.computed = True
-
         self._alpha = None
 
     def recompute(self, quiet=False, **kwargs):
         """
         Re-compute a previously computed model. You might want to do this if
         the kernel parameters change and the kernel is labeled as ``dirty``.
+
+        :param quiet: (optional)
+            If ``True``, return false when the computation fails. Otherwise,
+            throw an error if something goes wrong. (default: ``False``)
 
         """
         if self.kernel.dirty or not self.computed:
@@ -350,8 +353,9 @@ class GP(object):
 
     def lnlikelihood(self, y, quiet=False):
         """
-        Compute the ln-likelihood of a set of observations under the Gaussian
-        process model. You must call ``compute`` before this function.
+        Compute the logarithm of the marginalized likelihood of a set of
+        observations under the Gaussian process model. You must call
+        :func:`GP.compute` before this function.
 
         :param y: ``(nsamples, )``
             The observations at the coordinates provided in the ``compute``
@@ -373,8 +377,9 @@ class GP(object):
 
     def grad_lnlikelihood(self, y, quiet=False):
         """
-        Compute the gradient of the ln-likelihood function as a function of
-        the kernel parameters.
+        Compute the gradient of :func:`GP.lnlikelihood` as a function of the
+        parameters returned by :func:`GP.get_vector`. You must call
+        :func:`GP.compute` before this function.
 
         :param y: ``(nsamples,)``
             The list of observations at coordinates ``x`` provided to the
@@ -427,7 +432,8 @@ class GP(object):
                 return_cov=True,
                 return_var=False):
         """
-        Compute the conditional predictive distribution of the model.
+        Compute the conditional predictive distribution of the model. You must
+        call :func:`GP.compute` before this function.
 
         :param y: ``(nsamples,)``
             The observations to condition the model on.
@@ -436,10 +442,23 @@ class GP(object):
             The coordinates where the predictive distribution should be
             computed.
 
-        Returns a tuple ``(mu, cov)`` where
+        :param return_cov: (optional)
+            If ``True``, the full covariance matrix is computed and returned.
+            Otherwise, only the mean prediction is computed. (default:
+            ``True``)
 
-        * **mu** ``(ntest,)`` is the mean of the predictive distribution, and
-        * **cov** ``(ntest, ntest)`` is the predictive covariance.
+        :param return_var: (optional)
+            If ``True``, only return the diagonal of the predictive covariance;
+            this will be faster to compute than the full covariance matrix.
+            This overrides ``return_cov`` so, if both are set to ``True``,
+            only the diagonal is computed. (default: ``False``)
+
+        Returns ``mu``, ``(mu, cov)``, or ``(mu, var)`` depending on the values
+        of ``return_cov`` and ``return_var``. These output values are:
+
+        * **mu** ``(ntest,)``: mean of the predictive distribution,
+        * **cov** ``(ntest, ntest)``: the predictive covariance matrix, and
+        * **var** ``(ntest,)``: the diagonal elements of ``cov``.
 
         """
         self.recompute()
@@ -465,7 +484,8 @@ class GP(object):
 
     def sample_conditional(self, y, t, size=1):
         """
-        Draw samples from the predictive conditional distribution.
+        Draw samples from the predictive conditional distribution. You must
+        call :func:`GP.compute` before this function.
 
         :param y: ``(nsamples, )``
             The observations to condition the model on.
@@ -522,10 +542,15 @@ class GP(object):
 
     def get_matrix(self, x1, x2=None):
         """
-        Get the covariance matrix at a given set of independent coordinates.
+        Get the covariance matrix at a given set or two of independent
+        coordinates.
 
-        :param t: ``(nsamples,)`` or ``(nsamples, ndim)``
-            The list of samples.
+        :param x1: ``(nsamples,)`` or ``(nsamples, ndim)``
+            A list of samples.
+
+        :param x2: ``(nsamples,)`` or ``(nsamples, ndim)`` (optional)
+            A second list of samples. If this is given, the cross covariance
+            matrix is computed. Otherwise, the auto-covariance is evaluated.
 
         """
         x1, _ = self.parse_samples(x1, False)
@@ -548,6 +573,14 @@ class GP(object):
         return n
 
     def get_parameter_names(self):
+        """
+        Returns the list of parameter names following the modeling protocol.
+        Parameters related to the mean function (included if ``fit_mean`` is
+        ``True``) are prefixed with ``mean:``, parameters for the white noise
+        function are prefixed with ``white:``, and parameters for the kernel
+        are prefixed with ``kernel:``.
+
+        """
         n = []
         if self.fit_mean:
             n += map("mean:{0}".format, self.mean.get_parameter_names())
@@ -559,12 +592,28 @@ class GP(object):
         return n
 
     def get_value(self, *args, **kwargs):
+        """
+        A synonym for :func:`GP.lnlikelihood` provided for consistency with
+        the modeling protocol.
+
+        """
         return self.lnlikelihood(*args, **kwargs)
 
     def get_gradient(self, *args, **kwargs):
+        """
+        A synonym for :func:`GP.grad_lnlikelihood` provided for consistency
+        with the modeling protocol.
+
+        """
         return self.grad_lnlikelihood(*args, **kwargs)
 
     def get_vector(self):
+        """
+        As specified by the modeling protocol, this returns the vector of
+        fitting parameters for this model in the order specified by
+        :func:`GP.get_parameter_names`.
+
+        """
         v = np.empty(len(self))
         n = 0
         if self.fit_mean:
@@ -581,6 +630,17 @@ class GP(object):
         return v
 
     def set_vector(self, vector):
+        """
+        Update the model parameters
+
+        As specified by the modeling protocol, this returns the vector of
+        fitting parameters for this model in the order specified by
+        :func:`GP.get_parameter_names`.
+
+        """
+        if len(vector) != len(self):
+            raise ValueError("dimension mismatch")
+
         n = 0
         if self.fit_mean:
             l = len(self.mean)

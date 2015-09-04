@@ -43,6 +43,10 @@ class ModelingMixin(object):
             self._parameters[k] = v
             self._frozen[k] = False
 
+    def index(self, name):
+        names = self.get_parameter_names()
+        return names.index(name)
+
     def __len__(self):
         return len(self._frozen) - sum(self._frozen.values())
 
@@ -79,6 +83,15 @@ class ModelingMixin(object):
 
     def thaw_parameter(self, parameter_name):
         self._frozen[parameter_name] = False
+
+    @staticmethod
+    def sort_gradient(f):
+        def func(self, *args, **kwargs):
+            values = f(self, *args, **kwargs)
+            return np.concatenate([
+                [values[k]] for k in self.get_parameter_names()
+            ], axis=0)
+        return func
 
 
 def supports_modeling_protocol(obj):
