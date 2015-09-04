@@ -72,7 +72,7 @@ class GP(object):
         self._y = None
 
         self.kernel = kernel
-        self.fit_kernel = fit_kernel
+        self.fit_kernel = False if kernel is None else fit_kernel
 
         self.mean = mean
         self.fit_mean = fit_mean
@@ -184,13 +184,13 @@ class GP(object):
         return (
             self._computed
             and self.solver.computed
-            and not self.kernel.dirty
+            and (self.kernel is None or not self.kernel.dirty)
         )
 
     @computed.setter
     def computed(self, v):
         self._computed = v
-        if v:
+        if v and self.kernel is not None:
             self.kernel.dirty = False
 
     def parse_samples(self, t, sort=False):
@@ -237,7 +237,8 @@ class GP(object):
             inds = np.arange(t.shape[0], dtype=int)
 
         # Double check the dimensions against the kernel.
-        if len(t.shape) != 2 or t.shape[1] != self.kernel.ndim:
+        if len(t.shape) != 2 or (self.kernel is not None and
+                                 t.shape[1] != self.kernel.ndim):
             raise ValueError("Dimension mismatch")
 
         return t[inds], inds
@@ -331,7 +332,7 @@ class GP(object):
             throw an error if something goes wrong. (default: ``False``)
 
         """
-        if self.kernel.dirty or not self.computed:
+        if not self.computed:
             if not (hasattr(self, "_x") and hasattr(self, "_yerr2")):
                 raise RuntimeError("You need to compute the model first")
             try:
