@@ -43,9 +43,17 @@ class ModelingMixin(object):
             self._parameters[k] = v
             self._frozen[k] = False
 
-    def index(self, name):
-        names = self.get_parameter_names()
-        return names.index(name)
+    def __getattr__(self, k):
+        try:
+            return self._parameters[k]
+        except KeyError:
+            raise AttributeError(k)
+
+    def __setattr__(self, k, v):
+        if k in self._parameters:
+            self._parameters[k] = v
+        else:
+            super(ModelingMixin, self).__setattr__(k, v)
 
     def __len__(self):
         return len(self._frozen) - sum(self._frozen.values())

@@ -2,7 +2,7 @@
 from __future__ import division
 
 cimport cython
-cimport kerneldefs
+from .. cimport kerneldefs
 
 import time
 import numpy as np

@@ -65,8 +65,7 @@ class LinearWhiteNoise(ModelingMixin):
         super(LinearWhiteNoise, self).__init__(m=m, b=b)
 
     def get_value(self, x):
-        m, b = self["m"], self["b"]
-        return m * x + b
+        return self.m * x + self.b
 
     @ModelingMixin.sort_gradient
     def get_gradient(self, x):

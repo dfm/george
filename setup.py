@@ -179,7 +179,7 @@ if __name__ == "__main__":
     # Check for the Cython source (development mode) and compile it if it
     # exists.
     kern_fn = os.path.join("george", "cython_kernel")
-    hodlr_fn = os.path.join("george", "hodlr")
+    hodlr_fn = os.path.join("george", "solvers", "hodlr")
     if (os.path.exists(kern_fn + ".pyx") and os.path.exists(hodlr_fn + ".pyx")
             and os.path.exists(os.path.join("george", "kerneldefs.pxd"))):
         from Cython.Build import cythonize
@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     kern_ext = Extension("george.cython_kernel", sources=[kern_fn],
                          libraries=libraries, include_dirs=include_dirs)
-    hodlr_ext = Extension("george.hodlr", sources=[hodlr_fn],
+    hodlr_ext = Extension("george.solvers.hodlr", sources=[hodlr_fn],
                           libraries=libraries, include_dirs=include_dirs)
     extensions = cythonize([kern_ext, hodlr_ext])
 
@@ -217,7 +217,7 @@ if __name__ == "__main__":
         description="Blazingly fast Gaussian Processes for regression.",
         long_description=open("README.rst").read(),
         package_data={"": ["README.rst", "LICENSE",
-                           "include/*.h", "hodlr/header/*.hpp", ]},
+                           "george/include/*.h", "hodlr/header/*.hpp", ]},
         include_package_data=True,
         cmdclass=dict(build_ext=build_ext),
         classifiers=[

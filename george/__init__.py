@@ -17,7 +17,7 @@ if not __GEORGE_SETUP__:
 
     from . import kernels
     from .gp import GP
-    from .basic import BasicSolver
-    from .hodlr import HODLRSolver
+
+    from .solvers import BasicSolver, HODLRSolver
 
     from .modeling import ModelingMixin

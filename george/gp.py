@@ -7,7 +7,7 @@ __all__ = ["GP"]
 import numpy as np
 from scipy.linalg import LinAlgError
 
-from .basic import BasicSolver
+from .solvers.basic import BasicSolver
 from .models import ConstantModel, CallableModel
 from .modeling import supports_modeling_protocol
 from .utils import multivariate_gaussian_samples, nd_sort_samples
@@ -27,33 +27,27 @@ class GP(object):
 
     :param fit_kernel: (optional)
         If ``True``, the parameters of the kernel will be included in all
-        the relevant methods (:func:`GP.get_vector`,
-        :func:`GP.grad_lnlikelihood`, etc.).
-        (default: ``True``)
+        the relevant methods (:func:`get_vector`, :func:`grad_lnlikelihood`,
+        etc.). (default: ``True``)
 
     :param mean: (optional)
-        A description of the mean function; can be a callable, a scalar, or an
-        instance of a class implementing the modeling protocol. If scalar,
-        the mean is assumed constant. If callable, ``mean`` will be called
-        with the array of independent coordinates as the only argument.
-        Finally, for an object satisfying the modeling protocol,
-        :func:`mean.get_value()` will be called with the input coordinates.
-        (default: ``0.0``)
+        A description of the mean function. See :py:attr:`mean` for more
+        information. (default: ``0.0``)
 
     :param fit_mean: (optional)
-        If ``True``, the parameters of the mean model will be included in all
-        the relevant methods (:func:`GP.get_vector`,
-        :func:`GP.grad_lnlikelihood`, etc.).
-        (default: ``False``)
+        If ``True``, the parameters of the mean function will be included in
+        all the relevant methods (:func:`get_vector`,
+        :func:`grad_lnlikelihood`, etc.). (default: ``False``)
 
     :param white_noise: (optional)
-        (default: ``TINY``)
+        A description of the logarithm of the white noise variance added to
+        the diagonal of the covariance matrix. See :py:attr:`white_noise` for
+        more information. (default: ``log(TINY)``)
 
-    :param fit_mean: (optional)
-        If ``True``, the parameters of the mean model will be included in all
-        the relevant methods (:func:`GP.get_vector`,
-        :func:`GP.grad_lnlikelihood`, etc.).
-        (default: ``False``)
+    :param fit_white_noise: (optional)
+        If ``True``, the parameters of :py:attr:`white_noise` will be included
+        in all the relevant methods (:func:`get_vector`,
+        :func:`grad_lnlikelihood`, etc.). (default: ``False``)
 
     :param solver: (optional)
         The solver to use for linear algebra as documented in :ref:`solvers`.
@@ -65,13 +59,13 @@ class GP(object):
     """
 
     def __init__(self,
-                 kernel,
+                 kernel=None,
                  fit_kernel=True,
                  mean=None,
                  fit_mean=False,
                  white_noise=np.log(TINY),
                  fit_white_noise=False,
-                 solver=BasicSolver,
+                 solver=None,
                  **kwargs):
         self._computed = False
         self._alpha = None
@@ -86,6 +80,8 @@ class GP(object):
         self.white_noise = white_noise
         self.fit_white_noise = fit_white_noise
 
+        if solver is None:
+            solver = BasicSolver  # TrivialSolver if kernel is None else BasicSolver
         self.solver_type = solver
         self.solver_kwargs = kwargs
         self.solver = None
@@ -631,10 +627,7 @@ class GP(object):
 
     def set_vector(self, vector):
         """
-        Update the model parameters
-
-        As specified by the modeling protocol, this returns the vector of
-        fitting parameters for this model in the order specified by
+        Update the model parameters given a vector in the order specified by
         :func:`GP.get_parameter_names`.
 
         """
@@ -657,6 +650,11 @@ class GP(object):
             self.computed = False
 
     def freeze_parameter(self, parameter_name):
+        """
+        Freeze (stop fitting for) a parameter by name. This name must be in
+        the list returned by :func:`GP.get_parameter_names`.
+
+        """
         names = parameter_name.split(":")
         if names[0] == "white":
             self.white_noise.freeze_parameter(":".join(names[1:]))
@@ -669,6 +667,11 @@ class GP(object):
                              .format(parameter_name))
 
     def thaw_parameter(self, parameter_name):
+        """
+        The opposite of :func:`GP.freeze_parameter`. Thaw (start fitting for)
+        a parameter by name.
+
+        """
         names = parameter_name.split(":")
         if names[0] == "white":
             self.white_noise.thaw_parameter(":".join(names[1:]))

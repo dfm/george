@@ -10,7 +10,7 @@ dist
 .syntastic_cpp_config
 build
 .coverage
-george/*.cpp
+*.cpp
 george/kernels.py
 george/kerneldefs.pxd
 george/include/kernels.h
