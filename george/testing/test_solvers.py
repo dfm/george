@@ -2,13 +2,26 @@
 
 from __future__ import division, print_function
 
-__all__ = ["test_basic_solver"]
+__all__ = ["test_trivial_solver", "test_basic_solver", "test_hodlr_solver"]
 
 import numpy as np
 
 from .. import kernels
-from ..basic import BasicSolver
-from ..hodlr import HODLRSolver
+from .. import TrivialSolver, BasicSolver, HODLRSolver
+
+
+def test_trivial_solver(N=100, seed=1234):
+    # Sample some data.
+    np.random.seed(seed)
+    x = np.random.randn(N, 3)
+    yerr = 1e-3 * np.ones(N)
+    y = np.sin(np.sum(x, axis=1))
+
+    solver = TrivialSolver()
+    solver.compute(x, yerr)
+
+    assert np.allclose(solver.log_determinant, 2*np.sum(np.log(yerr)))
+    assert np.allclose(solver.apply_inverse(y), y / yerr**2)
 
 
 def _test_solver(Solver, N=100, seed=1234):
