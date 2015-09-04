@@ -8,8 +8,7 @@ import numpy as np
 
 from .. import kernels
 from ..gp import GP
-from ..basic import BasicSolver
-from ..hodlr import HODLRSolver
+from .. import BasicSolver, HODLRSolver
 
 
 def test_tutorial():
