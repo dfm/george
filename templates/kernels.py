@@ -313,6 +313,7 @@ class {{ spec.name }} (Kernel):
                  {% if spec.stationary -%}
                  metric=None,
                  lower=True,
+                 bounds=None,
                  {% endif -%}
                  ndim=1,
                  axes=None):
@@ -341,6 +342,7 @@ class {{ spec.name }} (Kernel):
         self.metric = Metric(metric, ndim=ndim, axes=axes, lower=lower)
         self.ndim = self.metric.ndim
         self.axes = self.metric.axes
+        self.bounds = bounds
         {%- else -%}
         self.subspace = Subspace(ndim, axes=axes)
         self.ndim = self.subspace.ndim
@@ -351,4 +353,25 @@ class {{ spec.name }} (Kernel):
         self.dirty = True
         self._kernel = None
 
+    {% if spec.stationary -%}
+    @property
+    def bounds(self):
+        if not self.bounded:
+            return None
+        return list(zip(self.min_bounds, self.max_bounds))
+
+    @bounds.setter
+    def bounds(self, bounds):
+        if bounds is None:
+            self.bounded = False
+            self.min_bounds = -np.inf + np.zeros(len(self.axes))
+            self.max_bounds = np.inf + np.zeros(len(self.axes))
+            return
+
+        bounds = np.atleast_2d(bounds)
+        if bounds.shape != (len(self.axes), 2):
+            raise ValueError("dimension mismatch in bounds specification")
+        self.bounded = True
+        self.min_bounds, self.max_bounds = map(np.array, zip(*bounds))
+    {% endif %}
 {% endfor %}

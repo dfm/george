@@ -49,6 +49,11 @@ cdef extern from "kernels.h" namespace "george::kernels":
             {% for con in spec.constants %}
             {{ con.type }} {{ con.name }},
             {%- endfor %}
+            {%- if spec.stationary -%}
+            unsigned bounded,
+            double* min_bounds,
+            double* max_bounds,
+            {%- endif %}
             unsigned ndim,
             unsigned naxes
         )
@@ -84,15 +89,20 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
                 kernel_spec.__class__.__name__))
 
     cdef unsigned i
-    cdef np.ndarray[DTYPE_t, ndim=1] pars = kernel_spec._parameter_vector
     cdef Kernel* kernel
+    cdef unsigned bounded
+    cdef np.ndarray[DTYPE_t, ndim=1] min_bounds, max_bounds
 
     if kernel_spec.stationary:
         ndim = kernel_spec.metric.ndim
         axes = kernel_spec.metric.axes
+        bounded = kernel_spec.bounded
+        min_bounds = kernel_spec.min_bounds
+        max_bounds = kernel_spec.max_bounds
     else:
         ndim = kernel_spec.ndim
         axes = kernel_spec.axes
+
 
     if False:
         pass
@@ -109,6 +119,9 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
                 {% for con in spec.constants %}
                 kernel_spec.{{ con.name }},
                 {%- endfor %}
+                bounded,
+                <double*>(min_bounds.data),
+                <double*>(max_bounds.data),
                 ndim,
                 len(axes)
             )
@@ -120,6 +133,9 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
                 {% for con in spec.constants %}
                 kernel_spec.{{ con.name }},
                 {%- endfor %}
+                bounded,
+                <double*>(min_bounds.data),
+                <double*>(max_bounds.data),
                 ndim,
                 len(axes)
             )
@@ -131,6 +147,9 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
                 {% for con in spec.constants %}
                 kernel_spec.{{ con.name }},
                 {%- endfor %}
+                bounded,
+                <double*>(min_bounds.data),
+                <double*>(max_bounds.data),
                 ndim,
                 len(axes)
             )

@@ -111,18 +111,31 @@ public:
         {%- for con in spec.constants %}
         {{ con.type }} {{ con.name }},
         {%- endfor %}
+        const unsigned blocked,
+        const double* min_bounds,
+        const double* max_bounds,
         const unsigned ndim,
         const unsigned naxes
     ) :
         size_({{ spec.params|length }}),
-        metric_(ndim, naxes)
+        metric_(ndim, naxes),
+        blocked_(blocked),
+        min_bounds_(naxes),
+        max_bounds_(naxes)
         {% for param in spec.params -%}
         , param_{{ param }}_({{param}})
         {% endfor -%}
         {%- for con in spec.constants %}
-        , constant_{{ con.name }}_({{ con.name }}),
+        , constant_{{ con.name }}_({{ con.name }})
         {%- endfor %}
     {
+        unsigned i;
+        if (blocked_) {
+            for (i = 0; i < naxes; ++i) {
+                min_bounds_[i] = min_bounds[i];
+                max_bounds_[i] = max_bounds[i];
+            }
+        }
         update_reparams();
     };
 
@@ -173,6 +186,15 @@ public:
     };
 
     double value (const double* x1, const double* x2) {
+        if (blocked_) {
+            unsigned i, j;
+            for (i = 0; i < min_bounds_.size(); ++i) {
+                j = metric_.get_axis(i);
+                if (x1[j] < min_bounds_[i] || x1[j] > max_bounds_[i] ||
+                        x2[j] < min_bounds_[i] || x2[j] > max_bounds_[i])
+                    return 0.0;
+            }
+        }
         double r2 = metric_.value(x1, x2);
         return get_value(
             {% for param in spec.params -%}
@@ -218,7 +240,23 @@ public:
     };
 
     void gradient (const double* x1, const double* x2, double* grad) {
-        unsigned i, n = size();
+        bool out = false;
+        unsigned i, j, n = size();
+        if (blocked_) {
+            for (i = 0; i < min_bounds_.size(); ++i) {
+                j = metric_.get_axis(i);
+                if (x1[j] < min_bounds_[i] || x1[j] > max_bounds_[i] ||
+                        x2[j] < min_bounds_[i] || x2[j] > max_bounds_[i]) {
+                    out = true;
+                    break;
+                }
+            }
+            if (out) {
+                for (i = 0; i < n; ++i) grad[i] = 0.0;
+                return;
+            }
+        }
+
         double r2 = metric_.value(x1, x2),
                r2grad = radial_gradient(
                     {% for param in spec.params -%}
@@ -280,6 +318,8 @@ public:
 private:
     unsigned size_;
     M metric_;
+    unsigned blocked_;
+    std::vector<double> min_bounds_, max_bounds_;
     {% for param in spec.params -%}
     double param_{{ param }}_;
     {% endfor %}

@@ -1,0 +1,32 @@
+name: PolynomialKernel
+stationary: false
+constants: [{name: order, type: double}]
+params: [ln_sigma2]
+
+doc: |
+    A polynomial kernel
+
+    .. math::
+
+        k(\mathbf{x}_i,\,\mathbf{x}_j) =
+            (\mathbf{x}_i \cdot \mathbf{x}_j + \sigma^2)^P
+
+    :param order:
+        The power :math:`P`. This parameter is a *constant*; it is not
+        included in the parameter vector.
+
+    :param sigma2:
+        The variance :math:`\sigma^2 > 0`.
+
+reparams:
+    sigma2:
+        return exp(ln_sigma2);
+
+value: |
+    if (order == 0.0) return 1.0;
+    return pow(x1 * x2 + sigma2, order);
+
+grad:
+    ln_sigma2: |
+        if (order == 0.0) return 0.0;
+        return sigma2 * pow(x1 * x2 + sigma2, order-1.0) * order;

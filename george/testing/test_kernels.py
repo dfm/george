@@ -3,6 +3,13 @@
 from __future__ import division, print_function, absolute_import
 
 __all__ = [
+    "test_dtype",
+
+    "test_constant", "test_dot_prod", "test_cosine", "test_exp_sine2",
+    "test_local", "test_local", "test_polynomial",
+
+    "test_exp", "test_exp_squared", "test_matern32", "test_matern52",
+    "test_rational_quadratic", "test_combine",
 ]
 
 import numpy as np
@@ -36,6 +43,55 @@ def test_dot_prod():
     do_kernel_t(kernels.DotProductKernel())
     do_kernel_t(kernels.DotProductKernel(ndim=2))
     do_kernel_t(kernels.DotProductKernel(ndim=5, axes=0))
+
+
+def test_cosine():
+    do_kernel_t(kernels.CosineKernel(period=1.0))
+    do_kernel_t(kernels.CosineKernel(period=0.5, ndim=2))
+    do_kernel_t(kernels.CosineKernel(period=0.5, ndim=2, axes=1))
+    do_kernel_t(kernels.CosineKernel(period=0.75, ndim=5, axes=[2, 3]))
+
+
+def test_exp_sine2():
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=0.4, period=1.0))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=12., period=0.5, ndim=2))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=17., period=0.5, ndim=2, axes=1))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=13.7, ln_period=-0.75, ndim=5,
+                                       axes=[2, 3]))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=-0.7, period=0.75, ndim=5,
+                                       axes=[2, 3]))
+    do_kernel_t(kernels.ExpSine2Kernel(gamma=-10, period=0.75))
+
+
+def test_local():
+    do_kernel_t(kernels.LocalGaussianKernel(width=0.5, location=1.0))
+    do_kernel_t(kernels.LocalGaussianKernel(width=0.1, location=0.5, ndim=2))
+    do_kernel_t(kernels.LocalGaussianKernel(width=1.5, location=-0.5, ndim=2,
+                                            axes=1))
+    do_kernel_t(kernels.LocalGaussianKernel(width=2.0, location=0.75, ndim=5,
+                                            axes=[2, 3]))
+
+
+def test_linear():
+    do_kernel_t(kernels.LinearKernel(order=0, ln_gamma2=0.0))
+    do_kernel_t(kernels.LinearKernel(order=2, ln_gamma2=0.0))
+    do_kernel_t(kernels.LinearKernel(order=2, ln_gamma2=0.0))
+    do_kernel_t(kernels.LinearKernel(order=5, ln_gamma2=1.0, ndim=2))
+    do_kernel_t(kernels.LinearKernel(order=3, ln_gamma2=-1.0, ndim=5,
+                                     axes=2))
+    k = kernels.LinearKernel(order=0, ln_gamma2=0.0)
+    k += kernels.LinearKernel(order=1, ln_gamma2=-1.0)
+    k += kernels.LinearKernel(order=2, ln_gamma2=-2.0)
+    do_kernel_t(k)
+
+
+def test_polynomial():
+    do_kernel_t(kernels.PolynomialKernel(order=0, ln_sigma2=-10.0))
+    do_kernel_t(kernels.PolynomialKernel(order=2, ln_sigma2=-10.0))
+    do_kernel_t(kernels.PolynomialKernel(order=2, ln_sigma2=0.0))
+    do_kernel_t(kernels.PolynomialKernel(order=5, ln_sigma2=1.0, ndim=2))
+    do_kernel_t(kernels.PolynomialKernel(order=3, ln_sigma2=-1.0, ndim=5,
+                                         axes=2))
 
 
 #
@@ -72,6 +128,9 @@ def do_stationary_t(kernel_type, **kwargs):
     kernel = build_kernel(1.0, ndim=3, axes=2)
     do_kernel_t(kernel)
 
+    kernel = build_kernel(1.0, ndim=3, axes=2, bounds=(-0.1, 0.1))
+    do_kernel_t(kernel)
+
 
 def test_exp():
     do_stationary_t(kernels.ExpKernel)
@@ -93,45 +152,6 @@ def test_rational_quadratic():
     do_stationary_t(kernels.RationalQuadraticKernel, alpha=1.0)
     do_stationary_t(kernels.RationalQuadraticKernel, alpha=0.1)
     do_stationary_t(kernels.RationalQuadraticKernel, alpha=10.0)
-
-
-def test_cosine():
-    do_kernel_t(kernels.CosineKernel(period=1.0))
-    do_kernel_t(kernels.CosineKernel(period=0.5, ndim=2))
-    do_kernel_t(kernels.CosineKernel(period=0.5, ndim=2, axes=1))
-    do_kernel_t(kernels.CosineKernel(period=0.75, ndim=5, axes=[2, 3]))
-
-
-def test_exp_sine2():
-    do_kernel_t(kernels.ExpSine2Kernel(gamma=0.4, period=1.0))
-    do_kernel_t(kernels.ExpSine2Kernel(gamma=12., period=0.5, ndim=2))
-    do_kernel_t(kernels.ExpSine2Kernel(gamma=17., period=0.5, ndim=2, axes=1))
-    do_kernel_t(kernels.ExpSine2Kernel(gamma=13.7, ln_period=-0.75, ndim=5,
-                                       axes=[2, 3]))
-    do_kernel_t(kernels.ExpSine2Kernel(gamma=-0.7, period=0.75, ndim=5,
-                                       axes=[2, 3]))
-    do_kernel_t(kernels.ExpSine2Kernel(gamma=-10, period=0.75))
-
-
-def test_local():
-    do_kernel_t(kernels.LocalGaussianKernel(width=0.5, location=1.0))
-    do_kernel_t(kernels.LocalGaussianKernel(width=0.1, location=0.5, ndim=2))
-    do_kernel_t(kernels.LocalGaussianKernel(width=1.5, location=-0.5, ndim=2,
-                                            axes=1))
-    do_kernel_t(kernels.LocalGaussianKernel(width=2.0, location=0.75, ndim=5,
-                                            axes=[2, 3]))
-
-
-def test_linear():
-    do_kernel_t(kernels.LinearKernel(order=2, ln_gamma2=0.0))
-    do_kernel_t(kernels.LinearKernel(order=2, ln_gamma2=0.0))
-    do_kernel_t(kernels.LinearKernel(order=5, ln_gamma2=1.0, ndim=2))
-    do_kernel_t(kernels.LinearKernel(order=3, ln_gamma2=-1.0, ndim=5,
-                                     axes=2))
-    k = kernels.LinearKernel(order=0, ln_gamma2=0.0)
-    k += kernels.LinearKernel(order=1, ln_gamma2=-1.0)
-    k += kernels.LinearKernel(order=2, ln_gamma2=-2.0)
-    do_kernel_t(k)
 
 
 def test_combine():
