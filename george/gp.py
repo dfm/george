@@ -7,7 +7,7 @@ __all__ = ["GP"]
 import numpy as np
 from scipy.linalg import LinAlgError
 
-from .solvers.basic import BasicSolver
+from .solvers import TrivialSolver, BasicSolver
 from .models import ConstantModel, CallableModel
 from .modeling import supports_modeling_protocol
 from .utils import multivariate_gaussian_samples, nd_sort_samples
@@ -81,7 +81,7 @@ class GP(object):
         self.fit_white_noise = fit_white_noise
 
         if solver is None:
-            solver = BasicSolver  # TrivialSolver if kernel is None else BasicSolver
+            solver = TrivialSolver if kernel is None else BasicSolver
         self.solver_type = solver
         self.solver_kwargs = kwargs
         self.solver = None

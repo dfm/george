@@ -11,13 +11,13 @@ if not __GEORGE_SETUP__:
     __all__ = [
         "kernels",
         "GP",
-        "BasicSolver", "HODLRSolver",
+        "TrivialSolver", "BasicSolver", "HODLRSolver",
         "ModelingMixin",
     ]
 
     from . import kernels
     from .gp import GP
 
-    from .solvers import BasicSolver, HODLRSolver
+    from .solvers import TrivialSolver, BasicSolver, HODLRSolver
 
     from .modeling import ModelingMixin
