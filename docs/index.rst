@@ -33,10 +33,13 @@ George is being actively developed in `a public repository on GitHub
 
 .. toctree::
    :maxdepth: 1
-   :glob:
    :caption: Tutorials
 
-   tutorials/*
+   tutorials/first
+   tutorials/model
+   tutorials/hyper
+   tutorials/scaling
+   tutorials/new_kernel
 
 
 Contributors

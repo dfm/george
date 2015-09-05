@@ -242,8 +242,11 @@ The currently available non-stationary kernels are:
 
 .. autoclass:: george.kernels.ConstantKernel
 .. autoclass:: george.kernels.DotProductKernel
+.. autoclass:: george.kernels.LinearKernel
+.. autoclass:: george.kernels.PolynomialKernel
 .. autoclass:: george.kernels.CosineKernel
 .. autoclass:: george.kernels.ExpSine2Kernel
+.. autoclass:: george.kernels.LocalGaussianKernel
 
 
 .. _combining-kernels:
