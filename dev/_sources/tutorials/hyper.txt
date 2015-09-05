@@ -2,13 +2,13 @@
 .. module:: george
 
 .. note:: This tutorial was generated from an IPython notebook that can be
-          downloaded `here <../_static/notebooks/hyper.ipynb>`_.
+          downloaded `here <../../_static/notebooks/hyper.ipynb>`_.
 
 .. _hyper:
 
 
-Tutorial: hyperparameter optimization
-=====================================
+Hyperparameter optimization
+===========================
 
 This notebook was made with the following version of george:
 
@@ -108,8 +108,8 @@ hyperparameters in the ``GP.grad_lnlikelihood`` function:
 .. code:: python
 
     import george
-    gp = george.GP(kernel, mean=np.mean(y),
-                   white_noise=0.19**2, fit_white_noise=True)
+    gp = george.GP(kernel, mean=np.mean(y), fit_mean=True,
+                   white_noise=np.log(0.19**2), fit_white_noise=True)
     gp.compute(t)
     print(gp.lnlikelihood(y))
     print(gp.grad_lnlikelihood(y))
@@ -117,10 +117,11 @@ hyperparameters in the ``GP.grad_lnlikelihood`` function:
 
 .. parsed-literal::
 
-    -136.166948891
-    [  1.01554945e+02   2.84403216e-01  -2.07871875e+00  -1.84883265e-01
-       1.92835916e+00  -1.18652524e+00  -2.26721780e+03   9.41628135e+00
-      -1.25060215e+01  -3.07023672e+01  -1.80087624e-01   3.11546171e-03]
+    -85.5547708528
+    [  1.31881763e-02  -1.64386469e+01  -4.94655690e-01   3.78791021e-01
+       1.08296383e+00  -1.54394027e+00  -1.14486240e+00  -3.98205196e+01
+      -4.34545333e+00  -1.02722671e+00   3.23160562e+00   1.24565433e+00
+      -4.89958197e-02]
 
 
 We'll use a gradient based optimization routine from SciPy to fit this
@@ -158,8 +159,8 @@ model as follows:
 
 .. parsed-literal::
 
-    -136.166948891
-    -84.1979126818
+    -85.5547708528
+    -83.1662492912
 
 
 **Warning:** *An optimization code something like this should work on
@@ -168,7 +169,7 @@ initialization and algorithm. If the results are nonsense, try choosing
 a better initial guess or try a different value of the ``method``
 parameter in ``op.minimize``.*
 
-After running this optimization, we find a final ln-likelihood of -84;
+After running this optimization, we find a final ln-likelihood of -83;
 slightly better than the result in R&W. We can plot our prediction of
 the CO2 concentration into the future using our optimized Gaussian
 process model by running:
@@ -210,7 +211,7 @@ First, we define the probabilistic model:
 
     def lnprob(p):
         # Trivial uniform prior.
-        if np.any((-100 > p) + (p > 100)):
+        if np.any((-100 > p[1:]) + (p[1:] > 100)):
             return -np.inf
     
         # Update the kernel and compute the lnlikelihood.

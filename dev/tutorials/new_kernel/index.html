@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorial: writing new kernels &mdash; George 1.0.0.dev0 documentation</title>
+  <title>Implementing new kernels &mdash; George 1.0.0.dev0 documentation</title>
   
 
   
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   
   
@@ -28,12 +28,13 @@
   
 
   
-    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
-        <link rel="next" title="The GP object" href="../../user/gp/"/>
-        <link rel="prev" title="Tutorial: hyperparameter optimization" href="../hyper/"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="prev" title="Scaling Gaussian Processes to big datasets" href="../scaling/"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -44,44 +45,45 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
-        <a href="../../" class="fa fa-home"> George</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+        
+
+        
+          <a href="../../" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+
+        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
         
-        
-            <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../quickstart/#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../quickstart/#a-simple-example">A Simple Example</a></li>
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user/quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#testing">Testing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../model/">Tutorial: model fitting with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../hyper/">Tutorial: hyperparameter optimization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../hyper/#optimization">Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial: writing new kernels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#the-kernel-function">The kernel function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#kernel-specification">Kernel specification</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/upgrade/">Upgrading from pre-1.0 versions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#common-parameters">Common parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
@@ -91,18 +93,43 @@
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementing-new-kernels">Implementing new kernels</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../user/modeling/">Modeling protocol</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#the-protocol">The protocol</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#a-simple-example">A simple example</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/solvers/">Solvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#basic-solver">Basic Solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../hyper/">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 </ul>
 
+          
         
       </div>
       &nbsp;
@@ -124,24 +151,26 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../../">Docs</a> &raquo;</li>
       
-    <li>Tutorial: writing new kernels</li>
+    <li>Implementing new kernels</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="https://github.com/dfm/george/blob/master/docs/tutorials/new_kernel.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/tutorials/new_kernel" class="fa fa-github"> Edit on GitHub</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main">
+          <div role="main" class="document">
             
   <span class="target" id="module-george"></span><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This tutorial was generated from an IPython notebook that can be
-downloaded <a class="reference external" href="../_static/notebooks/new_kernel.ipynb">here</a>.</p>
+downloaded <a class="reference external" href="../../_static/notebooks/new_kernel.ipynb">here</a>.</p>
 </div>
-<div class="section" id="tutorial-writing-new-kernels">
-<span id="new-kernel"></span><h1>Tutorial: writing new kernels<a class="headerlink" href="#tutorial-writing-new-kernels" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="implementing-new-kernels">
+<span id="new-kernel"></span><h1>Implementing new kernels<a class="headerlink" href="#implementing-new-kernels" title="Permalink to this headline">¶</a></h1>
 <p>This notebook was made with the following version of george:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
 <span class="n">george</span><span class="o">.</span><span class="n">__version__</span>
@@ -163,7 +192,7 @@ kernel.</p>
 <h2>The kernel function<a class="headerlink" href="#the-kernel-function" title="Permalink to this headline">¶</a></h2>
 <p>In this tutorial, we will work through the implementation of a kernel
 that wasn&#8217;t available in early versions of the code: the
-<tt class="docutils literal"><span class="pre">LocalGaussianKernel</span></tt>. This kernel has been used by <a class="reference external" href="http://iancze.github.io">Ian
+<code class="docutils literal"><span class="pre">LocalGaussianKernel</span></code>. This kernel has been used by <a class="reference external" href="http://iancze.github.io">Ian
 Czekala</a> in his stellar spectrum fitting
 algorithm <a class="reference external" href="http://iancze.github.io/Starfish/">Starfish</a>.</p>
 <p>This kernel is not stationary and its value is given by the following
@@ -191,8 +220,8 @@ with respect to the hyperparameters so let&#8217;s list those now:</p>
 <div class="section" id="kernel-specification">
 <h2>Kernel specification<a class="headerlink" href="#kernel-specification" title="Permalink to this headline">¶</a></h2>
 <p>In the root directory of your development version of george, there
-should be a directory called <tt class="docutils literal"><span class="pre">kernels</span></tt>. In this directory, create a
-new file called <tt class="docutils literal"><span class="pre">MyLocalGaussian.yml</span></tt> and edit it to have the
+should be a directory called <code class="docutils literal"><span class="pre">kernels</span></code>. In this directory, create a
+new file called <code class="docutils literal"><span class="pre">MyLocalGaussian.yml</span></code> and edit it to have the
 following contents:</p>
 <div class="highlight-python"><div class="highlight"><pre>name: MyLocalGaussianKernel
 doc: You should always document your code.
@@ -220,33 +249,33 @@ grad:
 lot of online resources for the details of the syntax but let&#8217;s go
 through it line-by-line now to explain what&#8217;s going on.</p>
 <ol class="arabic simple">
-<li>The <tt class="docutils literal"><span class="pre">name</span></tt> field is the name that you want the Python class to
-have. The convention is to have it end in <tt class="docutils literal"><span class="pre">Kernel</span></tt> but I guess you
+<li>The <code class="docutils literal"><span class="pre">name</span></code> field is the name that you want the Python class to
+have. The convention is to have it end in <code class="docutils literal"><span class="pre">Kernel</span></code> but I guess you
 can call it more-or-less anything.</li>
-<li>The <tt class="docutils literal"><span class="pre">doc</span></tt> field let&#8217;s you write a docstring for the class. This is
+<li>The <code class="docutils literal"><span class="pre">doc</span></code> field let&#8217;s you write a docstring for the class. This is
 always a good idea and you can look at the existing kernels for
 inspiration.</li>
 <li>This kernel is not stationary and you specify that using the
-<tt class="docutils literal"><span class="pre">stationary</span></tt> field.</li>
-<li><tt class="docutils literal"><span class="pre">params</span></tt> lists the &#8220;natural&#8221; parameters of the kernel. The
+<code class="docutils literal"><span class="pre">stationary</span></code> field.</li>
+<li><code class="docutils literal"><span class="pre">params</span></code> lists the &#8220;natural&#8221; parameters of the kernel. The
 derivatives should be computed with respect to these parameters. By
-convention, if a parameter name starts with <tt class="docutils literal"><span class="pre">ln_</span></tt>, the user can
+convention, if a parameter name starts with <code class="docutils literal"><span class="pre">ln_</span></code>, the user can
 also initialize the kernel with the linear version. For example, in
 this case, you could initialize the kernel object as
-<tt class="docutils literal"><span class="pre">MyLocalGaussianKernel(x0=0.0,</span> <span class="pre">w=1.0)</span></tt> or, equivalently,
-<tt class="docutils literal"><span class="pre">MyLocalGaussianKernel(x0=0.0,</span> <span class="pre">ln_w=0.0)</span></tt>.</li>
+<code class="docutils literal"><span class="pre">MyLocalGaussianKernel(x0=0.0,</span> <span class="pre">w=1.0)</span></code> or, equivalently,
+<code class="docutils literal"><span class="pre">MyLocalGaussianKernel(x0=0.0,</span> <span class="pre">ln_w=0.0)</span></code>.</li>
 <li>It is often useful (for speed) to pre-compute a reparameterized form
 of the parameters. In this case, we don&#8217;t want to make too many calls
-to the <tt class="docutils literal"><span class="pre">exp</span></tt> function so we&#8217;ll pre-compute <span class="math">\((2\,w)^{-1}\)</span>. To
-do this, we add an entry to the <tt class="docutils literal"><span class="pre">reparams</span></tt> dictionary with raw C++
+to the <code class="docutils literal"><span class="pre">exp</span></code> function so we&#8217;ll pre-compute <span class="math">\((2\,w)^{-1}\)</span>. To
+do this, we add an entry to the <code class="docutils literal"><span class="pre">reparams</span></code> dictionary with raw C++
 code for a function that returns the reparameterization. This
 function will take the natural parameters as input so you can use
 them directly by name.</li>
-<li>The <tt class="docutils literal"><span class="pre">value</span></tt> entry gives the raw C++ code for evaluating the kernel
-function at input <tt class="docutils literal"><span class="pre">double</span></tt>s <tt class="docutils literal"><span class="pre">x1</span></tt> and <tt class="docutils literal"><span class="pre">x2</span></tt>. This function will
+<li>The <code class="docutils literal"><span class="pre">value</span></code> entry gives the raw C++ code for evaluating the kernel
+function at input <code class="docutils literal"><span class="pre">double</span></code>s <code class="docutils literal"><span class="pre">x1</span></code> and <code class="docutils literal"><span class="pre">x2</span></code>. This function will
 take the parameters and the reparameterizations as inputs so you can
 use them by name.</li>
-<li>Finally, the <tt class="docutils literal"><span class="pre">grad</span></tt> dictionary gives the raw C++ code for computing
+<li>Finally, the <code class="docutils literal"><span class="pre">grad</span></code> dictionary gives the raw C++ code for computing
 the gradient as a function of each parameter.</li>
 </ol>
 <p>After you save this file and recompile george, you should now have
@@ -258,7 +287,7 @@ access to this kernel as follows:</p>
 </pre></div>
 </div>
 <p>Whenever you implement a new kernel, you should numerically test that
-you&#8217;ve implemented the gradients correctly. The <tt class="docutils literal"><span class="pre">Kernel</span></tt>
+you&#8217;ve implemented the gradients correctly. The <code class="docutils literal"><span class="pre">Kernel</span></code>
 implementation includes a function for doing exactly that and here&#8217;s how
 you would call it:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
@@ -291,7 +320,7 @@ functions:</p>
 </div>
 <img alt="../../_images/new_kernel_10_0.png" src="../../_images/new_kernel_10_0.png" />
 <p>George already includes an implementation of this kernel (called the
-<tt class="docutils literal"><span class="pre">LocalGaussianKernel</span></tt>) so we&#8217;ll finish here but when you implement
+<code class="docutils literal"><span class="pre">LocalGaussianKernel</span></code>) so we&#8217;ll finish here but when you implement
 your own favorite kernel, you should now open a pull request to include
 the kernel in the released version of george.</p>
 </div>
@@ -303,10 +332,8 @@ the kernel in the released version of george.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../../user/gp/" class="btn btn-neutral float-right" title="The GP object"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="../hyper/" class="btn btn-neutral" title="Tutorial: hyperparameter optimization"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../scaling/" class="btn btn-neutral" title="Scaling Gaussian Processes to big datasets" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -318,9 +345,10 @@ the kernel in the released version of george.</p>
         &copy; Copyright 2013-2014 Dan Foreman-Mackey.
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
-  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
 </footer>
+
         </div>
       </div>
 

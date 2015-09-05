@@ -5,6 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Solvers &mdash; George 1.0.0.dev0 documentation</title>
@@ -14,7 +15,6 @@
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   
   
@@ -28,11 +28,14 @@
   
 
   
-    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
-        <link rel="prev" title="Modeling protocol" href="../modeling/"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="next" title="Modeling protocol" href="../modeling/"/>
+        <link rel="prev" title="The GP object" href="../gp/"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -43,44 +46,45 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
-        <a href="../../" class="fa fa-home"> George</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+        
+
+        
+          <a href="../../" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+
+        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
         
-        
-            <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/quickstart/">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/quickstart/#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/quickstart/#a-simple-example">A Simple Example</a></li>
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart/#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart/#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart/#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart/#testing">Testing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/model/">Tutorial: model fitting with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#the-final-fit">The Final Fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/hyper/">Tutorial: hyperparameter optimization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#optimization">Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/new_kernel/">Tutorial: writing new kernels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../upgrade/">Upgrading from pre-1.0 versions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../kernels/#common-parameters">Common parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
@@ -90,18 +94,43 @@
 <li class="toctree-l2"><a class="reference internal" href="../kernels/#implementing-new-kernels">Implementing new kernels</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../modeling/">Modeling protocol</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../modeling/#the-protocol">The protocol</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modeling/#a-simple-example">A simple example</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../gp/">The GP object</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Solvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#basic-solver">Basic Solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/model/">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/hyper/">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/new_kernel/">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 </ul>
 
+          
         
       </div>
       &nbsp;
@@ -126,13 +155,15 @@
     <li>Solvers</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="https://github.com/dfm/george/blob/master/docs/user/solvers.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/user/solvers" class="fa fa-github"> Edit on GitHub</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main">
+          <div role="main" class="document">
             
   <span class="target" id="module-george"></span><div class="section" id="solvers">
 <span id="id1"></span><h1>Solvers<a class="headerlink" href="#solvers" title="Permalink to this headline">¶</a></h1>
@@ -140,30 +171,30 @@
 different libraries for doing linear algebra.
 Both of the solvers implement the same API and should (up to some tolerance)
 give the same answers on the same datasets.
-A solver is just a class that takes a <tt class="xref py py-class docutils literal"><span class="pre">Kernel</span></tt> and that exposes 3
+A solver is just a class that takes a <code class="xref py py-class docutils literal"><span class="pre">Kernel</span></code> and that exposes 3
 methods:</p>
 <ol class="arabic simple">
-<li><tt class="docutils literal"><span class="pre">compute</span></tt> &#8212; to compute and factorize the kernel matrix,</li>
-<li><tt class="docutils literal"><span class="pre">apply_inverse</span></tt> &#8212; to left-multiply the input by the covariance matrix
+<li><code class="docutils literal"><span class="pre">compute</span></code> &#8212; to compute and factorize the kernel matrix,</li>
+<li><code class="docutils literal"><span class="pre">apply_inverse</span></code> &#8212; to left-multiply the input by the covariance matrix
 <span class="math">\(C^{-1}\,b\)</span> (actually implemented by solving the system
 <span class="math">\(C\,x = b\)</span>), and</li>
-<li><tt class="docutils literal"><span class="pre">apply_sqrt</span></tt> &#8212; to apply the (Cholesky) square root of the covariance.</li>
+<li><code class="docutils literal"><span class="pre">apply_sqrt</span></code> &#8212; to apply the (Cholesky) square root of the covariance.</li>
 </ol>
-<p>The solvers also provide the properties <tt class="docutils literal"><span class="pre">computed</span></tt> and <tt class="docutils literal"><span class="pre">log_determinant</span></tt>.</p>
-<p>The simplest solver provided by George (<a class="reference internal" href="#george.BasicSolver" title="george.BasicSolver"><tt class="xref py py-class docutils literal"><span class="pre">BasicSolver</span></tt></a>) uses <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.cholesky.html">scipy&#8217;s
+<p>The solvers also provide the properties <code class="docutils literal"><span class="pre">computed</span></code> and <code class="docutils literal"><span class="pre">log_determinant</span></code>.</p>
+<p>The simplest solver provided by George (<a class="reference internal" href="#george.BasicSolver" title="george.BasicSolver"><code class="xref py py-class docutils literal"><span class="pre">BasicSolver</span></code></a>) uses <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.cholesky.html">scipy&#8217;s
 Cholesky implementation</a>
-and the second implementation (<a class="reference internal" href="#george.HODLRSolver" title="george.HODLRSolver"><tt class="xref py py-class docutils literal"><span class="pre">HODLRSolver</span></tt></a>) uses  Sivaram
+and the second implementation (<a class="reference internal" href="#george.HODLRSolver" title="george.HODLRSolver"><code class="xref py py-class docutils literal"><span class="pre">HODLRSolver</span></code></a>) uses  Sivaram
 Amambikasaran&#8217;s <a class="reference external" href="https://github.com/sivaramambikasaran/HODLR">HODLR library</a>.
 The HODLR algorithm implements a <span class="math">\(\mathcal{O}(N\,\log^2 N)\)</span> direct
 solver for dense matrices as described <a class="reference external" href="http://arxiv.org/abs/1403.6015">here</a>.</p>
-<p>By default, George uses the <a class="reference internal" href="#george.BasicSolver" title="george.BasicSolver"><tt class="xref py py-class docutils literal"><span class="pre">BasicSolver</span></tt></a> but the <a class="reference internal" href="#george.HODLRSolver" title="george.HODLRSolver"><tt class="xref py py-class docutils literal"><span class="pre">HODLRSolver</span></tt></a>
+<p>By default, George uses the <a class="reference internal" href="#george.BasicSolver" title="george.BasicSolver"><code class="xref py py-class docutils literal"><span class="pre">BasicSolver</span></code></a> but the <a class="reference internal" href="#george.HODLRSolver" title="george.HODLRSolver"><code class="xref py py-class docutils literal"><span class="pre">HODLRSolver</span></code></a>
 can be used as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
 <span class="n">kernel</span> <span class="o">=</span> <span class="o">...</span>
 <span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="n">george</span><span class="o">.</span><span class="n">HODLRSolver</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The <a class="reference internal" href="#george.HODLRSolver" title="george.HODLRSolver"><tt class="xref py py-class docutils literal"><span class="pre">HODLRSolver</span></tt></a> is probably best for most one-dimensional problems
+<p>The <a class="reference internal" href="#george.HODLRSolver" title="george.HODLRSolver"><code class="xref py py-class docutils literal"><span class="pre">HODLRSolver</span></code></a> is probably best for most one-dimensional problems
 and some large multi-dimensional problems but it doesn&#8217;t (in general) scale
 well with the number of input dimensions.
 In practice, it&#8217;s worth trying both solvers on your specific problem to see
@@ -172,19 +203,19 @@ which runs faster.</p>
 <h2>Basic Solver<a class="headerlink" href="#basic-solver" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="george.BasicSolver">
-<em class="property">class </em><tt class="descclassname">george.</tt><tt class="descname">BasicSolver</tt><big>(</big><em>kernel</em><big>)</big><a class="headerlink" href="#george.BasicSolver" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the most basic solver built using <tt class="xref py py-func docutils literal"><span class="pre">scipy.linalg.cholesky()</span></tt>.</p>
+<em class="property">class </em><code class="descclassname">george.</code><code class="descname">BasicSolver</code><span class="sig-paren">(</span><em>kernel</em><span class="sig-paren">)</span><a class="headerlink" href="#george.BasicSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the most basic solver built using <code class="xref py py-func docutils literal"><span class="pre">scipy.linalg.cholesky()</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kernel</strong> &#8211; A subclass of <tt class="xref py py-class docutils literal"><span class="pre">Kernel</span></tt> implementing a kernel function.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kernel</strong> &#8211; A subclass of <code class="xref py py-class docutils literal"><span class="pre">Kernel</span></code> implementing a kernel function.</td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
 <dt id="george.BasicSolver.apply_inverse">
-<tt class="descname">apply_inverse</tt><big>(</big><em>y</em>, <em>in_place=False</em><big>)</big><a class="headerlink" href="#george.BasicSolver.apply_inverse" title="Permalink to this definition">¶</a></dt>
+<code class="descname">apply_inverse</code><span class="sig-paren">(</span><em>y</em>, <em>in_place=False</em><span class="sig-paren">)</span><a class="headerlink" href="#george.BasicSolver.apply_inverse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the inverse of the covariance matrix to the input by solving</p>
 <div class="math">
 \[C\,x = b\]</div>
@@ -193,10 +224,10 @@ which runs faster.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">nrhs)</span></tt>
+<li><strong>y</strong> &#8211; <code class="docutils literal"><span class="pre">(nsamples,)</span></code> or <code class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">nrhs)</span></code>
 The vector or matrix <span class="math">\(b\)</span>.</li>
 <li><strong>in_place</strong> &#8211; (optional)
-Should the data in <tt class="docutils literal"><span class="pre">y</span></tt> be overwritten with the result <span class="math">\(x\)</span>?</li>
+Should the data in <code class="docutils literal"><span class="pre">y</span></code> be overwritten with the result <span class="math">\(x\)</span>?</li>
 </ul>
 </td>
 </tr>
@@ -206,14 +237,14 @@ Should the data in <tt class="docutils literal"><span class="pre">y</span></tt> 
 
 <dl class="method">
 <dt id="george.BasicSolver.apply_sqrt">
-<tt class="descname">apply_sqrt</tt><big>(</big><em>r</em><big>)</big><a class="headerlink" href="#george.BasicSolver.apply_sqrt" title="Permalink to this definition">¶</a></dt>
+<code class="descname">apply_sqrt</code><span class="sig-paren">(</span><em>r</em><span class="sig-paren">)</span><a class="headerlink" href="#george.BasicSolver.apply_sqrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the Cholesky square root of the covariance matrix to the input
 vector or matrix.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>r</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">nrhs)</span></tt>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>r</strong> &#8211; <code class="docutils literal"><span class="pre">(nsamples,)</span></code> or <code class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">nrhs)</span></code>
 The input vector or matrix.</td>
 </tr>
 </tbody>
@@ -222,18 +253,18 @@ The input vector or matrix.</td>
 
 <dl class="method">
 <dt id="george.BasicSolver.compute">
-<tt class="descname">compute</tt><big>(</big><em>x</em>, <em>yerr</em><big>)</big><a class="headerlink" href="#george.BasicSolver.compute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute</code><span class="sig-paren">(</span><em>x</em>, <em>yerr</em><span class="sig-paren">)</span><a class="headerlink" href="#george.BasicSolver.compute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute and factorize the covariance matrix.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>x</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+<li><strong>x</strong> &#8211; <code class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></code>
 The independent coordinates of the data points.</li>
-<li><strong>yerr</strong> &#8211; (optional) <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or scalar
+<li><strong>yerr</strong> &#8211; (optional) <code class="docutils literal"><span class="pre">(nsamples,)</span></code> or scalar
 The Gaussian uncertainties on the data points at coordinates
-<tt class="docutils literal"><span class="pre">x</span></tt>. These values will be added in quadrature to the diagonal of
+<code class="docutils literal"><span class="pre">x</span></code>. These values will be added in quadrature to the diagonal of
 the covariance matrix.</li>
 </ul>
 </td>
@@ -244,16 +275,16 @@ the covariance matrix.</li>
 
 <dl class="attribute">
 <dt id="george.BasicSolver.computed">
-<tt class="descname">computed</tt><a class="headerlink" href="#george.BasicSolver.computed" title="Permalink to this definition">¶</a></dt>
+<code class="descname">computed</code><a class="headerlink" href="#george.BasicSolver.computed" title="Permalink to this definition">¶</a></dt>
 <dd><p>A flag indicating whether or not the covariance matrix was computed
-and factorized (using the <a class="reference internal" href="#george.BasicSolver.compute" title="george.BasicSolver.compute"><tt class="xref py py-func docutils literal"><span class="pre">compute()</span></tt></a> method).</p>
+and factorized (using the <a class="reference internal" href="#george.BasicSolver.compute" title="george.BasicSolver.compute"><code class="xref py py-func docutils literal"><span class="pre">compute()</span></code></a> method).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="george.BasicSolver.log_determinant">
-<tt class="descname">log_determinant</tt><a class="headerlink" href="#george.BasicSolver.log_determinant" title="Permalink to this definition">¶</a></dt>
+<code class="descname">log_determinant</code><a class="headerlink" href="#george.BasicSolver.log_determinant" title="Permalink to this definition">¶</a></dt>
 <dd><p>The log-determinant of the covariance matrix. This will only be
-non-<tt class="docutils literal"><span class="pre">None</span></tt> after calling the <a class="reference internal" href="#george.BasicSolver.compute" title="george.BasicSolver.compute"><tt class="xref py py-func docutils literal"><span class="pre">compute()</span></tt></a> method.</p>
+non-<code class="docutils literal"><span class="pre">None</span></code> after calling the <a class="reference internal" href="#george.BasicSolver.compute" title="george.BasicSolver.compute"><code class="xref py py-func docutils literal"><span class="pre">compute()</span></code></a> method.</p>
 </dd></dl>
 
 </dd></dl>
@@ -263,7 +294,7 @@ non-<tt class="docutils literal"><span class="pre">None</span></tt> after callin
 <h2>HODLR Solver<a class="headerlink" href="#hodlr-solver" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="george.HODLRSolver">
-<em class="property">class </em><tt class="descclassname">george.</tt><tt class="descname">HODLRSolver</tt><a class="headerlink" href="#george.HODLRSolver" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">george.</code><code class="descname">HODLRSolver</code><a class="headerlink" href="#george.HODLRSolver" title="Permalink to this definition">¶</a></dt>
 <dd><p>A solver using Sivaram Amambikasaran&#8217;s <a class="reference external" href="https://github.com/sivaramambikasaran/HODLR">HODLR library</a> that implements a
 <span class="math">\(\mathcal{O}(N\,\log^2 N)\)</span> direct solver for dense matrices as
 described <a class="reference external" href="http://arxiv.org/abs/1403.6015">here</a>.</p>
@@ -272,16 +303,16 @@ described <a class="reference external" href="http://arxiv.org/abs/1403.6015">he
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>kernel</strong> &#8211; A subclass of <tt class="xref py py-class docutils literal"><span class="pre">Kernel</span></tt> implementing a kernel function.</li>
+<li><strong>kernel</strong> &#8211; A subclass of <code class="xref py py-class docutils literal"><span class="pre">Kernel</span></code> implementing a kernel function.</li>
 <li><strong>nleaf</strong> &#8211; (optional)
 The size of the smallest matrix blocks. When the solver reaches this
 level in the tree, it directly solves these systems using Eigen&#8217;s
-Cholesky implementation. (default: <tt class="docutils literal"><span class="pre">100</span></tt>)</li>
+Cholesky implementation. (default: <code class="docutils literal"><span class="pre">100</span></code>)</li>
 <li><strong>tol</strong> &#8211; (optional)
 A tuning parameter used when factorizing the matrix. The conversion
 between this parameter and the precision of the results is problem
 specific but if you need more precision, try deceasing this number
-(at the cost of a longer runtime). (default: <tt class="docutils literal"><span class="pre">1e-12</span></tt>)</li>
+(at the cost of a longer runtime). (default: <code class="docutils literal"><span class="pre">1e-12</span></code>)</li>
 </ul>
 </td>
 </tr>
@@ -289,7 +320,7 @@ specific but if you need more precision, try deceasing this number
 </table>
 <dl class="method">
 <dt id="george.HODLRSolver.apply_inverse">
-<tt class="descname">apply_inverse</tt><big>(</big><em>y</em>, <em>in_place=False</em><big>)</big><a class="headerlink" href="#george.HODLRSolver.apply_inverse" title="Permalink to this definition">¶</a></dt>
+<code class="descname">apply_inverse</code><span class="sig-paren">(</span><em>y</em>, <em>in_place=False</em><span class="sig-paren">)</span><a class="headerlink" href="#george.HODLRSolver.apply_inverse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the inverse of the covariance matrix to the input by solving</p>
 <div class="math">
 \[C\,x = b\]</div>
@@ -298,10 +329,10 @@ specific but if you need more precision, try deceasing this number
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>y</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">nrhs)</span></tt>
+<li><strong>y</strong> &#8211; <code class="docutils literal"><span class="pre">(nsamples,)</span></code> or <code class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">nrhs)</span></code>
 The vector or matrix <span class="math">\(b\)</span>.</li>
 <li><strong>in_place</strong> &#8211; (optional)
-Should the data in <tt class="docutils literal"><span class="pre">y</span></tt> be overwritten with the result <span class="math">\(x\)</span>?</li>
+Should the data in <code class="docutils literal"><span class="pre">y</span></code> be overwritten with the result <span class="math">\(x\)</span>?</li>
 </ul>
 </td>
 </tr>
@@ -311,24 +342,24 @@ Should the data in <tt class="docutils literal"><span class="pre">y</span></tt> 
 
 <dl class="method">
 <dt id="george.HODLRSolver.apply_sqrt">
-<tt class="descname">apply_sqrt</tt><big>(</big><em>r</em><big>)</big><a class="headerlink" href="#george.HODLRSolver.apply_sqrt" title="Permalink to this definition">¶</a></dt>
+<code class="descname">apply_sqrt</code><span class="sig-paren">(</span><em>r</em><span class="sig-paren">)</span><a class="headerlink" href="#george.HODLRSolver.apply_sqrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method is not implemented by this solver yet.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="george.HODLRSolver.compute">
-<tt class="descname">compute</tt><big>(</big><em>x</em>, <em>yerr</em>, <em>seed=None</em><big>)</big><a class="headerlink" href="#george.HODLRSolver.compute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute</code><span class="sig-paren">(</span><em>x</em>, <em>yerr</em>, <em>seed=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.HODLRSolver.compute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute and factorize the covariance matrix.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>x</strong> &#8211; <tt class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></tt>
+<li><strong>x</strong> &#8211; <code class="docutils literal"><span class="pre">(nsamples,</span> <span class="pre">ndim)</span></code>
 The independent coordinates of the data points.</li>
-<li><strong>yerr</strong> &#8211; (optional) <tt class="docutils literal"><span class="pre">(nsamples,)</span></tt> or scalar
+<li><strong>yerr</strong> &#8211; (optional) <code class="docutils literal"><span class="pre">(nsamples,)</span></code> or scalar
 The Gaussian uncertainties on the data points at coordinates
-<tt class="docutils literal"><span class="pre">x</span></tt>. These values will be added in quadrature to the diagonal of
+<code class="docutils literal"><span class="pre">x</span></code>. These values will be added in quadrature to the diagonal of
 the covariance matrix.</li>
 <li><strong>seed</strong> &#8211; (optional)
 There is a stochastic component in the HODLR factorization step.
@@ -345,16 +376,16 @@ conditioned, it will have a larger effect.</li>
 
 <dl class="attribute">
 <dt id="george.HODLRSolver.computed">
-<tt class="descname">computed</tt><a class="headerlink" href="#george.HODLRSolver.computed" title="Permalink to this definition">¶</a></dt>
+<code class="descname">computed</code><a class="headerlink" href="#george.HODLRSolver.computed" title="Permalink to this definition">¶</a></dt>
 <dd><p>A flag indicating whether or not the covariance matrix was computed
-and factorized (using the <a class="reference internal" href="#george.HODLRSolver.compute" title="george.HODLRSolver.compute"><tt class="xref py py-func docutils literal"><span class="pre">compute()</span></tt></a> method).</p>
+and factorized (using the <a class="reference internal" href="#george.HODLRSolver.compute" title="george.HODLRSolver.compute"><code class="xref py py-func docutils literal"><span class="pre">compute()</span></code></a> method).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="george.HODLRSolver.log_determinant">
-<tt class="descname">log_determinant</tt><a class="headerlink" href="#george.HODLRSolver.log_determinant" title="Permalink to this definition">¶</a></dt>
+<code class="descname">log_determinant</code><a class="headerlink" href="#george.HODLRSolver.log_determinant" title="Permalink to this definition">¶</a></dt>
 <dd><p>The log-determinant of the covariance matrix. This will only be
-non-<tt class="docutils literal"><span class="pre">None</span></tt> after calling the <a class="reference internal" href="#george.HODLRSolver.compute" title="george.HODLRSolver.compute"><tt class="xref py py-func docutils literal"><span class="pre">compute()</span></tt></a> method.</p>
+non-<code class="docutils literal"><span class="pre">None</span></code> after calling the <a class="reference internal" href="#george.HODLRSolver.compute" title="george.HODLRSolver.compute"><code class="xref py py-func docutils literal"><span class="pre">compute()</span></code></a> method.</p>
 </dd></dl>
 
 </dd></dl>
@@ -368,8 +399,10 @@ non-<tt class="docutils literal"><span class="pre">None</span></tt> after callin
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="../modeling/" class="btn btn-neutral float-right" title="Modeling protocol" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-        <a href="../modeling/" class="btn btn-neutral" title="Modeling protocol"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+        <a href="../gp/" class="btn btn-neutral" title="The GP object" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -381,9 +414,10 @@ non-<tt class="docutils literal"><span class="pre">None</span></tt> after callin
         &copy; Copyright 2013-2014 Dan Foreman-Mackey.
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
-  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
 </footer>
+
         </div>
       </div>
 

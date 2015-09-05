@@ -1,0 +1,358 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>A gentle introduction to Gaussian Process Regression &mdash; George 1.0.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="next" title="Model fitting with correlated noise" href="../model/"/>
+        <link rel="prev" title="Modeling protocol" href="../../user/modeling/"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../../" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user/quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#testing">Testing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/upgrade/">Upgrading from pre-1.0 versions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/kernels/">Kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#common-parameters">Common parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#stationary-kernels">Stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#non-stationary-kernels">Non-stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#combining-kernels">Combining kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementing-new-kernels">Implementing new kernels</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/solvers/">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#hodlr-solver">HODLR Solver</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../hyper/">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../">George</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../">Docs</a> &raquo;</li>
+      
+    <li>A gentle introduction to Gaussian Process Regression</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/tutorials/first" class="fa fa-github"> Edit on GitHub</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <span class="target" id="module-george"></span><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This tutorial was generated from an IPython notebook that can be
+downloaded <a class="reference external" href="../../_static/notebooks/first.ipynb">here</a>.</p>
+</div>
+<div class="section" id="a-gentle-introduction-to-gaussian-process-regression">
+<span id="first"></span><h1>A gentle introduction to Gaussian Process Regression<a class="headerlink" href="#a-gentle-introduction-to-gaussian-process-regression" title="Permalink to this headline">¶</a></h1>
+<p>This notebook was made with the following version of george:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
+<span class="n">george</span><span class="o">.</span><span class="n">__version__</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&#39;1.0.0.dev0&#39;</span>
+</pre></div>
+</div>
+<p>We&#8217;ll start by generating some fake data (from a sinusoidal model) with
+error bars:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pl</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">15</span><span class="p">))</span>
+<span class="n">yerr</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">yerr</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+<span class="n">pl</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="n">yerr</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&quot;.k&quot;</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">1.45</span><span class="p">,</span> <span class="mf">1.45</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="../../_images/first_4_0.png" src="../../_images/first_4_0.png" />
+<p>Now, we&#8217;ll choose a kernel (covariance) function to model these data,
+assume a zero mean model, and predict the function values across the
+full range. The full kernel specification language is documented
+<a class="reference external" href="../../user/kernels/">here</a> but here&#8217;s an example for this dataset:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">george</span> <span class="kn">import</span> <span class="n">kernels</span>
+
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+<span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">yerr</span><span class="p">)</span>
+
+<span class="n">x_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+<span class="n">pred</span><span class="p">,</span> <span class="n">pred_var</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x_pred</span><span class="p">,</span> <span class="n">return_var</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">pl</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_pred</span><span class="p">,</span> <span class="n">pred</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pred_var</span><span class="p">),</span> <span class="n">pred</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pred_var</span><span class="p">),</span>
+                <span class="n">color</span><span class="o">=</span><span class="s">&quot;k&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_pred</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="s">&quot;k&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="n">yerr</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&quot;.k&quot;</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_pred</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x_pred</span><span class="p">),</span> <span class="s">&quot;--g&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">1.45</span><span class="p">,</span> <span class="mf">1.45</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="../../_images/first_6_0.png" src="../../_images/first_6_0.png" />
+<p>The <code class="docutils literal"><span class="pre">gp</span></code> model provides a handler for computing the marginalized
+likelihood of the data under this model:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="k">print</span><span class="p">(</span><span class="s">&quot;Initial ln-likelihood: {0:.2f}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre>Initial ln-likelihood: -11.82
+</pre></div>
+</div>
+<p>So we can use this—combined with scipy&#8217;s
+<a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">minimize</a>
+function—to fit for the maximum likelihood parameters:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+
+<span class="k">def</span> <span class="nf">neg_ln_like</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">grad_neg_ln_like</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">gp</span><span class="o">.</span><span class="n">grad_lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">neg_ln_like</span><span class="p">,</span> <span class="n">gp</span><span class="o">.</span><span class="n">get_vector</span><span class="p">(),</span> <span class="n">jac</span><span class="o">=</span><span class="n">grad_neg_ln_like</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">Final ln-likelihood: {0:.2f}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre>   status: 0
+  success: True
+     njev: 10
+     nfev: 10
+ hess_inv: array([[ 0.53470696,  0.31341863],
+       [ 0.31341863,  0.40382934]])
+      fun: 9.225282556049551
+        x: array([-0.48730368,  0.60407505])
+  message: &#39;Optimization terminated successfully.&#39;
+      jac: array([  7.47945958e-06,  -8.00286213e-06])
+
+Final ln-likelihood: -9.23
+</pre></div>
+</div>
+<p>And plot the maximum likelihood model:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">pred</span><span class="p">,</span> <span class="n">pred_var</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x_pred</span><span class="p">,</span> <span class="n">return_var</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">pl</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_pred</span><span class="p">,</span> <span class="n">pred</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pred_var</span><span class="p">),</span> <span class="n">pred</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pred_var</span><span class="p">),</span>
+                <span class="n">color</span><span class="o">=</span><span class="s">&quot;k&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_pred</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="s">&quot;k&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="n">yerr</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&quot;.k&quot;</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_pred</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x_pred</span><span class="p">),</span> <span class="s">&quot;--g&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">1.45</span><span class="p">,</span> <span class="mf">1.45</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="../../_images/first_12_0.png" src="../../_images/first_12_0.png" />
+<p>And there you have it! Read on to see what else you can do with george
+or just dive right into your own problem.</p>
+<p>Finally, don&#8217;t forget <a class="reference external" href="http://www.gaussianprocess.org/gpml/">Rasmussen &amp;
+Williams</a>, the reference for
+everything Gaussian Process.</p>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../model/" class="btn btn-neutral float-right" title="Model fitting with correlated noise" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../../user/modeling/" class="btn btn-neutral" title="Modeling protocol" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014 Dan Foreman-Mackey.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../_static/js/analytics.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

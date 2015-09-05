@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting started &mdash; George 1.0.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="next" title="Upgrading from pre-1.0 versions" href="../upgrade/"/>
+        <link rel="prev" title="George" href="../../"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../../" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#testing">Testing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../upgrade/">Upgrading from pre-1.0 versions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kernels/">Kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#common-parameters">Common parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#stationary-kernels">Stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#non-stationary-kernels">Non-stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#combining-kernels">Combining kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/#implementing-new-kernels">Implementing new kernels</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../solvers/">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/#hodlr-solver">HODLR Solver</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/model/">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/hyper/">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/new_kernel/">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../">George</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../">Docs</a> &raquo;</li>
+      
+    <li>Getting started</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/user/quickstart" class="fa fa-github"> Edit on GitHub</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="getting-started">
+<span id="quickstart"></span><h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>You can install the most recent stable version of George using <a class="reference external" href="#stable">PyPI</a> or the development version from <a class="reference external" href="https://github.com/dfm/george">GitHub</a>.</p>
+<div class="section" id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
+<p>Whichever method you choose, you&#8217;ll need to make sure that you first have
+<a class="reference external" href="http://eigen.tuxfamily.org/">Eigen</a> installed.
+On Debian-based Linux distributions:</p>
+<div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install libeigen3-dev
+</pre></div>
+</div>
+<p>On Mac:</p>
+<div class="highlight-bash"><div class="highlight"><pre>brew install eigen
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Chances are high that George won&#8217;t work on Windows right now because
+it hasn&#8217;t been tested at all but feel free to try it out at your own risk!</p>
+</div>
+<p>You&#8217;ll also need a working scientific Python installation (including <a class="reference external" href="http://www.numpy.org/">NumPy</a> and <a class="reference external" href="http://www.scipy.org/">SciPy</a>).
+I recommend the <a class="reference external" href="http://continuum.io/downloads">Anaconda distribution</a> if
+you don&#8217;t already have your own opinions.</p>
+</div>
+<div class="section" id="stable-version">
+<span id="stable"></span><h3>Stable Version<a class="headerlink" href="#stable-version" title="Permalink to this headline">¶</a></h3>
+<p>The simplest way to install the <a class="reference external" href="https://pypi.python.org/pypi/george">most recent stable version of George</a> is using <a class="reference external" href="http://pip.readthedocs.org/">pip</a>:</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip install george
+</pre></div>
+</div>
+<p>If you installed Eigen in a strange place, specify that location by running
+(sorry to say that it&#8217;s pretty freaking ugly):</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip install george <span class="se">\</span>
+    --global-option<span class="o">=</span>build_ext <span class="se">\</span>
+    --global-option<span class="o">=</span>-I/path/to/eigen3
+</pre></div>
+</div>
+</div>
+<div class="section" id="development-version">
+<span id="dev"></span><h3>Development Version<a class="headerlink" href="#development-version" title="Permalink to this headline">¶</a></h3>
+<p>To get the source for the development version, clone the git repository and
+checkout the required HODLR submodule:</p>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/dfm/george.git
+<span class="nb">cd </span>george
+git submodule init
+git submodule update
+</pre></div>
+</div>
+<p>Then, install the package by running the following command:</p>
+<div class="highlight-bash"><div class="highlight"><pre>python setup.py install
+</pre></div>
+</div>
+<p>If installed Eigen in a non-standard location, you can specify the correct
+path using the install command:</p>
+<div class="highlight-bash"><div class="highlight"><pre>python setup.py build_ext -I/path/to/eigen3 install
+</pre></div>
+</div>
+</div>
+<div class="section" id="testing">
+<h3>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h3>
+<p>To run the unit tests, install <a class="reference external" href="https://nose.readthedocs.org">nose</a> and then
+execute:</p>
+<div class="highlight-bash"><div class="highlight"><pre>nosetests -v george.testing
+</pre></div>
+</div>
+<p>All of the tests should (of course) pass.
+If any of the tests don&#8217;t pass and if you can&#8217;t sort out why, <a class="reference external" href="https://github.com/dfm/george/issues">open an issue
+on GitHub</a>.</p>
+</div>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Take a look at <a class="reference internal" href="../../tutorials/first/#first"><span>A gentle introduction to Gaussian Process Regression</span></a> to get started and then check out the other
+tutorials for some more advanced usage examples.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../upgrade/" class="btn btn-neutral float-right" title="Upgrading from pre-1.0 versions" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../../" class="btn btn-neutral" title="George" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014 Dan Foreman-Mackey.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../_static/js/analytics.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

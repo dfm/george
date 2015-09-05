@@ -6,6 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Index &mdash; George 1.0.0.dev0 documentation</title>
@@ -15,7 +16,6 @@
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   
   
@@ -29,10 +29,12 @@
   
 
   
+
+  
     <link rel="top" title="George 1.0.0.dev0 documentation" href="../"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -43,44 +45,45 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
-        <a href="../" class="fa fa-home"> George</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../search/" method="get">
+        
+
+        
+          <a href="../" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+
+        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
         
-        
-            <ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/quickstart/">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/quickstart/#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/quickstart/#a-simple-example">A Simple Example</a></li>
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user/quickstart/#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user/quickstart/#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user/quickstart/#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user/quickstart/#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user/quickstart/#testing">Testing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/model/">Tutorial: model fitting with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#the-final-fit">The Final Fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user/quickstart/#examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/hyper/">Tutorial: hyperparameter optimization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/hyper/#optimization">Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/new_kernel/">Tutorial: writing new kernels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../user/gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/upgrade/">Upgrading from pre-1.0 versions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../user/kernels/#common-parameters">Common parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user/kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
@@ -90,18 +93,43 @@
 <li class="toctree-l2"><a class="reference internal" href="../user/kernels/#implementing-new-kernels">Implementing new kernels</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../user/modeling/">Modeling protocol</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../user/modeling/#the-protocol">The protocol</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../user/modeling/#a-simple-example">A simple example</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/solvers/">Solvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../user/solvers/#basic-solver">Basic Solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user/solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../user/modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user/modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user/modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/model/">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/hyper/">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/new_kernel/">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 </ul>
 
+          
         
       </div>
       &nbsp;
@@ -126,13 +154,15 @@
     <li></li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="https://github.com/dfm/george/blob/master/docs/genindex.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/genindex" class="fa fa-github"> Edit on GitHub</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main">
+          <div role="main" class="document">
             
 
 <h1 id="index">Index</h1>
@@ -143,6 +173,7 @@
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#L"><strong>L</strong></a>
@@ -150,6 +181,8 @@
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -268,11 +301,21 @@
   </dl></td>
 </tr></table>
 
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.freeze_parameter">freeze_parameter() (george.GP method)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="../user/gp/#module-george">george (module)</a>, <a href="../tutorials/model/#module-george">[1]</a>, <a href="../user/solvers/#module-george">[2]</a>, <a href="../tutorials/hyper/#module-george">[3]</a>, <a href="../tutorials/new_kernel/#module-george">[4]</a>
+  <dt><a href="../tutorials/first/#module-george">george (module)</a>, <a href="../tutorials/hyper/#module-george">[1]</a>, <a href="../tutorials/model/#module-george">[2]</a>, <a href="../tutorials/new_kernel/#module-george">[3]</a>, <a href="../tutorials/scaling/#module-george">[4]</a>, <a href="../user/gp/#module-george">[5]</a>, <a href="../user/solvers/#module-george">[6]</a>
   </dt>
 
       
@@ -280,11 +323,27 @@
   </dt>
 
       
+  <dt><a href="../user/gp/#george.GP.get_gradient">get_gradient() (george.GP method)</a>
+  </dt>
+
+      
   <dt><a href="../user/gp/#george.GP.get_matrix">get_matrix() (george.GP method)</a>
+  </dt>
+
+      
+  <dt><a href="../user/gp/#george.GP.get_parameter_names">get_parameter_names() (george.GP method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.get_value">get_value() (george.GP method)</a>
+  </dt>
+
+      
+  <dt><a href="../user/gp/#george.GP.get_vector">get_vector() (george.GP method)</a>
+  </dt>
+
       
   <dt><a href="../user/gp/#george.GP">GP (class in george)</a>
   </dt>
@@ -310,11 +369,19 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="../user/kernels/#george.kernels.LinearKernel">LinearKernel (class in george.kernels)</a>
+  </dt>
+
+      
   <dt><a href="../user/gp/#george.GP.lnlikelihood">lnlikelihood() (george.GP method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/kernels/#george.kernels.LocalGaussianKernel">LocalGaussianKernel (class in george.kernels)</a>
+  </dt>
+
       
   <dt><a href="../user/solvers/#george.BasicSolver.log_determinant">log_determinant (george.BasicSolver attribute)</a>
   </dt>
@@ -335,10 +402,14 @@
   <dt><a href="../user/kernels/#george.kernels.Matern32Kernel">Matern32Kernel (class in george.kernels)</a>
   </dt>
 
+      
+  <dt><a href="../user/kernels/#george.kernels.Matern52Kernel">Matern52Kernel (class in george.kernels)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="../user/kernels/#george.kernels.Matern52Kernel">Matern52Kernel (class in george.kernels)</a>
+  <dt><a href="../user/gp/#george.GP.mean">mean (george.GP attribute)</a>
   </dt>
 
   </dl></td>
@@ -349,6 +420,10 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="../user/gp/#george.GP.parse_samples">parse_samples() (george.GP method)</a>
+  </dt>
+
+      
+  <dt><a href="../user/kernels/#george.kernels.PolynomialKernel">PolynomialKernel (class in george.kernels)</a>
   </dt>
 
   </dl></td>
@@ -383,10 +458,34 @@
   <dt><a href="../user/gp/#george.GP.sample">sample() (george.GP method)</a>
   </dt>
 
+      
+  <dt><a href="../user/gp/#george.GP.sample_conditional">sample_conditional() (george.GP method)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="../user/gp/#george.GP.sample_conditional">sample_conditional() (george.GP method)</a>
+  <dt><a href="../user/gp/#george.GP.set_vector">set_vector() (george.GP method)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.thaw_parameter">thaw_parameter() (george.GP method)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="../user/gp/#george.GP.white_noise">white_noise (george.GP attribute)</a>
   </dt>
 
   </dl></td>
@@ -405,9 +504,10 @@
         &copy; Copyright 2013-2014 Dan Foreman-Mackey.
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
-  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
 </footer>
+
         </div>
       </div>
 

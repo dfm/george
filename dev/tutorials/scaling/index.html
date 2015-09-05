@@ -1,0 +1,433 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Scaling Gaussian Processes to big datasets &mdash; George 1.0.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="next" title="Implementing new kernels" href="../new_kernel/"/>
+        <link rel="prev" title="Hyperparameter optimization" href="../hyper/"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../../" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user/quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#testing">Testing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/upgrade/">Upgrading from pre-1.0 versions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/kernels/">Kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#common-parameters">Common parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#stationary-kernels">Stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#non-stationary-kernels">Non-stationary kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#combining-kernels">Combining kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementing-new-kernels">Implementing new kernels</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/solvers/">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#basic-solver">Basic Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#hodlr-solver">HODLR Solver</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../hyper/">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../">George</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../">Docs</a> &raquo;</li>
+      
+    <li>Scaling Gaussian Processes to big datasets</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/tutorials/scaling" class="fa fa-github"> Edit on GitHub</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <span class="target" id="module-george"></span><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This tutorial was generated from an IPython notebook that can be
+downloaded <a class="reference external" href="../../_static/notebooks/scaling.ipynb">here</a>.</p>
+</div>
+<div class="section" id="scaling-gaussian-processes-to-big-datasets">
+<span id="scaling"></span><h1>Scaling Gaussian Processes to big datasets<a class="headerlink" href="#scaling-gaussian-processes-to-big-datasets" title="Permalink to this headline">¶</a></h1>
+<p>This notebook was made with the following version of george:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
+<span class="n">george</span><span class="o">.</span><span class="n">__version__</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&#39;1.0.0.dev0&#39;</span>
+</pre></div>
+</div>
+<p>One of the biggest technical challenges faced when using Gaussian
+Processes to model big datasets is that the computational cost naïvely
+scales as <span class="math">\(\mathcal{O}(N^3)\)</span> where <span class="math">\(N\)</span> is the number of
+points in you dataset. This cost can be prohibitive even for moderately
+sized datasets. There are a lot of methods for making these types of
+problems tractable by exploiting structure or making approximations.
+George comes equipped with one approximate method with controllable
+precision that works well with one-dimensional inputs (time series, for
+example). The method comes from <a class="reference external" href="http://arxiv.org/abs/1403.6015">this
+paper</a> and it can help speed up
+many—but not all—Gaussian Process models.</p>
+<p>To demonstrate this method, in this tutorial, we&#8217;ll benchmark the two
+Gaussian Process &#8220;solvers&#8221; included with george. For comparison, we&#8217;ll
+also measure the computational cost of the same operations using the
+popular <a class="reference external" href="https://github.com/SheffieldML/GPy">GPy library</a> and the
+<a class="reference external" href="https://github.com/scikit-learn/scikit-learn/pull/4270">proposed scikit-learn
+interface</a>.
+Note that GPy is designed a Gaussian Process toolkit and it comes with a
+huge number state-of-the-art algorithms for the application of Gaussian
+Processes and it is not meant for efficiently computing marginalized
+likelihoods so the comparison isn&#8217;t totally fair.</p>
+<p>As usual, we&#8217;ll start by generating a large fake dataset:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pl</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">50000</span><span class="p">))</span>
+<span class="n">yerr</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The standard method for computing the marginalized likelihood of this
+dataset under a GP model is:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">george</span> <span class="kn">import</span> <span class="n">kernels</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+
+<span class="n">gp_basic</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+<span class="n">gp_basic</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="mi">100</span><span class="p">],</span> <span class="n">yerr</span><span class="p">[:</span><span class="mi">100</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span><span class="n">gp_basic</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">[:</span><span class="mi">100</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="mf">133.946394912</span>
+</pre></div>
+</div>
+<p>When using only 100 data points, this computation is very fast but we
+could also use the approximate solver as follows:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">gp_hodlr</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="n">george</span><span class="o">.</span><span class="n">HODLRSolver</span><span class="p">)</span>
+<span class="n">gp_hodlr</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="mi">100</span><span class="p">],</span> <span class="n">yerr</span><span class="p">[:</span><span class="mi">100</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span><span class="n">gp_hodlr</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">[:</span><span class="mi">100</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="mf">133.946394912</span>
+</pre></div>
+</div>
+<p>The proposed scikit-learn interface is quite similar (you&#8217;ll need to
+install <a class="reference external" href="https://github.com/scikit-learn/scikit-learn/pull/4270">this pull request branch of
+sklearn</a> to
+execute this cell):</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">sklearn</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;sklearn version: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sklearn</span><span class="o">.</span><span class="n">__version__</span><span class="p">))</span>
+<span class="kn">from</span> <span class="nn">sklearn.gaussian_process.kernels</span> <span class="kn">import</span> <span class="n">RBF</span>
+<span class="kn">from</span> <span class="nn">sklearn.gaussian_process</span> <span class="kn">import</span> <span class="n">GaussianProcessRegressor</span>
+
+<span class="n">kernel_skl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">RBF</span><span class="p">(</span><span class="n">length_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">gp_skl</span> <span class="o">=</span> <span class="n">GaussianProcessRegressor</span><span class="p">(</span><span class="n">kernel_skl</span><span class="p">,</span>
+                                  <span class="n">alpha</span><span class="o">=</span><span class="n">yerr</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+                                  <span class="n">optimizer</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                                  <span class="n">copy_X_train</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">gp_skl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="mi">100</span><span class="p">,</span> <span class="bp">None</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="mi">100</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span><span class="n">gp_skl</span><span class="o">.</span><span class="n">log_marginal_likelihood</span><span class="p">(</span><span class="n">kernel_skl</span><span class="o">.</span><span class="n">theta</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre>sklearn version: 0.17.dev0
+133.946394918
+</pre></div>
+</div>
+<p>To implement this same model in GPy, you would do something like (I&#8217;ve
+never been able to get the heteroscedastic regression to work in GPy):</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">GPy</span>
+
+<span class="n">kernel_gpy</span> <span class="o">=</span> <span class="n">GPy</span><span class="o">.</span><span class="n">kern</span><span class="o">.</span><span class="n">RBF</span><span class="p">(</span><span class="n">input_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">lengthscale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="n">gp_gpy</span> <span class="o">=</span> <span class="n">GPy</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">GPRegression</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="mi">100</span><span class="p">,</span> <span class="bp">None</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="mi">100</span><span class="p">,</span> <span class="bp">None</span><span class="p">],</span> <span class="n">kernel_gpy</span><span class="p">)</span>
+<span class="n">gp_gpy</span><span class="p">[</span><span class="s">&#39;.*Gaussian_noise&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">yerr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+<span class="k">print</span><span class="p">(</span><span class="n">gp_gpy</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="mf">133.946394918</span>
+</pre></div>
+</div>
+<p>Now that we have working implementations of this model using all of the
+different methods and modules, let&#8217;s run a benchmark to look at the
+computational cost and scaling of each option. The code here doesn&#8217;t
+matter too much but we&#8217;ll compute the best-of-&#8220;K&#8221; runtime for each
+method where &#8220;K&#8221; depends on how long I&#8217;m willing to wait. This cell
+takes a few minutes to run.</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">ns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">5000</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="mi">50000</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">t_basic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ns</span><span class="p">))</span>
+<span class="n">t_hodlr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ns</span><span class="p">))</span>
+<span class="n">t_gpy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ns</span><span class="p">))</span>
+<span class="n">t_skl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ns</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ns</span><span class="p">):</span>
+    <span class="c"># Time the HODLR solver.</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100000</span> <span class="o">//</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">strt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">gp_hodlr</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="n">n</span><span class="p">],</span> <span class="n">yerr</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">gp_hodlr</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">strt</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="o">&lt;</span> <span class="n">best</span><span class="p">:</span>
+            <span class="n">best</span> <span class="o">=</span> <span class="n">dt</span>
+    <span class="n">t_hodlr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">best</span>
+
+    <span class="c"># Time the basic solver.</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span> <span class="o">//</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">strt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">gp_basic</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="n">n</span><span class="p">],</span> <span class="n">yerr</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">gp_basic</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">strt</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="o">&lt;</span> <span class="n">best</span><span class="p">:</span>
+            <span class="n">best</span> <span class="o">=</span> <span class="n">dt</span>
+    <span class="n">t_basic</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">best</span>
+
+    <span class="c"># Compare to the proposed scikit-learn interface.</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">10000</span><span class="p">:</span>
+        <span class="n">gp_skl</span> <span class="o">=</span> <span class="n">GaussianProcessRegressor</span><span class="p">(</span><span class="n">kernel_skl</span><span class="p">,</span>
+                                          <span class="n">alpha</span><span class="o">=</span><span class="n">yerr</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+                                          <span class="n">optimizer</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                                          <span class="n">copy_X_train</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">gp_skl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="bp">None</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span> <span class="o">//</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">strt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">gp_skl</span><span class="o">.</span><span class="n">log_marginal_likelihood</span><span class="p">(</span><span class="n">kernel_skl</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">strt</span>
+            <span class="k">if</span> <span class="n">dt</span> <span class="o">&lt;</span> <span class="n">best</span><span class="p">:</span>
+                <span class="n">best</span> <span class="o">=</span> <span class="n">dt</span>
+    <span class="n">t_skl</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">best</span>
+
+    <span class="c"># Compare to GPy.</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5000</span> <span class="o">//</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">kernel_gpy</span> <span class="o">=</span> <span class="n">GPy</span><span class="o">.</span><span class="n">kern</span><span class="o">.</span><span class="n">RBF</span><span class="p">(</span><span class="n">input_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">lengthscale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="n">strt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">gp_gpy</span> <span class="o">=</span> <span class="n">GPy</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">GPRegression</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="bp">None</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="bp">None</span><span class="p">],</span> <span class="n">kernel_gpy</span><span class="p">)</span>
+        <span class="n">gp_gpy</span><span class="p">[</span><span class="s">&#39;.*Gaussian_noise&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">yerr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">gp_gpy</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">()</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">strt</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="o">&lt;</span> <span class="n">best</span><span class="p">:</span>
+            <span class="n">best</span> <span class="o">=</span> <span class="n">dt</span>
+    <span class="n">t_gpy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">best</span>
+</pre></div>
+</div>
+<p>Finally, here are the results of the benchmark plotted on a logarithmic
+scale:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">pl</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">t_gpy</span><span class="p">,</span> <span class="s">&quot;-or&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&quot;GPy&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">t_skl</span><span class="p">,</span> <span class="s">&quot;-ob&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&quot;sklearn&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">t_basic</span><span class="p">,</span> <span class="s">&quot;-ok&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&quot;basic&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">t_hodlr</span><span class="p">,</span> <span class="s">&quot;-og&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&quot;HODLR&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">80000</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">1.1e-4</span><span class="p">,</span> <span class="mf">50.</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;number of datapoints&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;time [seconds]&quot;</span><span class="p">)</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="../../_images/scaling_16_0.png" src="../../_images/scaling_16_0.png" />
+<p>The sklearn and basic solver perform similarly with george being
+consistently a factor of <span class="math">\(\sim 1.5\)</span> faster. This is not surprising
+because they both use LAPACK (via numpy/scipy) to naïvely compute the
+likelihood. GPy is consistently slower (probably because of Python
+overheads) even for small datasets but, like I mentioned previously,
+this wasn&#8217;t really what GPy was designed to do and it comes with a lot
+of other features. For large datasets (<span class="math">\(N \gtrsim 1000\)</span>), the
+<code class="docutils literal"><span class="pre">HODLRSolver</span></code> really shines. In practice, this gain is less
+significant for multidimensional inputs and some other kernels but for
+reasonably well-behaved time-series models, it might solve all of your
+problems!</p>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../new_kernel/" class="btn btn-neutral float-right" title="Implementing new kernels" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../hyper/" class="btn btn-neutral" title="Hyperparameter optimization" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014 Dan Foreman-Mackey.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../_static/js/analytics.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -5,6 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Kernels &mdash; George 1.0.0.dev0 documentation</title>
@@ -14,7 +15,6 @@
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   
   
@@ -28,12 +28,14 @@
   
 
   
-    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
-        <link rel="next" title="Modeling protocol" href="../modeling/"/>
-        <link rel="prev" title="The GP object" href="../gp/"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="next" title="The GP object" href="../gp/"/>
+        <link rel="prev" title="Upgrading from pre-1.0 versions" href="../upgrade/"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -44,44 +46,45 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
-        <a href="../../" class="fa fa-home"> George</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+        
+
+        
+          <a href="../../" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+
+        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
         
-        
-            <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/quickstart/">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/quickstart/#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/quickstart/#a-simple-example">A Simple Example</a></li>
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart/#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart/#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart/#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart/#testing">Testing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/model/">Tutorial: model fitting with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#the-final-fit">The Final Fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/#examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/hyper/">Tutorial: hyperparameter optimization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#optimization">Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/new_kernel/">Tutorial: writing new kernels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../upgrade/">Upgrading from pre-1.0 versions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#common-parameters">Common parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
@@ -91,18 +94,43 @@
 <li class="toctree-l2"><a class="reference internal" href="#implementing-new-kernels">Implementing new kernels</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../modeling/">Modeling protocol</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../modeling/#the-protocol">The protocol</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modeling/#a-simple-example">A simple example</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../solvers/">Solvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../solvers/#basic-solver">Basic Solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/model/">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/hyper/">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/new_kernel/">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 </ul>
 
+          
         
       </div>
       &nbsp;
@@ -127,13 +155,15 @@
     <li>Kernels</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="https://github.com/dfm/george/blob/master/docs/user/kernels.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/user/kernels" class="fa fa-github"> Edit on GitHub</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main">
+          <div role="main" class="document">
             
   <span class="target" id="module-george.kernels"></span><div class="section" id="kernels">
 <span id="id1"></span><h1>Kernels<a class="headerlink" href="#kernels" title="Permalink to this headline">¶</a></h1>
@@ -141,21 +171,21 @@
 kernels that can be combined to build more complex models.
 The standard kernels fall into the following categories:</p>
 <ol class="arabic simple">
-<li><a class="reference internal" href="#stationary-kernels"><em>Stationary kernels</em></a> — functions that depend only on the radial
+<li><a class="reference internal" href="#stationary-kernels"><span>Stationary kernels</span></a> — functions that depend only on the radial
 distance between points in some user-defined metric, and</li>
-<li><a class="reference internal" href="#non-stationary-kernels"><em>Non-stationary kernels</em></a> — functions that depend on the value of the
+<li><a class="reference internal" href="#non-stationary-kernels"><span>Non-stationary kernels</span></a> — functions that depend on the value of the
 input coordinates themselves.</li>
 </ol>
-<p><a class="reference internal" href="#combining-kernels"><em>Combining kernels</em></a> describes how to combine kernels to build more
-sophisticated models and <a class="reference internal" href="#new-kernels"><em>Implementing new kernels</em></a> explains how you would go about
+<p><a class="reference internal" href="#combining-kernels"><span>Combining kernels</span></a> describes how to combine kernels to build more
+sophisticated models and <a class="reference internal" href="#new-kernels"><span>Implementing new kernels</span></a> explains how you would go about
 incorporating a custom kernel.</p>
 <div class="section" id="common-parameters">
 <h2>Common parameters<a class="headerlink" href="#common-parameters" title="Permalink to this headline">¶</a></h2>
-<p>Every kernel accepts the two keyword arguments <tt class="docutils literal"><span class="pre">ndim</span></tt> and <tt class="docutils literal"><span class="pre">axes</span></tt>. By
-default, kernels are only one dimensional so you must specify the <tt class="docutils literal"><span class="pre">ndim</span></tt>
+<p>Every kernel accepts the two keyword arguments <code class="docutils literal"><span class="pre">ndim</span></code> and <code class="docutils literal"><span class="pre">axes</span></code>. By
+default, kernels are only one dimensional so you must specify the <code class="docutils literal"><span class="pre">ndim</span></code>
 argument if you want the kernel to work with higher dimensional inputs.
 By default, higher dimensional kernels are applied to every dimension but you
-can restrict the evaluation to a subspace using the <tt class="docutils literal"><span class="pre">axes</span></tt> argument.
+can restrict the evaluation to a subspace using the <code class="docutils literal"><span class="pre">axes</span></code> argument.
 For example, if you have a 3 dimensional input space but you want one of the
 kernels to only act in the first dimension, you would do the following:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">george</span> <span class="kn">import</span> <span class="n">kernels</span>
@@ -165,6 +195,17 @@ kernels to only act in the first dimension, you would do the following:</p>
 <p>Similarly, if you wanted the kernel to act on only the second and third
 dimensions, you could do something like:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">kernel</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Finally, all of the stationary kernels can be &#8220;bounded&#8221;. This means that the
+kernel will only be applied within some parameter range. In practice, the
+covariance matrix will have a block diagonal structure. To use this feature,
+you use the <code class="docutils literal"><span class="pre">bounds</span></code> keyword argument:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">kernel</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+
+<span class="c"># or...</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">],</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                  <span class="n">bounds</span><span class="o">=</span><span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)])</span>
 </pre></div>
 </div>
 </div>
@@ -177,7 +218,7 @@ This makes the code fast and consistent across interfaces but it also means
 that it isn&#8217;t currently possible to implement new kernel functions without
 recompiling the code.
 Almost every kernel has hyperparameters that you can set to control its
-behavior and these are controlled using the <a class="reference internal" href="../modeling/#modeling"><em>Modeling protocol</em></a>.</p>
+behavior and these are controlled using the <a class="reference internal" href="../modeling/#modeling"><span>Modeling protocol</span></a>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">k</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">Matern32Kernel</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)</span>
 
 <span class="k">print</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">get_parameter_names</span><span class="p">())</span>
@@ -208,7 +249,7 @@ follows:</p>
 </pre></div>
 </div>
 <p>Finally, if you want to update the entire vector, you can use the
-<tt class="xref py py-func docutils literal"><span class="pre">set_vector()</span></tt> method:</p>
+<code class="xref py py-func docutils literal"><span class="pre">set_vector()</span></code> method:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">k</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">get_vector</span><span class="p">()</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -281,7 +322,7 @@ For example:</p>
 <span class="c"># [ 0.34657359  0.07071068  0.69252179]</span>
 </pre></div>
 </div>
-<p>All the stationary kernels take the <tt class="docutils literal"><span class="pre">metric</span></tt> specification as a keyword
+<p>All the stationary kernels take the <code class="docutils literal"><span class="pre">metric</span></code> specification as a keyword
 argument:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">k</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="p">[[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]],</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">get_vector</span><span class="p">())</span>
@@ -291,7 +332,7 @@ argument:</p>
 <p>The currently available stationary kernels are:</p>
 <dl class="class">
 <dt id="george.kernels.ExpSquaredKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">ExpSquaredKernel</tt><big>(</big><em>metric=None</em>, <em>lower=True</em>, <em>ndim=1</em>, <em>axes=None</em><big>)</big><a class="headerlink" href="#george.kernels.ExpSquaredKernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">ExpSquaredKernel</code><span class="sig-paren">(</span><em>metric=None</em>, <em>lower=True</em>, <em>bounds=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.ExpSquaredKernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The exponential-squared kernel is a stationary kernel where the value
 at a given radius <span class="math">\(r^2\)</span> is given by:</p>
 <div class="math">
@@ -300,7 +341,7 @@ at a given radius <span class="math">\(r^2\)</span> is given by:</p>
 
 <dl class="class">
 <dt id="george.kernels.Matern32Kernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">Matern32Kernel</tt><big>(</big><em>metric=None</em>, <em>lower=True</em>, <em>ndim=1</em>, <em>axes=None</em><big>)</big><a class="headerlink" href="#george.kernels.Matern32Kernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">Matern32Kernel</code><span class="sig-paren">(</span><em>metric=None</em>, <em>lower=True</em>, <em>bounds=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.Matern32Kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Matern-3/2 kernel is stationary kernel where the value at a
 given radius <span class="math">\(r^2\)</span> is given by:</p>
 <div class="math">
@@ -310,7 +351,7 @@ given radius <span class="math">\(r^2\)</span> is given by:</p>
 
 <dl class="class">
 <dt id="george.kernels.Matern52Kernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">Matern52Kernel</tt><big>(</big><em>metric=None</em>, <em>lower=True</em>, <em>ndim=1</em>, <em>axes=None</em><big>)</big><a class="headerlink" href="#george.kernels.Matern52Kernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">Matern52Kernel</code><span class="sig-paren">(</span><em>metric=None</em>, <em>lower=True</em>, <em>bounds=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.Matern52Kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Matern-5/2 kernel is stationary kernel where the value at a
 given radius <span class="math">\(r^2\)</span> is given by:</p>
 <div class="math">
@@ -320,7 +361,7 @@ given radius <span class="math">\(r^2\)</span> is given by:</p>
 
 <dl class="class">
 <dt id="george.kernels.ExpKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">ExpKernel</tt><big>(</big><em>metric=None</em>, <em>lower=True</em>, <em>ndim=1</em>, <em>axes=None</em><big>)</big><a class="headerlink" href="#george.kernels.ExpKernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">ExpKernel</code><span class="sig-paren">(</span><em>metric=None</em>, <em>lower=True</em>, <em>bounds=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.ExpKernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The exponential-squared kernel is a stationary kernel where the value
 at a given radius <span class="math">\(r^2\)</span> is given by:</p>
 <div class="math">
@@ -329,8 +370,8 @@ at a given radius <span class="math">\(r^2\)</span> is given by:</p>
 
 <dl class="class">
 <dt id="george.kernels.RationalQuadraticKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">RationalQuadraticKernel</tt><big>(</big><em>ln_alpha=None</em>, <em>alpha=None</em>, <em>metric=None</em>, <em>lower=True</em>, <em>ndim=1</em>, <em>axes=None</em><big>)</big><a class="headerlink" href="#george.kernels.RationalQuadraticKernel" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is equivalent to a &#8220;scale mixture&#8221; of <a class="reference internal" href="#george.kernels.ExpSquaredKernel" title="george.kernels.ExpSquaredKernel"><tt class="xref py py-class docutils literal"><span class="pre">ExpSquaredKernel</span></tt></a>
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">RationalQuadraticKernel</code><span class="sig-paren">(</span><em>ln_alpha=None</em>, <em>alpha=None</em>, <em>metric=None</em>, <em>lower=True</em>, <em>bounds=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.RationalQuadraticKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is equivalent to a &#8220;scale mixture&#8221; of <a class="reference internal" href="#george.kernels.ExpSquaredKernel" title="george.kernels.ExpSquaredKernel"><code class="xref py py-class docutils literal"><span class="pre">ExpSquaredKernel</span></code></a>
 kernels with different scale lengths drawn from a gamma distribution.
 See R&amp;W for more info but here&#8217;s the equation:</p>
 <div class="math">
@@ -350,7 +391,7 @@ See R&amp;W for more info but here&#8217;s the equation:</p>
 <span id="id3"></span><h2>Non-stationary kernels<a class="headerlink" href="#non-stationary-kernels" title="Permalink to this headline">¶</a></h2>
 <p>Non-stationary kernels are specified by a (symmetric) function of the input
 coordinates themselves.
-They are applied identically to every axis so the <tt class="docutils literal"><span class="pre">axes</span></tt> keyword argument
+They are applied identically to every axis so the <code class="docutils literal"><span class="pre">axes</span></code> keyword argument
 will probably come in handy.</p>
 <p>For example, to implement a quasi-periodic kernel with a three-dimensional
 input space where you only want to apply the periodicity along the first
@@ -363,7 +404,7 @@ input space where you only want to apply the periodicity along the first
 <p>The currently available non-stationary kernels are:</p>
 <dl class="class">
 <dt id="george.kernels.ConstantKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">ConstantKernel</tt><big>(</big><em>ln_constant=None</em>, <em>constant=None</em>, <em>ndim=1</em>, <em>axes=None</em><big>)</big><a class="headerlink" href="#george.kernels.ConstantKernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">ConstantKernel</code><span class="sig-paren">(</span><em>ln_constant=None</em>, <em>constant=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.ConstantKernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>This kernel returns the constant</p>
 <div class="math">
 \[k(\mathbf{x}_i,\,\mathbf{x}_j) = c\]</div>
@@ -380,23 +421,67 @@ input space where you only want to apply the periodicity along the first
 
 <dl class="class">
 <dt id="george.kernels.DotProductKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">DotProductKernel</tt><big>(</big><em>ndim=1</em>, <em>axes=None</em><big>)</big><a class="headerlink" href="#george.kernels.DotProductKernel" title="Permalink to this definition">¶</a></dt>
-<dd><p>The linear regression kernel</p>
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">DotProductKernel</code><span class="sig-paren">(</span><em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.DotProductKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>The dot product kernel</p>
 <div class="math">
 \[k(\mathbf{x}_i,\,\mathbf{x}_j) = \mathbf{x}_i \cdot \mathbf{x}_j\]</div>
 <p>with no parameters.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="george.kernels.LinearKernel">
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">LinearKernel</code><span class="sig-paren">(</span><em>ln_gamma2=None</em>, <em>gamma2=None</em>, <em>order=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.LinearKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>The linear regression kernel</p>
+<div class="math">
+\[k(\mathbf{x}_i,\,\mathbf{x}_j) =
+    \frac{(\mathbf{x}_i \cdot \mathbf{x}_j)^P}{\gamma^2}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>order</strong> &#8211; The power <span class="math">\(P\)</span>. This parameter is a <em>constant</em>; it is not
+included in the parameter vector.</li>
+<li><strong>gamma2</strong> &#8211; The scale factor <span class="math">\(\gamma^2\)</span>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="george.kernels.PolynomialKernel">
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">PolynomialKernel</code><span class="sig-paren">(</span><em>ln_sigma2=None</em>, <em>sigma2=None</em>, <em>order=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.PolynomialKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>A polynomial kernel</p>
+<div class="math">
+\[k(\mathbf{x}_i,\,\mathbf{x}_j) =
+    (\mathbf{x}_i \cdot \mathbf{x}_j + \sigma^2)^P\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>order</strong> &#8211; The power <span class="math">\(P\)</span>. This parameter is a <em>constant</em>; it is not
+included in the parameter vector.</li>
+<li><strong>sigma2</strong> &#8211; The variance <span class="math">\(\sigma^2 &gt; 0\)</span>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
 <dt id="george.kernels.CosineKernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">CosineKernel</tt><big>(</big><em>ln_period=None</em>, <em>period=None</em>, <em>ndim=1</em>, <em>axes=None</em><big>)</big><a class="headerlink" href="#george.kernels.CosineKernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">CosineKernel</code><span class="sig-paren">(</span><em>ln_period=None</em>, <em>period=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.CosineKernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The simplest periodic kernel. This</p>
 <div class="math">
 \[k(\mathbf{x}_i,\,\mathbf{x}_j) = \cos\left(
     \frac{2\,\pi\,|x_i - x_j|}{P} \right)\]</div>
 <p>where the parameter <span class="math">\(P\)</span> is the period of the oscillation. This
 kernel should probably always be multiplied be a stationary kernel
-(e.g. <a class="reference internal" href="#george.kernels.ExpSquaredKernel" title="george.kernels.ExpSquaredKernel"><tt class="xref py py-class docutils literal"><span class="pre">ExpSquaredKernel</span></tt></a>) to allow quasi-periodic variations.</p>
+(e.g. <a class="reference internal" href="#george.kernels.ExpSquaredKernel" title="george.kernels.ExpSquaredKernel"><code class="xref py py-class docutils literal"><span class="pre">ExpSquaredKernel</span></code></a>) to allow quasi-periodic variations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -409,9 +494,9 @@ kernel should probably always be multiplied be a stationary kernel
 
 <dl class="class">
 <dt id="george.kernels.ExpSine2Kernel">
-<em class="property">class </em><tt class="descclassname">george.kernels.</tt><tt class="descname">ExpSine2Kernel</tt><big>(</big><em>gamma=None</em>, <em>ln_period=None</em>, <em>period=None</em>, <em>ndim=1</em>, <em>axes=None</em><big>)</big><a class="headerlink" href="#george.kernels.ExpSine2Kernel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">ExpSine2Kernel</code><span class="sig-paren">(</span><em>gamma=None</em>, <em>ln_period=None</em>, <em>period=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.ExpSine2Kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The exp-sine-squared kernel is a commonly used periodic kernel. Unlike
-the <a class="reference internal" href="#george.kernels.CosineKernel" title="george.kernels.CosineKernel"><tt class="xref py py-class docutils literal"><span class="pre">CosineKernel</span></tt></a>, this kernel never has negative covariance
+the <a class="reference internal" href="#george.kernels.CosineKernel" title="george.kernels.CosineKernel"><code class="xref py py-class docutils literal"><span class="pre">CosineKernel</span></code></a>, this kernel never has negative covariance
 which might be useful for your problem. Here&#8217;s the equation:</p>
 <div class="math">
 \[k(\mathbf{x}_i,\,\mathbf{x}_j) =
@@ -433,6 +518,27 @@ which might be useful for your problem. Here&#8217;s the equation:</p>
 </table>
 </dd></dl>
 
+<dl class="class">
+<dt id="george.kernels.LocalGaussianKernel">
+<em class="property">class </em><code class="descclassname">george.kernels.</code><code class="descname">LocalGaussianKernel</code><span class="sig-paren">(</span><em>location=None</em>, <em>ln_width=None</em>, <em>width=None</em>, <em>ndim=1</em>, <em>axes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#george.kernels.LocalGaussianKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>A local Gaussian kernel.</p>
+<div class="math">
+\[k(\mathbf{x}_i,\,\mathbf{x}_j) = \exp\left(
+    -\frac{(x_i - x_0)^2 + (x_j - x_0)^2}{2\,w} \right))\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>location</strong> &#8211; The location <span class="math">\(x_0\)</span> of the Gaussian.</li>
+<li><strong>width</strong> &#8211; The (squared) width <span class="math">\(w\)</span> of the Gaussian.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 <div class="section" id="combining-kernels">
 <span id="id4"></span><h2>Combining kernels<a class="headerlink" href="#combining-kernels" title="Permalink to this headline">¶</a></h2>
@@ -447,11 +553,11 @@ constructed as follows:</p>
 </div>
 <p>This is equivalent to:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">sqrt</span>
-<span class="n">kernel</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">Product</span><span class="p">(</span><span class="n">kernels</span><span class="o">.</span><span class="n">ConstantKernel</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">)),</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">Product</span><span class="p">(</span><span class="n">kernels</span><span class="o">.</span><span class="n">ConstantKernel</span><span class="p">(</span><span class="n">constant</span><span class="o">=</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">)),</span>
                          <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">3.4</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>As demonstrated in <a class="reference internal" href="../../tutorials/hyper/#hyper"><em>Tutorial: hyperparameter optimization</em></a>, a mixture of kernels can be implemented with
+<p>As demonstrated in <a class="reference internal" href="../../tutorials/hyper/#hyper"><span>Hyperparameter optimization</span></a>, a mixture of kernels can be implemented with
 addition:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">k1</span> <span class="o">=</span> <span class="mf">1e-3</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">3.4</span><span class="p">)</span>
 <span class="n">k2</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">Matern32Kernel</span><span class="p">(</span><span class="mf">14.53</span><span class="p">)</span>
@@ -463,7 +569,7 @@ addition:</p>
 <span id="new-kernels"></span><h2>Implementing new kernels<a class="headerlink" href="#implementing-new-kernels" title="Permalink to this headline">¶</a></h2>
 <p>As mentioned previously, because of technical limitations, new kernels can
 only be implemented by re-compiling george.
-See</p>
+See <a class="reference internal" href="../../tutorials/new_kernel/#new-kernel"><span>Implementing new kernels</span></a> for a detailed example of implementing a new kernel.</p>
 </div>
 </div>
 
@@ -473,10 +579,10 @@ See</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../modeling/" class="btn btn-neutral float-right" title="Modeling protocol"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../gp/" class="btn btn-neutral float-right" title="The GP object" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../gp/" class="btn btn-neutral" title="The GP object"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../upgrade/" class="btn btn-neutral" title="Upgrading from pre-1.0 versions" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -488,9 +594,10 @@ See</p>
         &copy; Copyright 2013-2014 Dan Foreman-Mackey.
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
-  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
 </footer>
+
         </div>
       </div>
 

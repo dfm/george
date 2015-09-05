@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorial: hyperparameter optimization &mdash; George 1.0.0.dev0 documentation</title>
+  <title>Hyperparameter optimization &mdash; George 1.0.0.dev0 documentation</title>
   
 
   
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   
   
@@ -28,12 +28,14 @@
   
 
   
-    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
-        <link rel="next" title="Tutorial: writing new kernels" href="../new_kernel/"/>
-        <link rel="prev" title="Tutorial: model fitting with correlated noise" href="../model/"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="next" title="Scaling Gaussian Processes to big datasets" href="../scaling/"/>
+        <link rel="prev" title="Model fitting with correlated noise" href="../model/"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -44,44 +46,45 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
-        <a href="../../" class="fa fa-home"> George</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+        
+
+        
+          <a href="../../" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+
+        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
         
-        
-            <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../quickstart/#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../quickstart/#a-simple-example">A Simple Example</a></li>
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user/quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#testing">Testing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../model/">Tutorial: model fitting with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial: hyperparameter optimization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#optimization">Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sampling-marginalization">Sampling &amp; Marginalization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Tutorial: writing new kernels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#the-kernel-function">The kernel function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#kernel-specification">Kernel specification</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/upgrade/">Upgrading from pre-1.0 versions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#common-parameters">Common parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
@@ -91,18 +94,43 @@
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementing-new-kernels">Implementing new kernels</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../user/modeling/">Modeling protocol</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#the-protocol">The protocol</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#a-simple-example">A simple example</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/solvers/">Solvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#basic-solver">Basic Solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 </ul>
 
+          
         
       </div>
       &nbsp;
@@ -124,24 +152,26 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../../">Docs</a> &raquo;</li>
       
-    <li>Tutorial: hyperparameter optimization</li>
+    <li>Hyperparameter optimization</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="https://github.com/dfm/george/blob/master/docs/tutorials/hyper.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/tutorials/hyper" class="fa fa-github"> Edit on GitHub</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main">
+          <div role="main" class="document">
             
   <span class="target" id="module-george"></span><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This tutorial was generated from an IPython notebook that can be
-downloaded <a class="reference external" href="../_static/notebooks/hyper.ipynb">here</a>.</p>
+downloaded <a class="reference external" href="../../_static/notebooks/hyper.ipynb">here</a>.</p>
 </div>
-<div class="section" id="tutorial-hyperparameter-optimization">
-<span id="hyper"></span><h1>Tutorial: hyperparameter optimization<a class="headerlink" href="#tutorial-hyperparameter-optimization" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="hyperparameter-optimization">
+<span id="hyper"></span><h1>Hyperparameter optimization<a class="headerlink" href="#hyperparameter-optimization" title="Permalink to this headline">¶</a></h1>
 <p>This notebook was made with the following version of george:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
 <span class="n">george</span><span class="o">.</span><span class="n">__version__</span>
@@ -212,20 +242,21 @@ results as the hyperparameters for now):</p>
 an objective function. The two standard functions (as described in
 Chapter 5 of R&amp;W) are the marginalized ln-likelihood and the cross
 validation likelihood. George implements the former in the
-<tt class="docutils literal"><span class="pre">GP.lnlikelihood</span></tt> function and the gradient with respect to the
-hyperparameters in the <tt class="docutils literal"><span class="pre">GP.grad_lnlikelihood</span></tt> function:</p>
+<code class="docutils literal"><span class="pre">GP.lnlikelihood</span></code> function and the gradient with respect to the
+hyperparameters in the <code class="docutils literal"><span class="pre">GP.grad_lnlikelihood</span></code> function:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
-<span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">),</span>
-               <span class="n">white_noise</span><span class="o">=</span><span class="mf">0.19</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">fit_white_noise</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">fit_mean</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+               <span class="n">white_noise</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.19</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">fit_white_noise</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
 <span class="k">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">grad_lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>-136.166948891
-[  1.01554945e+02   2.84403216e-01  -2.07871875e+00  -1.84883265e-01
-   1.92835916e+00  -1.18652524e+00  -2.26721780e+03   9.41628135e+00
-  -1.25060215e+01  -3.07023672e+01  -1.80087624e-01   3.11546171e-03]
+<div class="highlight-python"><div class="highlight"><pre>-85.5547708528
+[  1.31881763e-02  -1.64386469e+01  -4.94655690e-01   3.78791021e-01
+   1.08296383e+00  -1.54394027e+00  -1.14486240e+00  -3.98205196e+01
+  -4.34545333e+00  -1.02722671e+00   3.23160562e+00   1.24565433e+00
+  -4.89958197e-02]
 </pre></div>
 </div>
 <p>We&#8217;ll use a gradient based optimization routine from SciPy to fit this
@@ -258,8 +289,8 @@ model as follows:</p>
 <span class="k">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="o">-</span><span class="mf">136.166948891</span>
-<span class="o">-</span><span class="mf">84.1979126818</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="o">-</span><span class="mf">85.5547708528</span>
+<span class="o">-</span><span class="mf">83.1662492912</span>
 </pre></div>
 </div>
 <p><strong>Warning:</strong> <em>An optimization code something like this should work on
@@ -267,7 +298,7 @@ most problems but the results can be very sensitive to your choice of
 initialization and algorithm. If the results are nonsense, try choosing
 a better initial guess or try a different value of the ``method``
 parameter in ``op.minimize``.</em></p>
-<p>After running this optimization, we find a final ln-likelihood of -84;
+<p>After running this optimization, we find a final ln-likelihood of -83;
 slightly better than the result in R&amp;W. We can plot our prediction of
 the CO2 concentration into the future using our optimized Gaussian
 process model by running:</p>
@@ -299,7 +330,7 @@ using Markov chain Monte Carlo (MCMC). To do this, we’ll use the
 <p>First, we define the probabilistic model:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">lnprob</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
     <span class="c"># Trivial uniform prior.</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">((</span><span class="o">-</span><span class="mi">100</span> <span class="o">&gt;</span> <span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">p</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">((</span><span class="o">-</span><span class="mi">100</span> <span class="o">&gt;</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">+</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">)):</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
 
     <span class="c"># Update the kernel and compute the lnlikelihood.</span>
@@ -310,8 +341,8 @@ using Markov chain Monte Carlo (MCMC). To do this, we’ll use the
 <p>In this function, we’ve applied a prior on every parameter that is
 uniform between -100 and 100 for every parameter. In real life, you
 should probably use something more intelligent but this will work for
-this problem. The quiet argument in the call to <tt class="docutils literal"><span class="pre">GP.lnlikelihood()</span></tt>
-means that that function will return <tt class="docutils literal"><span class="pre">-numpy.inf</span></tt> if the kernel is
+this problem. The quiet argument in the call to <code class="docutils literal"><span class="pre">GP.lnlikelihood()</span></code>
+means that that function will return <code class="docutils literal"><span class="pre">-numpy.inf</span></code> if the kernel is
 invalid or if there are any linear algebra errors (otherwise it would
 raise an exception).</p>
 <p>Then, we run the sampler (this will probably take a while to run if you
@@ -374,10 +405,10 @@ account.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../new_kernel/" class="btn btn-neutral float-right" title="Tutorial: writing new kernels"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../scaling/" class="btn btn-neutral float-right" title="Scaling Gaussian Processes to big datasets" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../model/" class="btn btn-neutral" title="Tutorial: model fitting with correlated noise"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../model/" class="btn btn-neutral" title="Model fitting with correlated noise" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -389,9 +420,10 @@ account.</p>
         &copy; Copyright 2013-2014 Dan Foreman-Mackey.
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
-  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
 </footer>
+
         </div>
       </div>
 

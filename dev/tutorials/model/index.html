@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorial: model fitting with correlated noise &mdash; George 1.0.0.dev0 documentation</title>
+  <title>Model fitting with correlated noise &mdash; George 1.0.0.dev0 documentation</title>
   
 
   
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   
   
@@ -28,12 +28,14 @@
   
 
   
-    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
-        <link rel="next" title="Tutorial: hyperparameter optimization" href="../hyper/"/>
-        <link rel="prev" title="Getting started" href="../quickstart/"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="../../"/>
+        <link rel="next" title="Hyperparameter optimization" href="../hyper/"/>
+        <link rel="prev" title="A gentle introduction to Gaussian Process Regression" href="../first/"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -44,44 +46,45 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
-        <a href="../../" class="fa fa-home"> George</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../../search/" method="get">
+        
+
+        
+          <a href="../../" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+
+        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
         
-        
-            <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../quickstart/#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../quickstart/#a-simple-example">A Simple Example</a></li>
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user/quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user/quickstart/#testing">Testing</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial: model fitting with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#a-simple-mean-model">A Simple Mean Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#simulated-dataset">Simulated Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#assuming-white-noise">Assuming White Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#modeling-the-noise">Modeling the Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-final-fit">The Final Fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/quickstart/#examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../hyper/">Tutorial: hyperparameter optimization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../hyper/#optimization">Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Tutorial: writing new kernels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#the-kernel-function">The kernel function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#kernel-specification">Kernel specification</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/upgrade/">Upgrading from pre-1.0 versions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#common-parameters">Common parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
@@ -91,18 +94,43 @@
 <li class="toctree-l2"><a class="reference internal" href="../../user/kernels/#implementing-new-kernels">Implementing new kernels</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../user/modeling/">Modeling protocol</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#the-protocol">The protocol</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#a-simple-example">A simple example</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../user/solvers/">Solvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#basic-solver">Basic Solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../user/solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user/modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../hyper/">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../new_kernel/">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 </ul>
 
+          
         
       </div>
       &nbsp;
@@ -124,24 +152,26 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../../">Docs</a> &raquo;</li>
       
-    <li>Tutorial: model fitting with correlated noise</li>
+    <li>Model fitting with correlated noise</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="https://github.com/dfm/george/blob/master/docs/tutorials/model.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/tutorials/model" class="fa fa-github"> Edit on GitHub</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main">
+          <div role="main" class="document">
             
   <span class="target" id="module-george"></span><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This tutorial was generated from an IPython notebook that can be
-downloaded <a class="reference external" href="../_static/notebooks/model.ipynb">here</a>.</p>
+downloaded <a class="reference external" href="../../_static/notebooks/model.ipynb">here</a>.</p>
 </div>
-<div class="section" id="tutorial-model-fitting-with-correlated-noise">
-<span id="model"></span><h1>Tutorial: model fitting with correlated noise<a class="headerlink" href="#tutorial-model-fitting-with-correlated-noise" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="model-fitting-with-correlated-noise">
+<span id="model"></span><h1>Model fitting with correlated noise<a class="headerlink" href="#model-fitting-with-correlated-noise" title="Permalink to this headline">¶</a></h1>
 <p>This notebook was made with the following version of george:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">george</span>
 <span class="n">george</span><span class="o">.</span><span class="n">__version__</span>
@@ -183,26 +213,30 @@ to each data point.</p>
 <div class="math">
 \[\alpha = −1 \quad, \quad\quad \ell = 0.1 \quad, \quad\quad \sigma^2 = 0.4 \quad.\]</div>
 <p>the resulting dataset is:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">george.modeling</span> <span class="kn">import</span> <span class="n">ModelingMixin</span>
+
+<span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">ModelingMixin</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">amp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ln_sig2</span><span class="p">))</span>
+</pre></div>
+</div>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pl</span>
 <span class="kn">from</span> <span class="nn">george</span> <span class="kn">import</span> <span class="n">kernels</span>
 
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
-    <span class="n">amp</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">sig2</span> <span class="o">=</span> <span class="n">params</span>
-    <span class="k">return</span> <span class="n">amp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">loc</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">sig2</span><span class="p">)</span>
-
 <span class="k">def</span> <span class="nf">generate_data</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)):</span>
     <span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExpSquaredKernel</span><span class="p">(</span><span class="mf">3.3</span><span class="p">))</span>
     <span class="n">t</span> <span class="o">=</span> <span class="n">rng</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-    <span class="n">y</span> <span class="o">+=</span> <span class="n">model</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">+=</span> <span class="n">Model</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
     <span class="n">yerr</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="o">+</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">+=</span> <span class="n">yerr</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yerr</span>
 
-<span class="n">truth</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">]</span>
+<span class="n">truth</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">amp</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">ln_sig2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.4</span><span class="p">))</span>
 <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yerr</span> <span class="o">=</span> <span class="n">generate_data</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
 
 <span class="n">pl</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="n">yerr</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&quot;.k&quot;</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -212,7 +246,7 @@ to each data point.</p>
 <span class="n">pl</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;simulated data&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<img alt="../../_images/model_4_0.png" src="../../_images/model_4_0.png" />
+<img alt="../../_images/model_5_0.png" src="../../_images/model_5_0.png" />
 </div>
 <div class="section" id="assuming-white-noise">
 <h2>Assuming White Noise<a class="headerlink" href="#assuming-white-noise" title="Permalink to this headline">¶</a></h2>
@@ -237,12 +271,12 @@ Therefore, our model is</p>
 \[\theta = \{ m,\,b,\,\alpha,\,\ell,\,\sigma^2 \} \quad.\]</div>
 <p>The following code snippet is a simple implementation of this model in
 Python.</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">model1</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
-    <span class="n">m</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">m</span><span class="o">*</span><span class="n">t</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">model</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">t</span><span class="p">)</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">PolynomialModel</span><span class="p">(</span><span class="n">ModelingMixin</span><span class="p">):</span>
 
-<span class="k">def</span> <span class="nf">lnlike1</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
-    <span class="k">return</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(((</span><span class="n">y</span> <span class="o">-</span> <span class="n">model1</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span><span class="o">/</span><span class="n">yerr</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">t</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">+</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">amp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ln_sig2</span><span class="p">)))</span>
 </pre></div>
 </div>
 <p>To fit this model using MCMC (using <a class="reference external" href="http://dfm.io/emcee">emcee</a>), we
@@ -250,26 +284,22 @@ need to first choose priors—in this case we’ll just use a simple uniform
 prior on each parameter—and then combine these with our likelihood
 function to compute the ln-probability (up to a normalization constant).
 In code, this will be:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">lnprior1</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
-    <span class="n">m</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">sig2</span> <span class="o">=</span> <span class="n">p</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">-</span><span class="mi">10</span> <span class="o">&lt;</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">and</span>  <span class="o">-</span><span class="mi">10</span> <span class="o">&lt;</span> <span class="n">b</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">and</span> <span class="o">-</span><span class="mi">10</span> <span class="o">&lt;</span> <span class="n">amp</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">and</span>
-            <span class="o">-</span><span class="mi">5</span> <span class="o">&lt;</span> <span class="n">loc</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">sig2</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">):</span>
-        <span class="k">return</span> <span class="mf">0.0</span>
-    <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">model</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">PolynomialModel</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">amp</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">ln_sig2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.4</span><span class="p">)),</span> <span class="n">fit_mean</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">yerr</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">lnprob1</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
-    <span class="n">lp</span> <span class="o">=</span> <span class="n">lnprior1</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">lp</span> <span class="o">+</span> <span class="n">lnlike1</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lp</span><span class="p">)</span> <span class="k">else</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+<span class="k">def</span> <span class="nf">lnprob</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Now that we have our model implemented, we’ll initialize the walkers and
 run both a burn-in and production chain:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">emcee</span>
 
-<span class="n">initial</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
+<span class="n">initial</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_vector</span><span class="p">()</span>
 <span class="n">ndim</span><span class="p">,</span> <span class="n">nwalkers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">initial</span><span class="p">),</span> <span class="mi">32</span>
-<span class="n">p0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-8</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
-<span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">lnprob1</span><span class="p">)</span>
+<span class="n">p0</span> <span class="o">=</span> <span class="n">initial</span> <span class="o">+</span> <span class="mf">1e-8</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
+<span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">lnprob</span><span class="p">)</span>
 
 <span class="k">print</span><span class="p">(</span><span class="s">&quot;Running burn-in...&quot;</span><span class="p">)</span>
 <span class="n">p0</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
@@ -295,7 +325,8 @@ can over plot 24 posterior samples on top of the data:</p>
 <span class="c"># Plot 24 posterior samples.</span>
 <span class="n">samples</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">flatchain</span>
 <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)]:</span>
-    <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">model1</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;#4682b4&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">mean</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;#4682b4&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 
 <span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&quot;$y$&quot;</span><span class="p">)</span>
 <span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">r&quot;$t$&quot;</span><span class="p">)</span>
@@ -303,7 +334,7 @@ can over plot 24 posterior samples on top of the data:</p>
 <span class="n">pl</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;fit assuming uncorrelated noise&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<img alt="../../_images/model_12_0.png" src="../../_images/model_12_0.png" />
+<img alt="../../_images/model_13_0.png" src="../../_images/model_13_0.png" />
 <p>In this figure, the data are shown as black points with error bars and
 the posterior samples are shown as translucent blue lines. These results
 seem, at face value, pretty satisfying. But, since we know the true
@@ -314,11 +345,16 @@ the projections of our posterior samples using
 true values:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">triangle</span>
 
-<span class="n">triangle</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">flatchain</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">truths</span><span class="o">=</span><span class="n">truth</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s">r&quot;$\alpha$&quot;</span><span class="p">,</span> <span class="s">r&quot;$\ell$&quot;</span><span class="p">,</span> <span class="s">r&quot;$\sigma^2$&quot;</span><span class="p">]);</span>
+<span class="n">tri_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;amp&quot;</span><span class="p">,</span> <span class="s">&quot;loc&quot;</span><span class="p">,</span> <span class="s">&quot;ln_sig2&quot;</span><span class="p">]</span>
+<span class="n">tri_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s">r&quot;$\alpha$&quot;</span><span class="p">,</span> <span class="s">r&quot;$\ell$&quot;</span><span class="p">,</span> <span class="s">r&quot;$\ln\sigma^2$&quot;</span><span class="p">]</span>
+<span class="n">tri_truths</span> <span class="o">=</span> <span class="p">[</span><span class="n">truth</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">tri_cols</span><span class="p">]</span>
+<span class="n">tri_range</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+<span class="n">names</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_parameter_names</span><span class="p">()</span>
+<span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&quot;mean:&quot;</span><span class="o">+</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">tri_cols</span><span class="p">])</span>
+<span class="n">triangle</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">flatchain</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">],</span> <span class="n">truths</span><span class="o">=</span><span class="n">tri_truths</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">tri_labels</span><span class="p">);</span>
 </pre></div>
 </div>
-<img alt="../../_images/model_14_0.png" src="../../_images/model_14_0.png" />
+<img alt="../../_images/model_15_0.png" src="../../_images/model_15_0.png" />
 <p>In this figure, the blue lines are the true values used to simulate the
 data and the black contours and histograms show the posterior
 constraints. The constraints on the amplitude <span class="math">\(\alpha\)</span> and the
@@ -358,7 +394,7 @@ able to work out that we haven&#8217;t changed it at all):</p>
       &amp; &amp; \ddots &amp; \\
     0 &amp; 0 &amp; &amp; \sigma_N^2 \\
 \end{array}\right)\end{split}\]</div>
-<p>is the <span class="math">\(N \times N\)</span> data covariance matrix (where :math:<tt class="docutils literal"><span class="pre">N</span></tt> is
+<p>is the <span class="math">\(N \times N\)</span> data covariance matrix (where :math:<code class="docutils literal"><span class="pre">N</span></code> is
 the number of data points).</p>
 <p>The fact that <span class="math">\(K\)</span> is diagonal is the result of our earlier
 assumption that the noise was white. If we want to relax this
@@ -388,29 +424,26 @@ parameters of the model.</p>
 came up with in the previous section but that&#8217;s what George is for,
 after all! To implement the model from the previous section using
 George, we can write the following ln-likelihood function in Python:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">Matern32Kernel</span><span class="p">(</span><span class="mf">1.0</span><span class="p">))</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">gp</span> <span class="o">=</span> <span class="n">george</span><span class="o">.</span><span class="n">GP</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernels</span><span class="o">.</span><span class="n">Matern32Kernel</span><span class="p">(</span><span class="mf">10.0</span><span class="p">),</span>
+               <span class="n">mean</span><span class="o">=</span><span class="n">Model</span><span class="p">(</span><span class="o">**</span><span class="n">truth</span><span class="p">),</span> <span class="n">fit_mean</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="n">gp</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">yerr</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">lnlike2</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
-    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">p</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">model</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">t</span><span class="p">),</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gp</span><span class="o">.</span><span class="n">lnlikelihood</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">lnprob2</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
-    <span class="n">lna</span><span class="p">,</span> <span class="n">lntau</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">sig2</span> <span class="o">=</span> <span class="n">p</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="o">-</span><span class="mi">5</span> <span class="o">&lt;</span> <span class="n">lna</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="ow">and</span>  <span class="o">-</span><span class="mi">5</span> <span class="o">&lt;</span> <span class="n">lntau</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="ow">and</span> <span class="o">-</span><span class="mi">10</span> <span class="o">&lt;</span> <span class="n">amp</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">and</span>
-            <span class="o">-</span><span class="mi">5</span> <span class="o">&lt;</span> <span class="n">loc</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">sig2</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">):</span>
-        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
     <span class="k">return</span> <span class="n">lnlike2</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>As before, let’s run MCMC on this model:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">initial</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">initial</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">get_vector</span><span class="p">()</span>
 <span class="n">ndim</span><span class="p">,</span> <span class="n">nwalkers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">initial</span><span class="p">),</span> <span class="mi">32</span>
 <span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">lnprob2</span><span class="p">)</span>
 
 <span class="k">print</span><span class="p">(</span><span class="s">&quot;Running first burn-in...&quot;</span><span class="p">)</span>
 <span class="n">p0</span> <span class="o">=</span> <span class="n">initial</span> <span class="o">+</span> <span class="mf">1e-8</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
-<span class="n">p0</span><span class="p">,</span> <span class="n">lp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">p0</span><span class="p">,</span> <span class="n">lp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
 
 <span class="k">print</span><span class="p">(</span><span class="s">&quot;Running second burn-in...&quot;</span><span class="p">)</span>
 <span class="n">p0</span> <span class="o">=</span> <span class="n">p0</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">lp</span><span class="p">)]</span> <span class="o">+</span> <span class="mf">1e-8</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
@@ -445,9 +478,8 @@ of the data:</p>
 <span class="c"># Plot 24 posterior samples.</span>
 <span class="n">samples</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">flatchain</span>
 <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)]:</span>
-    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">s</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">model</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">t</span><span class="p">)</span>
-    <span class="n">mu</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">sample_conditional</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">model</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">gp</span><span class="o">.</span><span class="n">set_vector</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">sample_conditional</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
     <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;#4682b4&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 
 <span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&quot;$y$&quot;</span><span class="p">)</span>
@@ -456,12 +488,13 @@ of the data:</p>
 <span class="n">pl</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;fit with GP noise model&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<img alt="../../_images/model_21_0.png" src="../../_images/model_21_0.png" />
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">triangle</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">flatchain</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">truths</span><span class="o">=</span><span class="n">truth</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s">r&quot;$\alpha$&quot;</span><span class="p">,</span> <span class="s">r&quot;$\ell$&quot;</span><span class="p">,</span> <span class="s">r&quot;$\sigma^2$&quot;</span><span class="p">]);</span>
+<img alt="../../_images/model_22_0.png" src="../../_images/model_22_0.png" />
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">names</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">get_parameter_names</span><span class="p">()</span>
+<span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&quot;mean:&quot;</span><span class="o">+</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">tri_cols</span><span class="p">])</span>
+<span class="n">triangle</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">flatchain</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">],</span> <span class="n">truths</span><span class="o">=</span><span class="n">tri_truths</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">tri_labels</span><span class="p">);</span>
 </pre></div>
 </div>
-<img alt="../../_images/model_22_0.png" src="../../_images/model_22_0.png" />
+<img alt="../../_images/model_23_0.png" src="../../_images/model_23_0.png" />
 <p>It is clear from this figure that the constraints obtained when modeling
 the noise are less precise (the error bars are larger) but more accurate
 (and honest).</p>
@@ -474,10 +507,10 @@ the noise are less precise (the error bars are larger) but more accurate
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../hyper/" class="btn btn-neutral float-right" title="Tutorial: hyperparameter optimization"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../hyper/" class="btn btn-neutral float-right" title="Hyperparameter optimization" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../quickstart/" class="btn btn-neutral" title="Getting started"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../first/" class="btn btn-neutral" title="A gentle introduction to Gaussian Process Regression" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -489,9 +522,10 @@ the noise are less precise (the error bars are larger) but more accurate
         &copy; Copyright 2013-2014 Dan Foreman-Mackey.
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
-  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
 </footer>
+
         </div>
       </div>
 

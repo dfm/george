@@ -42,6 +42,19 @@ dimensions, you could do something like:
 
     kernel = 10.0 * kernels.ExpSquaredKernel([1.0, 0.5], ndim=3, axes=[1, 2])
 
+Finally, all of the stationary kernels can be "bounded". This means that the
+kernel will only be applied within some parameter range. In practice, the
+covariance matrix will have a block diagonal structure. To use this feature,
+you use the ``bounds`` keyword argument:
+
+.. code-block:: python
+
+    kernel = 10.0 * kernels.ExpSquaredKernel(1.0, bounds=(-1.0, 1.0))
+
+    # or...
+    kernel = kernels.ExpSquaredKernel([1.0, 1.5], ndim=2,
+                                      bounds=[(-1.0, 1.0), (0.5, 1.5)])
+
 
 .. _implementation:
 
@@ -229,8 +242,11 @@ The currently available non-stationary kernels are:
 
 .. autoclass:: george.kernels.ConstantKernel
 .. autoclass:: george.kernels.DotProductKernel
+.. autoclass:: george.kernels.LinearKernel
+.. autoclass:: george.kernels.PolynomialKernel
 .. autoclass:: george.kernels.CosineKernel
 .. autoclass:: george.kernels.ExpSine2Kernel
+.. autoclass:: george.kernels.LocalGaussianKernel
 
 
 .. _combining-kernels:
@@ -254,7 +270,7 @@ This is equivalent to:
 .. code-block:: python
 
     from math import sqrt
-    kernel = kernels.Product(kernels.ConstantKernel(sqrt(1e-3)),
+    kernel = kernels.Product(kernels.ConstantKernel(constant=sqrt(1e-3)),
                              kernels.ExpSquaredKernel(3.4))
 
 As demonstrated in :ref:`hyper`, a mixture of kernels can be implemented with
@@ -274,4 +290,4 @@ Implementing new kernels
 
 As mentioned previously, because of technical limitations, new kernels can
 only be implemented by re-compiling george.
-See
+See :ref:`new_kernel` for a detailed example of implementing a new kernel.

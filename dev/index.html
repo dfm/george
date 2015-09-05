@@ -5,6 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>George &mdash; George 1.0.0.dev0 documentation</title>
@@ -14,7 +15,6 @@
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   
   
@@ -28,11 +28,13 @@
   
 
   
-    <link rel="top" title="George 1.0.0.dev0 documentation" href="#"/>
-        <link rel="next" title="Getting started" href="tutorials/quickstart/"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+    <link rel="top" title="George 1.0.0.dev0 documentation" href="#"/>
+        <link rel="next" title="Getting started" href="user/quickstart/"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -43,44 +45,45 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
-        <a href="#" class="fa fa-home"> George</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="search/" method="get">
+        
+
+        
+          <a href="#" class="icon icon-home"> George
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search/" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+
+        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
         
-        
-            <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/quickstart/">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/quickstart/#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/quickstart/#a-simple-example">A Simple Example</a></li>
+          
+          
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user/quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user/quickstart/#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user/quickstart/#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user/quickstart/#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user/quickstart/#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user/quickstart/#testing">Testing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/model/">Tutorial: model fitting with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#the-final-fit">The Final Fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user/quickstart/#examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/hyper/">Tutorial: hyperparameter optimization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/hyper/#optimization">Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/new_kernel/">Tutorial: writing new kernels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="user/gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/upgrade/">Upgrading from pre-1.0 versions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="user/kernels/#common-parameters">Common parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user/kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
@@ -90,18 +93,43 @@
 <li class="toctree-l2"><a class="reference internal" href="user/kernels/#implementing-new-kernels">Implementing new kernels</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="user/modeling/">Modeling protocol</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="user/modeling/#the-protocol">The protocol</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/modeling/#a-simple-example">A simple example</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user/solvers/">Solvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="user/solvers/#basic-solver">Basic Solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user/solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="user/modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user/modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user/modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/model/">Model fitting with correlated noise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#the-final-fit">The Final Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/hyper/">Hyperparameter optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/hyper/#optimization">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/new_kernel/">Implementing new kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
+</ul>
+</li>
 </ul>
 
+          
         
       </div>
       &nbsp;
@@ -126,49 +154,38 @@
     <li>George</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="https://github.com/dfm/george/blob/master/docs/index.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+            <a href="https://github.com/dfm/george/blob/master/docs/index" class="fa fa-github"> Edit on GitHub</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main">
+          <div role="main" class="document">
             
   <div class="section" id="george">
 <h1>George<a class="headerlink" href="#george" title="Permalink to this headline">¶</a></h1>
-<p>George is a fast and flexible Python library for Gaussian Process Regression.
-A full introduction to the theory of Gaussian Processes is beyond the scope of
-this documentation but the best resource is available for free online:
-<a class="reference external" href="http://www.gaussianprocess.org/gpml/">Rasmussen &amp; Williams (2006)</a>.</p>
+<p>George is a fast and flexible Python library for Gaussian Process (GP)
+Regression. A full introduction to the theory of Gaussian Processes is beyond
+the scope of this documentation but the best resource is available for free
+online: <a class="reference external" href="http://www.gaussianprocess.org/gpml/">Rasmussen &amp; Williams (2006)</a>.</p>
+<p>Unlike some other GP implementations, george is focused on efficiently
+evaluating the marginalized likelihood of a dataset under a GP prior, even as
+this dataset gets Big™. As you&#8217;ll see in these pages of documentation, the
+module exposes quite a few other features but it is designed to be used
+alongside your favorite <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">non-linear optimization</a>
+or <a class="reference external" href="http://dfm.io/emcee">posterior inference</a> library for the best results.</p>
 <p>George is being actively developed in <a class="reference external" href="https://github.com/dfm/george">a public repository on GitHub</a> so if you have any trouble, <a class="reference external" href="https://github.com/dfm/george/issues">open an issue</a> there.</p>
-<div class="section" id="user-guide">
-<h2>User guide<a class="headerlink" href="#user-guide" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
+<div class="toctree-wrapper compound" id="user-guide">
+<p class="caption"><span class="caption-text">User Guide</span><a class="headerlink" href="#user-guide" title="Permalink to this toctree">¶</a></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/quickstart/">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/quickstart/#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/quickstart/#a-simple-example">A Simple Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/quickstart/">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user/quickstart/#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user/quickstart/#examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/model/">Tutorial: model fitting with correlated noise</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#a-simple-mean-model">A Simple Mean Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#simulated-dataset">Simulated Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#assuming-white-noise">Assuming White Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#modeling-the-noise">Modeling the Noise</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/model/#the-final-fit">The Final Fit</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/hyper/">Tutorial: hyperparameter optimization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/hyper/#optimization">Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/hyper/#sampling-marginalization">Sampling &amp; Marginalization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/new_kernel/">Tutorial: writing new kernels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/new_kernel/#the-kernel-function">The kernel function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/new_kernel/#kernel-specification">Kernel specification</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="user/gp/">The GP object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/upgrade/">Upgrading from pre-1.0 versions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user/kernels/">Kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="user/kernels/#common-parameters">Common parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user/kernels/#implementation-details-modeling-interface">Implementation details &amp; modeling interface</a></li>
@@ -178,18 +195,40 @@ this documentation but the best resource is available for free online:
 <li class="toctree-l2"><a class="reference internal" href="user/kernels/#implementing-new-kernels">Implementing new kernels</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="user/modeling/">Modeling protocol</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="user/modeling/#the-protocol">The protocol</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/modeling/#a-simple-example">A simple example</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="user/gp/">The GP object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user/solvers/">Solvers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="user/solvers/#basic-solver">Basic Solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user/solvers/#hodlr-solver">HODLR Solver</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="user/modeling/">Modeling protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user/modeling/#the-protocol">The protocol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user/modeling/#a-simple-example">A simple example</a></li>
+</ul>
+</li>
 </ul>
 </div>
+<div class="toctree-wrapper compound" id="tutorials">
+<p class="caption"><span class="caption-text">Tutorials</span><a class="headerlink" href="#tutorials" title="Permalink to this toctree">¶</a></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/first/">A gentle introduction to Gaussian Process Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/model/">Model fitting with correlated noise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/hyper/">Hyperparameter optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/scaling/">Scaling Gaussian Processes to big datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/new_kernel/">Implementing new kernels</a></li>
+</ul>
+</div>
+<div class="section" id="contributors">
+<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<p>George is being developed by <a class="reference external" href="https://github.com/dfm">Dan Foreman-Mackey (&#64;dfm)</a> with many contributions from:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/RuthAngus">Ruth Angus (&#64;RuthAngus)</a></li>
+<li><a class="reference external" href="https://github.com/jbernhard">Jonah Bernhard (&#64;jbernhard)</a></li>
+<li><a class="reference external" href="https://github.com/migueldvb">Miguel de Val-Borro (&#64;migueldvb)</a></li>
+<li><a class="reference external" href="https://github.com/hitzg">Gregory Hitz (&#64;hitzg)</a></li>
+<li><a class="reference external" href="https://github.com/shoyer">Stephan Hoyer (&#64;shoyer)</a></li>
+<li><a class="reference external" href="https://github.com/mindriot101">Simon Walker (&#64;mindriot101)</a></li>
+</ul>
 </div>
 <div class="section" id="license-attribution">
 <h2>License &amp; Attribution<a class="headerlink" href="#license-attribution" title="Permalink to this headline">¶</a></h2>
@@ -202,13 +241,27 @@ ArXiv</a>:</p>
 <div class="highlight-tex"><div class="highlight"><pre>@article<span class="nb">{</span>hodlr,
     author = <span class="nb">{{</span>Ambikasaran<span class="nb">}</span>, S. and <span class="nb">{</span>Foreman-Mackey<span class="nb">}</span>, D. and
               <span class="nb">{</span>Greengard<span class="nb">}</span>, L. and <span class="nb">{</span>Hogg<span class="nb">}</span>, D.~W. and <span class="nb">{</span>O&#39;Neil<span class="nb">}</span>, M.<span class="nb">}</span>,
-     title = &quot;<span class="nb">{</span>Fast Direct Methods for Gaussian Processes and the Analysis
-               of NASA Kepler Mission Data<span class="nb">}</span>&quot;,
+     title = &quot;<span class="nb">{</span>Fast Direct Methods for Gaussian Processes<span class="nb">}</span>&quot;,
       year = 2014,
      month = mar,
        url = http://arxiv.org/abs/1403.6015
 <span class="nb">}</span>
 </pre></div>
+</div>
+</div>
+<div class="section" id="changelog">
+<h2>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="upcoming">
+<h3>1.0.0 (upcoming)<a class="headerlink" href="#upcoming" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Initial stable release</li>
+</ul>
+</div>
+<div class="section" id="pre-1-0">
+<h3>pre-1.0<a class="headerlink" href="#pre-1-0" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>This project has had a long and tumultuous history</li>
+</ul>
 </div>
 </div>
 </div>
@@ -219,7 +272,7 @@ ArXiv</a>:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="tutorials/quickstart/" class="btn btn-neutral float-right" title="Getting started"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="user/quickstart/" class="btn btn-neutral float-right" title="Getting started" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -232,9 +285,10 @@ ArXiv</a>:</p>
         &copy; Copyright 2013-2014 Dan Foreman-Mackey.
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
-  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
 </footer>
+
         </div>
       </div>
 

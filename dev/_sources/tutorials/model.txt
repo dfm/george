@@ -2,13 +2,13 @@
 .. module:: george
 
 .. note:: This tutorial was generated from an IPython notebook that can be
-          downloaded `here <../_static/notebooks/model.ipynb>`_.
+          downloaded `here <../../_static/notebooks/model.ipynb>`_.
 
 .. _model:
 
 
-Tutorial: model fitting with correlated noise
-=============================================
+Model fitting with correlated noise
+===================================
 
 This notebook was made with the following version of george:
 
@@ -67,26 +67,31 @@ the resulting dataset is:
 
 .. code:: python
 
+    from george.modeling import ModelingMixin
+    
+    class Model(ModelingMixin):
+        
+        def get_value(self, t):
+            return self.amp * np.exp(-0.5*(t.flatten()-self.loc)**2 * np.exp(-self.ln_sig2))
+
+.. code:: python
+
     import numpy as np
     import matplotlib.pyplot as pl
     from george import kernels
     
     np.random.seed(1234)
     
-    def model(params, t):
-        amp, loc, sig2 = params
-        return amp * np.exp(-0.5 * (t - loc) ** 2 / sig2)
-    
     def generate_data(params, N, rng=(-5, 5)):
         gp = george.GP(0.1 * kernels.ExpSquaredKernel(3.3))
         t = rng[0] + np.diff(rng) * np.sort(np.random.rand(N))
         y = gp.sample(t)
-        y += model(params, t)
+        y += Model(**params).get_value(t)
         yerr = 0.05 + 0.05 * np.random.rand(N)
         y += yerr * np.random.randn(N)
         return t, y, yerr
     
-    truth = [-1.0, 0.1, 0.4]
+    truth = dict(amp=-1.0, loc=0.1, ln_sig2=np.log(0.4))
     t, y, yerr = generate_data(truth, 50)
     
     pl.errorbar(t, y, yerr=yerr, fmt=".k", capsize=0)
@@ -97,7 +102,7 @@ the resulting dataset is:
 
 
 
-.. image:: model_files/model_4_0.png
+.. image:: model_files/model_5_0.png
 
 
 Assuming White Noise
@@ -140,12 +145,12 @@ Python.
 
 .. code:: python
 
-    def model1(params, t):
-        m, b = params[:2]
-        return m*t + b + model(params[2:], t)
-    
-    def lnlike1(p):
-        return -0.5 * np.sum(((y - model1(p, t))/yerr) ** 2)
+    class PolynomialModel(ModelingMixin):
+        
+        def get_value(self, t):
+            t = t.flatten()
+            return (t * self.m + self.b +
+                    self.amp * np.exp(-0.5*(t-self.loc)**2*np.exp(-self.ln_sig2)))
 
 To fit this model using MCMC (using `emcee <http://dfm.io/emcee>`__), we
 need to first choose priors—in this case we’ll just use a simple uniform
@@ -155,16 +160,12 @@ In code, this will be:
 
 .. code:: python
 
-    def lnprior1(p):
-        m, b, amp, loc, sig2 = p
-        if (-10 < m < 10 and  -10 < b < 10 and -10 < amp < 10 and
-                -5 < loc < 5 and 0 < sig2 < 3):
-            return 0.0
-        return -np.inf
+    model = george.GP(mean=PolynomialModel(m=0, b=0, amp=-1, loc=0.1, ln_sig2=np.log(0.4)), fit_mean=True)
+    model.compute(t, yerr)
     
-    def lnprob1(p):
-        lp = lnprior1(p)
-        return lp + lnlike1(p) if np.isfinite(lp) else -np.inf
+    def lnprob(p):
+        model.set_vector(p)
+        return model.lnlikelihood(y, quiet=True)
 
 Now that we have our model implemented, we’ll initialize the walkers and
 run both a burn-in and production chain:
@@ -173,10 +174,10 @@ run both a burn-in and production chain:
 
     import emcee
     
-    initial = np.array([0, 0, -1.0, 0.1, 0.4])
+    initial = model.get_vector()
     ndim, nwalkers = len(initial), 32
-    p0 = np.array(initial) + 1e-8 * np.random.randn(nwalkers, ndim)
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob1)
+    p0 = initial + 1e-8 * np.random.randn(nwalkers, ndim)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob)
     
     print("Running burn-in...")
     p0, _, _ = sampler.run_mcmc(p0, 500)
@@ -207,7 +208,8 @@ can over plot 24 posterior samples on top of the data:
     # Plot 24 posterior samples.
     samples = sampler.flatchain
     for s in samples[np.random.randint(len(samples), size=24)]:
-        pl.plot(x, model1(s, x), color="#4682b4", alpha=0.3)
+        model.set_vector(s)
+        pl.plot(x, model.mean.get_value(x), color="#4682b4", alpha=0.3)
         
     pl.ylabel(r"$y$")
     pl.xlabel(r"$t$")
@@ -216,7 +218,7 @@ can over plot 24 posterior samples on top of the data:
 
 
 
-.. image:: model_files/model_12_0.png
+.. image:: model_files/model_13_0.png
 
 
 In this figure, the data are shown as black points with error bars and
@@ -232,12 +234,17 @@ true values:
 
     import triangle
     
-    triangle.corner(sampler.flatchain[:, 2:], truths=truth,
-                    labels=[r"$\alpha$", r"$\ell$", r"$\sigma^2$"]);
+    tri_cols = ["amp", "loc", "ln_sig2"]
+    tri_labels = [r"$\alpha$", r"$\ell$", r"$\ln\sigma^2$"]
+    tri_truths = [truth[k] for k in tri_cols]
+    tri_range = [(-2, -0.01), (-3, -0.5), (-1, 1)]
+    names = model.get_parameter_names()
+    inds = np.array([names.index("mean:"+k) for k in tri_cols])
+    triangle.corner(sampler.flatchain[:, inds], truths=tri_truths, labels=tri_labels);
 
 
 
-.. image:: model_files/model_14_0.png
+.. image:: model_files/model_15_0.png
 
 
 In this figure, the blue lines are the true values used to simulate the
@@ -336,31 +343,28 @@ George, we can write the following ln-likelihood function in Python:
 
 .. code:: python
 
-    gp = george.GP(1.0 * kernels.Matern32Kernel(1.0))
+    gp = george.GP(np.var(y) * kernels.Matern32Kernel(10.0),
+                   mean=Model(**truth), fit_mean=True)
     gp.compute(t, yerr)
     
     def lnlike2(p):
-        gp.set_vector(p[:2])
-        return gp.lnlikelihood(y - model(p[2:], t), quiet=True)
+        gp.set_vector(p)
+        return gp.lnlikelihood(y, quiet=True)
     
     def lnprob2(p):
-        lna, lntau, amp, loc, sig2 = p
-        if not (-5 < lna < 5 and  -5 < lntau < 5 and -10 < amp < 10 and
-                -5 < loc < 5 and 0 < sig2 < 3):
-            return -np.inf
         return lnlike2(p)
 
 As before, let’s run MCMC on this model:
 
 .. code:: python
 
-    initial = np.array([0, 0, -1.0, 0.1, 0.4])
+    initial = gp.get_vector()
     ndim, nwalkers = len(initial), 32
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob2)
     
     print("Running first burn-in...")
     p0 = initial + 1e-8 * np.random.randn(nwalkers, ndim)
-    p0, lp, _ = sampler.run_mcmc(p0, 1000)
+    p0, lp, _ = sampler.run_mcmc(p0, 2000)
     
     print("Running second burn-in...")
     p0 = p0[np.argmax(lp)] + 1e-8 * np.random.randn(nwalkers, ndim)
@@ -401,9 +405,8 @@ of the data:
     # Plot 24 posterior samples.
     samples = sampler.flatchain
     for s in samples[np.random.randint(len(samples), size=24)]:
-        gp.set_vector(s[:2])
-        r = y - model(s[2:], t)
-        mu = gp.sample_conditional(r, x) + model(s[2:], x)
+        gp.set_vector(s)
+        mu = gp.sample_conditional(y, x)
         pl.plot(x, mu, color="#4682b4", alpha=0.3)
         
     pl.ylabel(r"$y$")
@@ -413,17 +416,18 @@ of the data:
 
 
 
-.. image:: model_files/model_21_0.png
+.. image:: model_files/model_22_0.png
 
 
 .. code:: python
 
-    triangle.corner(sampler.flatchain[:, 2:], truths=truth,
-                    labels=[r"$\alpha$", r"$\ell$", r"$\sigma^2$"]);
+    names = gp.get_parameter_names()
+    inds = np.array([names.index("mean:"+k) for k in tri_cols])
+    triangle.corner(sampler.flatchain[:, inds], truths=tri_truths, labels=tri_labels);
 
 
 
-.. image:: model_files/model_22_0.png
+.. image:: model_files/model_23_0.png
 
 
 It is clear from this figure that the constraints obtained when modeling

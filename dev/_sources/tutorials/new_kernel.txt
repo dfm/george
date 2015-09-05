@@ -2,13 +2,13 @@
 .. module:: george
 
 .. note:: This tutorial was generated from an IPython notebook that can be
-          downloaded `here <../_static/notebooks/new_kernel.ipynb>`_.
+          downloaded `here <../../_static/notebooks/new_kernel.ipynb>`_.
 
 .. _new_kernel:
 
 
-Tutorial: writing new kernels
-=============================
+Implementing new kernels
+========================
 
 This notebook was made with the following version of george:
 
