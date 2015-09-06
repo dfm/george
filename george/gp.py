@@ -396,9 +396,8 @@ class GP(object):
         # Pre-compute some factors.
         self._compute_alpha(y)
         if self.fit_white_noise or self.fit_kernel:
-            K_inv = self.solver.apply_inverse(np.eye(self._alpha.size),
-                                              in_place=True)
-            A = np.outer(self._alpha, self._alpha) - K_inv
+            K_inv = self.solver.get_inverse()
+            A = np.einsum("i,j", self._alpha, self._alpha) - K_inv
 
         # Compute each component of the gradient.
         grad = np.empty(len(self))

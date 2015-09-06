@@ -97,3 +97,6 @@ class BasicSolver(object):
 
         """
         return np.dot(r, self._factor[0])
+
+    def get_inverse(self):
+        return self.apply_inverse(np.eye(len(self._factor[0])), in_place=True)

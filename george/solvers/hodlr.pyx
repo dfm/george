@@ -53,6 +53,7 @@ cdef class HODLRSolver:
     cdef Solver* solver
     cdef unsigned int nleaf
     cdef double tol
+    cdef unsigned int dim
 
     def __cinit__(self, kernel_spec, unsigned int nleaf=100, double tol=1e-12):
         self.kernel_spec = kernel_spec
@@ -60,6 +61,7 @@ cdef class HODLRSolver:
         self.solver = new Solver(self.kernel, nleaf, tol)
         self.nleaf = nleaf
         self.tol = tol
+        self.dim = -1
 
     def __reduce__(self):
         return _rebuild, (self.kernel_spec, self.nleaf, self.tol)
@@ -95,6 +97,9 @@ cdef class HODLRSolver:
         cdef unsigned int ndim = x.shape[1]
         if yerr.shape[0] != n or ndim != self.kernel.get_ndim():
             raise ValueError("Dimension mismatch")
+
+        # Save the dimension of the problem.
+        self.dim = n
 
         # Seed with the time if no seed is provided.
         if seed is None:
@@ -149,6 +154,8 @@ cdef class HODLRSolver:
 
         # Get the problem dimensions.
         cdef unsigned int n = y.shape[0], nrhs = y.shape[1]
+        if n != self.dim:
+            raise ValueError("dimension mismatch")
 
         # Do an in-place solve if requested.
         if in_place:
@@ -168,3 +175,6 @@ cdef class HODLRSolver:
         """
         raise NotImplementedError("The sqrt function isn't available in "
                                   "the HODLR solver yet")
+
+    def get_inverse(self):
+        return self.apply_inverse(np.eye(self.dim), in_place=True)
