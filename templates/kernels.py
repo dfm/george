@@ -59,7 +59,8 @@ class Kernel(object):
         params = ["{0}={1}".format(k, getattr(self, k))
                   for k in self._parameter_names]
         if self.stationary:
-            params += ["metric={0}".format(self.metric)]
+            params += ["metric={0}".format(self.metric),
+                       "block={0}".format(self.block)]
         else:
             params += ["ndim={0}".format(self.ndim),
                        "axes={0}".format(self.axes)]
@@ -380,14 +381,14 @@ class {{ spec.name }} (Kernel):
     {% if spec.stationary -%}
     @property
     def block(self):
-        if not self.bounded:
+        if not self.blocked:
             return None
         return list(zip(self.min_block, self.max_block))
 
     @block.setter
     def block(self, block):
         if block is None:
-            self.bounded = False
+            self.blocked = False
             self.min_block = -np.inf + np.zeros(len(self.axes))
             self.max_block = np.inf + np.zeros(len(self.axes))
             return
@@ -395,7 +396,7 @@ class {{ spec.name }} (Kernel):
         block = np.atleast_2d(block)
         if block.shape != (len(self.axes), 2):
             raise ValueError("dimension mismatch in block specification")
-        self.bounded = True
+        self.blocked = True
         self.min_block, self.max_block = map(np.array, zip(*block))
     {% endif %}
 {% endfor %}
