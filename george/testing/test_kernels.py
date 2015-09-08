@@ -128,7 +128,7 @@ def do_stationary_t(kernel_type, **kwargs):
     kernel = build_kernel(1.0, ndim=3, axes=2)
     do_kernel_t(kernel)
 
-    kernel = build_kernel(1.0, ndim=3, axes=2, bounds=(-0.1, 0.1))
+    kernel = build_kernel(1.0, ndim=3, axes=2, block=(-0.1, 0.1))
     do_kernel_t(kernel)
 
 
