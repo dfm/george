@@ -42,18 +42,18 @@ dimensions, you could do something like:
 
     kernel = 10.0 * kernels.ExpSquaredKernel([1.0, 0.5], ndim=3, axes=[1, 2])
 
-Finally, all of the stationary kernels can be "bounded". This means that the
+Finally, all of the stationary kernels can be "blocked". This means that the
 kernel will only be applied within some parameter range. In practice, the
 covariance matrix will have a block diagonal structure. To use this feature,
-you use the ``bounds`` keyword argument:
+you use the ``block`` keyword argument:
 
 .. code-block:: python
 
-    kernel = 10.0 * kernels.ExpSquaredKernel(1.0, bounds=(-1.0, 1.0))
+    kernel = 10.0 * kernels.ExpSquaredKernel(1.0, block=(-1.0, 1.0))
 
     # or...
     kernel = kernels.ExpSquaredKernel([1.0, 1.5], ndim=2,
-                                      bounds=[(-1.0, 1.0), (0.5, 1.5)])
+                                      block=[(-1.0, 1.0), (0.5, 1.5)])
 
 
 .. _implementation:
