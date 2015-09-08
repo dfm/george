@@ -13,6 +13,7 @@ import warnings
 import numpy as np
 from functools import partial
 
+from .compat import imap
 from .utils import numerical_gradient
 from .metrics import Metric, Subspace
 from .cython_kernel import CythonKernel
@@ -256,8 +257,10 @@ class _operator(Kernel):
         return len(self.k1) + len(self.k2)
 
     def get_parameter_names(self):
-        return (map("k1:{0}".format, self.k1.get_parameter_names()) +
-                map("k2:{0}".format, self.k2.get_parameter_names()))
+        return (
+            list(imap("k1:{0}".format, self.k1.get_parameter_names())) +
+            list(imap("k2:{0}".format, self.k2.get_parameter_names()))
+        )
 
     def get_vector(self):
         return np.append(self.k1.get_vector(), self.k2.get_vector())
