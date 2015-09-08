@@ -9,7 +9,7 @@ import fnmatch
 import numpy as np
 from collections import OrderedDict
 
-from .compat import iteritems, izip
+from .compat import iteritems, izip, xrange
 
 _EPS = 1.254e-5
 
