@@ -213,6 +213,16 @@ class Kernel(object):
         else:
             self._unfrozen[i] = True
 
+    def freeze_all_parameters(self):
+        self._unfrozen[:] = False
+        if self.stationary:
+            self.metric.freeze_all_parameters()
+
+    def thaw_all_parameters(self):
+        self._unfrozen[:] = True
+        if self.stationary:
+            self.metric.thaw_all_parameters()
+
 
 class _operator(Kernel):
     is_kernel = False
@@ -278,6 +288,14 @@ class _operator(Kernel):
             self.k2.thaw_parameter(":".join(n[1:]))
         else:
             raise ValueError("invalid parameter '{0}'".format(parameter_name))
+
+    def freeze_all_parameters(self):
+        self.k1.freeze_all_parameters()
+        self.k2.freeze_all_parameters()
+
+    def thaw_all_parameters(self):
+        self.k1.thaw_all_parameters()
+        self.k2.thaw_all_parameters()
 
 
 class Sum(_operator):

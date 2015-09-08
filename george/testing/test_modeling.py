@@ -8,6 +8,7 @@ __all__ = [
     "test_gp_mean",
     "test_gp_white_noise",
     "test_gp_callable_mean",
+    "test_parameters",
 ]
 
 import numpy as np
@@ -84,3 +85,26 @@ def test_gp_callable_white_noise(N=50, seed=1234):
 
     gp.freeze_parameter("white:m")
     check_gradient(gp, y)
+
+
+def test_parameters():
+    kernel = 10 * kernels.ExpSquaredKernel(1.0)
+    kernel += 0.5 * kernels.RationalQuadraticKernel(alpha=0.1, metric=5.0)
+    gp = GP(kernel, white_noise=LinearWhiteNoise(1.0, 0.1),
+            fit_white_noise=True)
+
+    n = len(gp.get_vector())
+    assert n == len(gp.get_parameter_names())
+    assert n - 2 == len(kernel.get_parameter_names())
+
+    gp.freeze_parameter(gp.get_parameter_names()[0])
+    assert n - 1 == len(gp.get_parameter_names())
+    assert n - 1 == len(gp.get_vector())
+
+    gp.freeze_all_parameters()
+    assert len(gp.get_parameter_names()) == 0
+    assert len(gp.get_vector()) == 0
+
+    gp.thaw_all_parameters()
+    assert n == len(gp.get_vector())
+    assert n == len(gp.get_parameter_names())

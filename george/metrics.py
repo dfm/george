@@ -117,6 +117,12 @@ class Metric(object):
     def thaw_parameter(self, parameter_name):
         self.unfrozen[self.parameter_names.index(parameter_name)] = True
 
+    def freeze_all_parameters(self):
+        self.unfrozen[:] = False
+
+    def thaw_all_parameters(self):
+        self.unfrozen[:] = True
+
     def to_matrix(self):
         if self.metric_type == 0:
             return np.exp(self.parameters[0]) * np.eye(len(self.axes))
