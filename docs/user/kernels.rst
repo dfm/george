@@ -290,4 +290,4 @@ Implementing new kernels
 
 As mentioned previously, because of technical limitations, new kernels can
 only be implemented by re-compiling george.
-See :ref:`new_kernel` for a detailed example of implementing a new kernel.
+See :ref:`new-kernel` for a detailed example of implementing a new kernel.

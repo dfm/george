@@ -167,11 +167,14 @@ class Kernel(object):
             return self.kernel.value_general(x1, x2)
 
     def get_gradient(self, x1, x2=None):
+        which = self.unfrozen.astype(np.uint32)
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
-            return self.kernel.gradient_symmetric(x1)[:, :, self.unfrozen]
-        x2 = np.ascontiguousarray(x2, dtype=np.float64)
-        return self.kernel.gradient_general(x1, x2)[:, :, self.unfrozen]
+            g = self.kernel.gradient_symmetric(which, x1)
+        else:
+            x2 = np.ascontiguousarray(x2, dtype=np.float64)
+            g = self.kernel.gradient_general(which, x1, x2)
+        return g[:, :, self.unfrozen]
 
     def test_gradient(self, x1, x2=None, eps=1.32e-6, **kwargs):
         vector = self.get_vector()

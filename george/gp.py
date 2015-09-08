@@ -682,3 +682,19 @@ class GP(object):
         else:
             raise ValueError("invalid parameter name '{0}'"
                              .format(parameter_name))
+
+    def freeze_all_parameters(self):
+        if self.fit_mean:
+            self.mean.freeze_all_parameters()
+        if self.fit_white_noise:
+            self.white_noise.freeze_all_parameters()
+        if self.fit_kernel:
+            self.kernel.freeze_all_parameters()
+
+    def thaw_all_parameters(self):
+        if self.fit_mean:
+            self.mean.thaw_all_parameters()
+        if self.fit_white_noise:
+            self.white_noise.thaw_all_parameters()
+        if self.fit_kernel:
+            self.kernel.thaw_all_parameters()

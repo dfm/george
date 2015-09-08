@@ -92,6 +92,14 @@ class ModelingMixin(object):
     def thaw_parameter(self, parameter_name):
         self._frozen[parameter_name] = False
 
+    def freeze_all_parameters(self):
+        for k in self._frozen:
+            self._frozen[k] = True
+
+    def thaw_all_parameters(self):
+        for k in self._frozen:
+            self._frozen[k] = False
+
     @staticmethod
     def sort_gradient(f):
         def func(self, *args, **kwargs):
@@ -118,6 +126,8 @@ def supports_modeling_protocol(obj):
         "set_vector",
         "freeze_parameter",
         "thaw_parameter",
+        "freeze_all_parameters",
+        "thaw_all_parameters",
     ]
     for method in methods:
         if not callable(getattr(obj, method, None)):

@@ -3,6 +3,9 @@
 Modeling protocol
 =================
 
+Hyperparameter optimization—and fitting more generally—has always been a sore
+point in the george API.
+
 In order to make hyperparameter optimization, george comes with a modeling
 language specification. To this end, any component of the model that is
 specified by parameters that we might want to fit should conform to a simple

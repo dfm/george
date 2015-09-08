@@ -11,6 +11,9 @@ np.import_array()
 DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t
 
+DTYPE_uint = np.uint32
+ctypedef np.uint32_t DTYPE_uint_t
+
 
 def _rebuild(kernel_spec):
     return CythonKernel(kernel_spec)
@@ -91,7 +94,8 @@ cdef class CythonKernel:
         return k
 
     @cython.boundscheck(False)
-    def gradient_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x):
+    def gradient_symmetric(self, np.ndarray[DTYPE_uint_t, ndim=1] which,
+                           np.ndarray[DTYPE_t, ndim=2] x):
         # Check the input dimensions.
         cdef unsigned int n = x.shape[0], ndim = x.shape[1]
         if self.kernel.get_ndim() != ndim:
@@ -108,10 +112,12 @@ cdef class CythonKernel:
         for i in range(n):
             self.kernel.gradient(<double*>(x.data + i*delta),
                                  <double*>(x.data + i*delta),
+                                 <unsigned*>(which.data),
                                  <double*>(g.data + i*dx + i*dy))
             for j in range(i + 1, n):
                 self.kernel.gradient(<double*>(x.data + i*delta),
                                      <double*>(x.data + j*delta),
+                                     <unsigned*>(which.data),
                                      <double*>(g.data + i*dx + j*dy))
                 for k in range(size):
                     g[j, i, k] = g[i, j, k]
@@ -119,7 +125,9 @@ cdef class CythonKernel:
         return g
 
     @cython.boundscheck(False)
-    def gradient_general(self, np.ndarray[DTYPE_t, ndim=2] x1,
+    def gradient_general(self,
+                         np.ndarray[DTYPE_uint_t, ndim=1] which,
+                         np.ndarray[DTYPE_t, ndim=2] x1,
                          np.ndarray[DTYPE_t, ndim=2] x2):
         cdef unsigned int n1 = x1.shape[0], ndim = x1.shape[1], n2 = x2.shape[0]
         if self.kernel.get_ndim() != ndim or x2.shape[1] != ndim:
@@ -137,6 +145,7 @@ cdef class CythonKernel:
             for j in range(n2):
                 self.kernel.gradient(<double*>(x1.data + i*d1),
                                      <double*>(x2.data + j*d2),
+                                     <unsigned*>(which.data),
                                      <double*>(g.data + i*dx + j*dy))
 
         return g

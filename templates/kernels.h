@@ -21,7 +21,8 @@ public:
     Kernel () {};
     virtual ~Kernel () {};
     virtual double value (const double* x1, const double* x2) { return 0.0; };
-    virtual void gradient (const double* x1, const double* x2, double* grad) {};
+    virtual void gradient (const double* x1, const double* x2,
+                           const unsigned* which, double* grad) {};
 
     // Parameter vector spec.
     virtual unsigned size () const { return 0; }
@@ -71,10 +72,17 @@ public:
     double value (const double* x1, const double* x2) {
         return this->kernel1_->value(x1, x2) + this->kernel2_->value(x1, x2);
     };
-    void gradient (const double* x1, const double* x2, double* grad) {
-        unsigned n = this->kernel1_->size();
-        this->kernel1_->gradient(x1, x2, grad);
-        this->kernel2_->gradient(x1, x2, &(grad[n]));
+    void gradient (const double* x1, const double* x2, const unsigned* which,
+                   double* grad) {
+        unsigned i, n1 = this->kernel1_->size(), n2 = this->size();
+
+        bool any = false;
+        for (i = 0; i < n1; ++i) if (which[i]) { any = true; break; }
+        if (any) this->kernel1_->gradient(x1, x2, which, grad);
+
+        any = false;
+        for (i = n1; i < n2; ++i) if (which[i]) { any = true; break; }
+        if (any) this->kernel2_->gradient(x1, x2, &(which[n1]), &(grad[n1]));
     };
 };
 
@@ -84,14 +92,27 @@ public:
     double value (const double* x1, const double* x2) {
         return this->kernel1_->value(x1, x2) * this->kernel2_->value(x1, x2);
     };
-    void gradient (const double* x1, const double* x2, double* grad) {
+    void gradient (const double* x1, const double* x2, const unsigned* which,
+                   double* grad) {
+        bool any;
         unsigned i, n1 = this->kernel1_->size(), n2 = this->size();
-        this->kernel1_->gradient(x1, x2, grad);
-        this->kernel2_->gradient(x1, x2, &(grad[n1]));
-        double k1 = this->kernel1_->value(x1, x2),
-               k2 = this->kernel2_->value(x1, x2);
-        for (i = 0; i < n1; ++i) grad[i] *= k2;
-        for (i = n1; i < n2; ++i) grad[i] *= k1;
+        double k;
+
+        any = false;
+        for (i = 0; i < n1; ++i) if (which[i]) { any = true; break; }
+        if (any) {
+            k = this->kernel2_->value(x1, x2);
+            this->kernel1_->gradient(x1, x2, which, grad);
+            for (i = 0; i < n1; ++i) grad[i] *= k;
+        }
+
+        any = false;
+        for (i = n1; i < n2; ++i) if (which[i]) { any = true; break; }
+        if (any) {
+            k = this->kernel1_->value(x1, x2);
+            this->kernel2_->gradient(x1, x2, &(which[n1]), &(grad[n1]));
+            for (i = n1; i < n2; ++i) grad[i] *= k;
+        }
     };
 };
 
@@ -239,7 +260,8 @@ public:
         {{ spec.grad["r2"] | indent(8) }}
     };
 
-    void gradient (const double* x1, const double* x2, double* grad) {
+    void gradient (const double* x1, const double* x2, const unsigned* which,
+                   double* grad) {
         bool out = false;
         unsigned i, j, n = size();
         if (blocked_) {
@@ -257,8 +279,26 @@ public:
             }
         }
 
-        double r2 = metric_.value(x1, x2),
-               r2grad = radial_gradient(
+        double r2 = metric_.value(x1, x2);
+        {% for param in spec.params -%}
+        if (which[{{ loop.index - 1 }}])
+            grad[{{ loop.index - 1 }}] = {{ param }}_gradient(
+                    {% for param in spec.params -%}
+                    param_{{ param }}_,
+                    {% endfor -%}
+                    {% for param in spec.reparams -%}
+                    reparam_{{ param }}_,
+                    {% endfor -%}
+                    {%- for con in spec.constants %}
+                    constant_{{ con.name }}_,
+                    {%- endfor %}
+                    r2);
+        {% endfor %}
+
+        bool any = false;
+        for (i = size_; i < size(); ++i) if (which[i]) { any = true; break; }
+        if (any) {
+            double r2grad = radial_gradient(
                     {% for param in spec.params -%}
                     param_{{ param }}_,
                     {% endfor %}
@@ -269,22 +309,9 @@ public:
                     constant_{{ con.name }}_,
                     {%- endfor %}
                     r2);
-
-        {% for param in spec.params -%}
-        grad[{{ loop.index - 1 }}] = {{ param }}_gradient(
-                {% for param in spec.params -%}
-                param_{{ param }}_,
-                {% endfor -%}
-                {% for param in spec.reparams -%}
-                reparam_{{ param }}_,
-                {% endfor -%}
-                {%- for con in spec.constants %}
-                constant_{{ con.name }}_,
-                {%- endfor %}
-                r2);
-        {% endfor %}
-        metric_.gradient(x1, x2, &(grad[size_]));
-        for (i = size_; i < n; ++i) grad[i] *= r2grad;
+            metric_.gradient(x1, x2, &(grad[size_]));
+            for (i = size_; i < n; ++i) grad[i] *= r2grad;
+        }
     };
 
     unsigned size () const { return metric_.size() + size_; };
@@ -426,7 +453,8 @@ public:
     };
     {% endfor -%}
 
-    void gradient (const double* x1, const double* x2, double* grad) {
+    void gradient (const double* x1, const double* x2, const unsigned* which,
+                   double* grad) {
         {% for param in spec.params -%}
         grad[{{ loop.index - 1 }}] = 0.0;
         {% endfor %}
@@ -436,17 +464,18 @@ public:
         for (i = 0; i < n; ++i) {
             j = subspace_.get_axis(i);
             {% for param in spec.params -%}
-            grad[{{ loop.index - 1 }}] += {{ param }}_gradient(
-                {% for param in spec.params -%}
-                param_{{ param }}_,
-                {% endfor -%}
-                {% for param in spec.reparams -%}
-                reparam_{{ param }}_,
-                {% endfor -%}
-                {%- for con in spec.constants %}
-                constant_{{ con.name }}_,
-                {%- endfor %}
-                x1[j], x2[j]);
+            if (which[{{ loop.index - 1}}])
+                grad[{{ loop.index - 1 }}] += {{ param }}_gradient(
+                    {% for param in spec.params -%}
+                    param_{{ param }}_,
+                    {% endfor -%}
+                    {% for param in spec.reparams -%}
+                    reparam_{{ param }}_,
+                    {% endfor -%}
+                    {%- for con in spec.constants %}
+                    constant_{{ con.name }}_,
+                    {%- endfor %}
+                    x1[j], x2[j]);
             {% endfor %}
         }
         {% endif %}

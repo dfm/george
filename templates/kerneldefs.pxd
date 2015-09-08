@@ -22,8 +22,9 @@ cdef extern from "metrics.h" namespace "george::metrics":
 cdef extern from "kernels.h" namespace "george::kernels":
 
     cdef cppclass Kernel:
-        double value (const double* x1, const double* x2) const
-        void gradient (const double* x1, const double* x2, double* grad) const
+        double value (const double* x1, const double* x2)
+        void gradient (const double* x1, const double* x2,
+                       const unsigned* which, double* grad)
         unsigned int get_ndim () const
         unsigned int size () const
         void set_vector (const double*)
