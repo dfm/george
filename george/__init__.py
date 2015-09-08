@@ -10,13 +10,14 @@ except NameError:
 if not __GEORGE_SETUP__:
     __all__ = [
         "kernels",
-        "GP",
+        "GP", "Metric",
         "TrivialSolver", "BasicSolver", "HODLRSolver",
         "ModelingMixin",
     ]
 
     from . import kernels
     from .gp import GP
+    from .metrics import Metric
 
     from .solvers import TrivialSolver, BasicSolver, HODLRSolver
 

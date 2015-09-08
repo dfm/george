@@ -9,6 +9,7 @@ __all__ = [
     {%- endfor %}
 ]
 
+import fnmatch
 import warnings
 import numpy as np
 from functools import partial
@@ -83,19 +84,16 @@ class Kernel(object):
             self.dirty = True
 
     def __getitem__(self, k):
-        try:
-            i = int(k)
-        except ValueError:
-            i = self.get_parameter_names().index(k)
-        return self.get_vector()[i]
+        if isinstance(k, basestring):
+            return self.get_parameter(k)
+        return self.get_vector()[k]
 
     def __setitem__(self, k, value):
-        try:
-            i = int(k)
-        except ValueError:
-            i = self.get_parameter_names().index(k)
+        if isinstance(k, basestring):
+            self.set_parameter(k, value)
+            return
         v = self.get_vector()
-        v[i] = value
+        v[k] = value
         self.set_vector(v)
 
     def __add__(self, b):
@@ -133,11 +131,14 @@ class Kernel(object):
             return np.sum(self._unfrozen) + len(self.metric)
         return np.sum(self._unfrozen)
 
-    def get_parameter_names(self):
-        n = [n for i, n in enumerate(self._parameter_names)
-             if self._unfrozen[i]]
+    def get_parameter_names(self, full=False):
+        if full:
+            n = list(self._parameter_names)
+        else:
+            n = [n for i, n in enumerate(self._parameter_names)
+                 if self._unfrozen[i]]
         if self.stationary:
-            n += self.metric.get_parameter_names()
+            n += self.metric.get_parameter_names(full=full)
         return n
 
     def get_vector(self):
@@ -199,31 +200,54 @@ class Kernel(object):
                 "incorrect gradient for parameter '{0}' ({1})" \
                 .format(self.get_parameter_names()[i], i)
 
-    def freeze_parameter(self, parameter_name):
-        try:
-            i = self._parameter_names.index(parameter_name)
-        except ValueError:
-            self.metric.freeze_parameter(parameter_name)
+    def _wildcard_apply(self, meth, pat, *args):
+        if len(set("[]*?") & set(pat)):
+            names = fnmatch.filter(self.get_parameter_names(full=True), pat)
         else:
-            self._unfrozen[i] = False
+            names = [pat]
+        elements = []
+        for name in names:
+            try:
+                i = self._parameter_names.index(name)
+            except ValueError:
+                if self.stationary:
+                    elements.append(getattr(self.metric, meth)(name, *args))
+            else:
+                elements.append(getattr(self, "_" + meth)(i, *args))
+
+        if len(elements) == 0:
+            raise ValueError("invalid parameter '{0}'".format(pat))
+        return elements
+
+    def _freeze_parameter(self, ind):
+        self._unfrozen[ind] = False
+
+    def _thaw_parameter(self, ind):
+        self._unfrozen[ind] = True
+
+    def _get_parameter(self, ind):
+        return self._parameter_vector[ind]
+
+    def _set_parameter(self, ind, value):
+        self._parameter_vector[ind] = value
+
+    def freeze_parameter(self, parameter_name):
+        self._wildcard_apply("freeze_parameter", parameter_name)
 
     def thaw_parameter(self, parameter_name):
+        self._wildcard_apply("thaw_parameter", parameter_name)
+
+    def get_parameter(self, parameter_name):
+        r = self._wildcard_apply("get_parameter", parameter_name)
+        if len(r) == 1:
+            r = r[0]
         try:
-            i = self._parameter_names.index(parameter_name)
-        except ValueError:
-            self.metric.thaw_parameter(parameter_name)
-        else:
-            self._unfrozen[i] = True
+            return float(r)
+        except TypeError:
+            return np.array(r, dtype=float)
 
-    def freeze_all_parameters(self):
-        self._unfrozen[:] = False
-        if self.stationary:
-            self.metric.freeze_all_parameters()
-
-    def thaw_all_parameters(self):
-        self._unfrozen[:] = True
-        if self.stationary:
-            self.metric.thaw_all_parameters()
+    def set_parameter(self, parameter_name, value):
+        self._wildcard_apply("set_parameter", parameter_name, value)
 
 
 class _operator(Kernel):
@@ -257,10 +281,11 @@ class _operator(Kernel):
     def __len__(self):
         return len(self.k1) + len(self.k2)
 
-    def get_parameter_names(self):
+    def get_parameter_names(self, full=False):
         return (
-            list(imap("k1:{0}".format, self.k1.get_parameter_names())) +
-            list(imap("k2:{0}".format, self.k2.get_parameter_names()))
+            list(imap("k1:{0}".format, self.k1.get_parameter_names(full=full)))
+            +
+            list(imap("k2:{0}".format, self.k2.get_parameter_names(full=full)))
         )
 
     def get_vector(self):
@@ -271,35 +296,39 @@ class _operator(Kernel):
         self.k1.set_vector(vector[:n])
         self.k2.set_vector(vector[n:])
 
-    def freeze_parameter(self, parameter_name):
-        n = parameter_name.split(":")
-        if len(n) < 2:
-            raise ValueError("invalid parameter '{0}'".format(parameter_name))
-        if n[0] == "k1":
-            self.k1.freeze_parameter(":".join(n[1:]))
-        elif n[0] == "k2":
-            self.k2.freeze_parameter(":".join(n[1:]))
+    def _wildcard_apply(self, meth, pat, *args):
+        if len(set("[]*?") & set(pat)):
+            names = fnmatch.filter(self.get_parameter_names(full=True), pat)
         else:
-            raise ValueError("invalid parameter '{0}'".format(parameter_name))
+            names = [pat]
+        elements = []
+        for name in names:
+            n = name.split(":")
+            if n[0] == "k1":
+                elements.append(getattr(self.k1, meth)(":".join(n[1:]), *args))
+            elif n[0] == "k2":
+                elements.append(getattr(self.k2, meth)(":".join(n[1:]), *args))
+        if len(elements) == 0:
+            raise ValueError("invalid parameter '{0}'".format(pat))
+        return elements
+
+    def freeze_parameter(self, parameter_name):
+        self._wildcard_apply("freeze_parameter", parameter_name)
 
     def thaw_parameter(self, parameter_name):
-        n = parameter_name.split(":")
-        if len(n) <= 2:
-            raise ValueError("invalid parameter '{0}'".format(parameter_name))
-        if n[0] == "k1":
-            self.k1.thaw_parameter(":".join(n[1:]))
-        elif n[0] == "k2":
-            self.k2.thaw_parameter(":".join(n[1:]))
-        else:
-            raise ValueError("invalid parameter '{0}'".format(parameter_name))
+        self._wildcard_apply("thaw_parameter", parameter_name)
 
-    def freeze_all_parameters(self):
-        self.k1.freeze_all_parameters()
-        self.k2.freeze_all_parameters()
+    def get_parameter(self, parameter_name):
+        r = self._wildcard_apply("get_parameter", parameter_name)
+        if len(r) == 1:
+            r = r[0]
+        try:
+            return float(r)
+        except TypeError:
+            return np.array(r, dtype=float)
 
-    def thaw_all_parameters(self):
-        self.k1.thaw_all_parameters()
-        self.k2.thaw_all_parameters()
+    def set_parameter(self, parameter_name, value):
+        self._wildcard_apply("set_parameter", parameter_name, value)
 
 
 class Sum(_operator):

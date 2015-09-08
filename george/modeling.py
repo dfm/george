@@ -5,6 +5,7 @@ from __future__ import division, print_function
 __all__ = ["ModelingMixin", "supports_modeling_protocol",
            "check_gradient"]
 
+import fnmatch
 import numpy as np
 from collections import OrderedDict
 
@@ -23,6 +24,9 @@ class ModelingMixin(object):
         self._frozen = dict((k, False) for k in self._parameters)
 
     def __getitem__(self, k):
+        if "*" in k or "?" in k:
+            return self.get_parameter(k)
+
         try:
             i = int(k)
         except ValueError:
@@ -30,6 +34,10 @@ class ModelingMixin(object):
         return self._parameters.values()[i]
 
     def __setitem__(self, k, v):
+        if "*" in k or "?" in k:
+            self.set_parameter(k, v)
+            return
+
         try:
             i = int(k)
         except ValueError:
@@ -58,7 +66,9 @@ class ModelingMixin(object):
     def __len__(self):
         return len(self._frozen) - sum(self._frozen.values())
 
-    def get_parameter_names(self):
+    def get_parameter_names(self, full=False):
+        if full:
+            return list(self._parameters.keys())
         return [k for k in self._parameters if not self._frozen[k]]
 
     def get_vector(self):
@@ -87,18 +97,37 @@ class ModelingMixin(object):
         return grad
 
     def freeze_parameter(self, parameter_name):
-        self._frozen[parameter_name] = True
-
-    def thaw_parameter(self, parameter_name):
-        self._frozen[parameter_name] = False
-
-    def freeze_all_parameters(self):
-        for k in self._frozen:
+        for k in self._frozen.keys():
+            if not fnmatch.fnmatch(k, parameter_name):
+                continue
             self._frozen[k] = True
 
-    def thaw_all_parameters(self):
-        for k in self._frozen:
+    def thaw_parameter(self, parameter_name):
+        for k in self._frozen.keys():
+            if not fnmatch.fnmatch(k, parameter_name):
+                continue
             self._frozen[k] = False
+
+    def get_parameter(self, parameter_name):
+        params = []
+        for k, v in iteritems(self._parameters):
+            if not fnmatch.fnmatch(k, parameter_name):
+                continue
+            params.append(v)
+        if len(params) == 1:
+            return params[0]
+        return np.array(params)
+
+    def set_parameter(self, parameter_name, value):
+        i = 0
+        for k in self._parameters.keys():
+            if not fnmatch.fnmatch(k, parameter_name):
+                continue
+            try:
+                self._parameters[k] = float(value)
+            except TypeError:
+                self._parameters[k] = value[i]
+            i += 1
 
     @staticmethod
     def sort_gradient(f):
@@ -126,8 +155,8 @@ def supports_modeling_protocol(obj):
         "set_vector",
         "freeze_parameter",
         "thaw_parameter",
-        "freeze_all_parameters",
-        "thaw_all_parameters",
+        "get_parameter",
+        "set_parameter",
     ]
     for method in methods:
         if not callable(getattr(obj, method, None)):

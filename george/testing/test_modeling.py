@@ -101,10 +101,17 @@ def test_parameters():
     assert n - 1 == len(gp.get_parameter_names())
     assert n - 1 == len(gp.get_vector())
 
-    gp.freeze_all_parameters()
+    gp.freeze_parameter("*")
     assert len(gp.get_parameter_names()) == 0
     assert len(gp.get_vector()) == 0
 
-    gp.thaw_all_parameters()
+    gp.thaw_parameter("*")
     assert n == len(gp.get_vector())
     assert n == len(gp.get_parameter_names())
+
+    assert np.allclose(kernel["*constant"], np.log([10., 0.5]))
+    assert np.allclose(kernel[0], np.log(10.))
+    assert np.allclose(kernel[[0, 1]], np.log([10., 1.0]))
+
+    gp.freeze_parameter("kernel:*constant")
+    assert n-2 == len(gp.get_vector())

@@ -4,6 +4,7 @@ from __future__ import division, print_function
 
 __all__ = ["GP"]
 
+import fnmatch
 import numpy as np
 from scipy.linalg import LinAlgError
 
@@ -568,7 +569,7 @@ class GP(object):
             n += len(self.kernel)
         return n
 
-    def get_parameter_names(self):
+    def get_parameter_names(self, full=False):
         """
         Returns the list of parameter names following the modeling protocol.
         Parameters related to the mean function (included if ``fit_mean`` is
@@ -579,12 +580,14 @@ class GP(object):
         """
         n = []
         if self.fit_mean:
-            n += map("mean:{0}".format, self.mean.get_parameter_names())
+            n += map("mean:{0}".format,
+                     self.mean.get_parameter_names(full=full))
         if self.fit_white_noise:
             n += map("white:{0}".format,
-                     self.white_noise.get_parameter_names())
+                     self.white_noise.get_parameter_names(full=full))
         if self.fit_kernel:
-            n += map("kernel:{0}".format, self.kernel.get_parameter_names())
+            n += map("kernel:{0}".format,
+                     self.kernel.get_parameter_names(full=full))
         return n
 
     def get_value(self, *args, **kwargs):
@@ -655,16 +658,7 @@ class GP(object):
         the list returned by :func:`GP.get_parameter_names`.
 
         """
-        names = parameter_name.split(":")
-        if names[0] == "white":
-            self.white_noise.freeze_parameter(":".join(names[1:]))
-        elif names[0] == "mean":
-            self.mean.freeze_parameter(":".join(names[1:]))
-        elif names[0] == "kernel":
-            self.kernel.freeze_parameter(":".join(names[1:]))
-        else:
-            raise ValueError("invalid parameter name '{0}'"
-                             .format(parameter_name))
+        self._wildcard_apply("freeze_parameter", parameter_name)
 
     def thaw_parameter(self, parameter_name):
         """
@@ -672,29 +666,39 @@ class GP(object):
         a parameter by name.
 
         """
-        names = parameter_name.split(":")
-        if names[0] == "white":
-            self.white_noise.thaw_parameter(":".join(names[1:]))
-        elif names[0] == "mean":
-            self.mean.thaw_parameter(":".join(names[1:]))
-        elif names[0] == "kernel":
-            self.kernel.thaw_parameter(":".join(names[1:]))
+        self._wildcard_apply("thaw_parameter", parameter_name)
+
+    def get_parameter(self, parameter_name):
+        r = self._wildcard_apply("get_parameter", parameter_name)
+        if len(r) == 1:
+            r = r[0]
+        try:
+            return float(r)
+        except TypeError:
+            return np.array(r, dtype=float)
+
+    def set_parameter(self, parameter_name, value):
+        self._wildcard_apply("set_parameter", parameter_name, value)
+
+    def _wildcard_apply(self, meth, pat, *args):
+        if len(set("[]*?") & set(pat)):
+            names = fnmatch.filter(self.get_parameter_names(full=True), pat)
         else:
-            raise ValueError("invalid parameter name '{0}'"
-                             .format(parameter_name))
+            names = [pat]
+        elements = []
+        for name in names:
+            names = name.split(":")
+            if names[0] == "mean":
+                elements.append(
+                    getattr(self.mean, meth)(":".join(names[1:]), *args))
+            elif names[0] == "white":
+                elements.append(
+                    getattr(self.white_noise, meth)(":".join(names[1:]),
+                                                    *args))
+            elif names[0] == "kernel":
+                elements.append(
+                    getattr(self.kernel, meth)(":".join(names[1:]), *args))
 
-    def freeze_all_parameters(self):
-        if self.fit_mean:
-            self.mean.freeze_all_parameters()
-        if self.fit_white_noise:
-            self.white_noise.freeze_all_parameters()
-        if self.fit_kernel:
-            self.kernel.freeze_all_parameters()
-
-    def thaw_all_parameters(self):
-        if self.fit_mean:
-            self.mean.thaw_all_parameters()
-        if self.fit_white_noise:
-            self.white_noise.thaw_all_parameters()
-        if self.fit_kernel:
-            self.kernel.thaw_all_parameters()
+        if len(elements) == 0:
+            raise ValueError("invalid parameter '{0}'".format(pat))
+        return elements
