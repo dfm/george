@@ -133,16 +133,16 @@ public:
         {{ con.type }} {{ con.name }},
         {%- endfor %}
         const unsigned blocked,
-        const double* min_bounds,
-        const double* max_bounds,
+        const double* min_block,
+        const double* max_block,
         const unsigned ndim,
         const unsigned naxes
     ) :
         size_({{ spec.params|length }}),
         metric_(ndim, naxes),
         blocked_(blocked),
-        min_bounds_(naxes),
-        max_bounds_(naxes)
+        min_block_(naxes),
+        max_block_(naxes)
         {% for param in spec.params -%}
         , param_{{ param }}_({{param}})
         {% endfor -%}
@@ -153,8 +153,8 @@ public:
         unsigned i;
         if (blocked_) {
             for (i = 0; i < naxes; ++i) {
-                min_bounds_[i] = min_bounds[i];
-                max_bounds_[i] = max_bounds[i];
+                min_block_[i] = min_block[i];
+                max_block_[i] = max_block[i];
             }
         }
         update_reparams();
@@ -209,10 +209,10 @@ public:
     double value (const double* x1, const double* x2) {
         if (blocked_) {
             unsigned i, j;
-            for (i = 0; i < min_bounds_.size(); ++i) {
+            for (i = 0; i < min_block_.size(); ++i) {
                 j = metric_.get_axis(i);
-                if (x1[j] < min_bounds_[i] || x1[j] > max_bounds_[i] ||
-                        x2[j] < min_bounds_[i] || x2[j] > max_bounds_[i])
+                if (x1[j] < min_block_[i] || x1[j] > max_block_[i] ||
+                        x2[j] < min_block_[i] || x2[j] > max_block_[i])
                     return 0.0;
             }
         }
@@ -265,10 +265,10 @@ public:
         bool out = false;
         unsigned i, j, n = size();
         if (blocked_) {
-            for (i = 0; i < min_bounds_.size(); ++i) {
+            for (i = 0; i < min_block_.size(); ++i) {
                 j = metric_.get_axis(i);
-                if (x1[j] < min_bounds_[i] || x1[j] > max_bounds_[i] ||
-                        x2[j] < min_bounds_[i] || x2[j] > max_bounds_[i]) {
+                if (x1[j] < min_block_[i] || x1[j] > max_block_[i] ||
+                        x2[j] < min_block_[i] || x2[j] > max_block_[i]) {
                     out = true;
                     break;
                 }
@@ -346,7 +346,7 @@ private:
     unsigned size_;
     M metric_;
     unsigned blocked_;
-    std::vector<double> min_bounds_, max_bounds_;
+    std::vector<double> min_block_, max_block_;
     {% for param in spec.params -%}
     double param_{{ param }}_;
     {% endfor %}

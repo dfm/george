@@ -51,9 +51,9 @@ cdef extern from "kernels.h" namespace "george::kernels":
             {{ con.type }} {{ con.name }},
             {%- endfor %}
             {%- if spec.stationary -%}
-            unsigned bounded,
-            double* min_bounds,
-            double* max_bounds,
+            unsigned blocked,
+            double* min_block,
+            double* max_block,
             {%- endif %}
             unsigned ndim,
             unsigned naxes
@@ -91,15 +91,15 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
 
     cdef unsigned i
     cdef Kernel* kernel
-    cdef unsigned bounded
-    cdef np.ndarray[DTYPE_t, ndim=1] min_bounds, max_bounds
+    cdef unsigned blocked
+    cdef np.ndarray[DTYPE_t, ndim=1] min_block, max_block
 
     if kernel_spec.stationary:
         ndim = kernel_spec.metric.ndim
         axes = kernel_spec.metric.axes
-        bounded = kernel_spec.bounded
-        min_bounds = kernel_spec.min_bounds
-        max_bounds = kernel_spec.max_bounds
+        blocked = kernel_spec.blocked
+        min_block = kernel_spec.min_block
+        max_block = kernel_spec.max_block
     else:
         ndim = kernel_spec.ndim
         axes = kernel_spec.axes
@@ -120,9 +120,9 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
                 {% for con in spec.constants %}
                 kernel_spec.{{ con.name }},
                 {%- endfor %}
-                bounded,
-                <double*>(min_bounds.data),
-                <double*>(max_bounds.data),
+                blocked,
+                <double*>(min_block.data),
+                <double*>(max_block.data),
                 ndim,
                 len(axes)
             )
@@ -134,9 +134,9 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
                 {% for con in spec.constants %}
                 kernel_spec.{{ con.name }},
                 {%- endfor %}
-                bounded,
-                <double*>(min_bounds.data),
-                <double*>(max_bounds.data),
+                blocked,
+                <double*>(min_block.data),
+                <double*>(max_block.data),
                 ndim,
                 len(axes)
             )
@@ -148,9 +148,9 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
                 {% for con in spec.constants %}
                 kernel_spec.{{ con.name }},
                 {%- endfor %}
-                bounded,
-                <double*>(min_bounds.data),
-                <double*>(max_bounds.data),
+                blocked,
+                <double*>(min_block.data),
+                <double*>(max_block.data),
                 ndim,
                 len(axes)
             )
