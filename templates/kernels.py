@@ -14,10 +14,10 @@ import warnings
 import numpy as np
 from functools import partial
 
-from .compat import imap, basestring
 from .utils import numerical_gradient
 from .metrics import Metric, Subspace
 from .cython_kernel import CythonKernel
+from .compat import imap, basestring, xrange
 
 
 class Kernel(object):
