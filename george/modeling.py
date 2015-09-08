@@ -71,9 +71,19 @@ class ModelingMixin(object):
             return list(self._parameters.keys())
         return [k for k in self._parameters if not self._frozen[k]]
 
+    def get_bounds(self):
+        return [(None, None) for _ in xrange(len(self))]
+
     def get_vector(self):
         return np.array([v for k, v in iteritems(self._parameters)
                          if not self._frozen[k]], dtype=np.float64)
+
+    def check_vector(self, vector):
+        for i, (a, b) in enumerate(self.get_bounds()):
+            v = vector[i]
+            if (a is not None and v < a) or (b is not None and b < v):
+                return False
+        return True
 
     def set_vector(self, vector):
         for k, v in izip(self.get_parameter_names(), vector):
@@ -97,16 +107,24 @@ class ModelingMixin(object):
         return grad
 
     def freeze_parameter(self, parameter_name):
+        any_ = False
         for k in self._frozen.keys():
             if not fnmatch.fnmatch(k, parameter_name):
                 continue
+            any_ = True
             self._frozen[k] = True
+        if not any_:
+            raise ValueError("unknown parameter '{0}'".format(parameter_name))
 
     def thaw_parameter(self, parameter_name):
+        any_ = False
         for k in self._frozen.keys():
             if not fnmatch.fnmatch(k, parameter_name):
                 continue
+            any_ = True
             self._frozen[k] = False
+        if not any_:
+            raise ValueError("unknown parameter '{0}'".format(parameter_name))
 
     def get_parameter(self, parameter_name):
         params = []
@@ -114,6 +132,8 @@ class ModelingMixin(object):
             if not fnmatch.fnmatch(k, parameter_name):
                 continue
             params.append(v)
+        if len(params) == 0:
+            raise ValueError("unknown parameter '{0}'".format(parameter_name))
         if len(params) == 1:
             return params[0]
         return np.array(params)
@@ -128,14 +148,19 @@ class ModelingMixin(object):
             except TypeError:
                 self._parameters[k] = value[i]
             i += 1
+        if i == 0:
+            raise ValueError("unknown parameter '{0}'".format(parameter_name))
 
     @staticmethod
-    def sort_gradient(f):
+    def parameter_sort(f):
         def func(self, *args, **kwargs):
             values = f(self, *args, **kwargs)
-            return np.concatenate([
-                [values[k]] for k in self.get_parameter_names()
-            ], axis=0)
+            ret = [values[k] for k in self.get_parameter_names()]
+            # Horrible hack to only return numpy array if that's what was
+            # given by the wrapped function.
+            if len(ret) and type(ret[0]).__module__ == np.__name__:
+                return np.vstack(ret)
+            return ret
         return func
 
 
@@ -152,11 +177,13 @@ def supports_modeling_protocol(obj):
         "get_gradient",
         "get_parameter_names",
         "get_vector",
+        "check_vector",
         "set_vector",
         "freeze_parameter",
         "thaw_parameter",
         "get_parameter",
         "set_parameter",
+        "get_bounds",
     ]
     for method in methods:
         if not callable(getattr(obj, method, None)):

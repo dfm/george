@@ -194,6 +194,10 @@ class Metric(object):
     def set_parameter(self, parameter_name, value):
         self.parameters[self._match_parameter(parameter_name)] = value
 
+    def get_bounds(self):
+        return [b for i, b in enumerate(self.parameter_bounds)
+                if self.unfrozen[i]]
+
     def to_matrix(self):
         if self.metric_type == 0:
             return np.exp(self.parameters[0]) * np.eye(len(self.axes))

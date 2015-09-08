@@ -9,6 +9,7 @@ __all__ = [
     "test_gp_white_noise",
     "test_gp_callable_mean",
     "test_parameters",
+    "test_bounds",
 ]
 
 import numpy as np
@@ -68,9 +69,13 @@ class LinearWhiteNoise(ModelingMixin):
     def get_value(self, x):
         return self.m * x + self.b
 
-    @ModelingMixin.sort_gradient
+    @ModelingMixin.parameter_sort
     def get_gradient(self, x):
         return dict(m=x, b=np.ones(len(x)))
+
+    @ModelingMixin.parameter_sort
+    def get_bounds(self):
+        return dict(m=(-50.0, 10.0), b=(None, 10.0))
 
 
 def test_gp_callable_white_noise(N=50, seed=1234):
@@ -115,3 +120,41 @@ def test_parameters():
 
     gp.freeze_parameter("kernel:*constant")
     assert n-2 == len(gp.get_vector())
+
+
+def test_bounds():
+    kernel = 10 * kernels.ExpSquaredKernel(1.0, metric_bounds=(None, 4.0))
+    kernel += 0.5 * kernels.RationalQuadraticKernel(alpha=0.1, metric=5.0)
+    gp = GP(kernel, white_noise=LinearWhiteNoise(1.0, 0.1),
+            fit_white_noise=True)
+
+    # Test bounds length.
+    assert len(gp.get_bounds()) == len(gp.get_vector())
+    gp.freeze_parameter("*")
+    gp.thaw_parameter("white:m")
+    assert len(gp.get_bounds()) == len(gp.get_vector())
+
+    # Test out of bounds.
+    (a, b), = gp.get_bounds()
+    try:
+        gp.set_vector([a - 1.0])
+    except ValueError:
+        pass
+    else:
+        assert False, "out of bounds should fail"
+
+    # Test bounds conversions.
+    k = kernels.ExpSine2Kernel(gamma=0.1, period=5.0,
+                               period_bounds=(None, 10.0))
+    b = k.get_bounds()
+    assert b[0] == (None, None)
+    assert b[1][0] is None
+    assert np.allclose(b[1][1], np.log(10))
+
+    # Test invalid bounds specification.
+    try:
+        kernels.ExpSine2Kernel(gamma=0.1, period=5.0, period_bounds=[10.0])
+    except ValueError:
+        pass
+    else:
+        assert False, "invalid bounds should fail"

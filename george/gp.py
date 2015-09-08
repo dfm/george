@@ -590,6 +590,16 @@ class GP(object):
                      self.kernel.get_parameter_names(full=full))
         return n
 
+    def get_bounds(self):
+        bounds = []
+        if self.fit_mean:
+            bounds += self.mean.get_bounds()
+        if self.fit_white_noise:
+            bounds += self.white_noise.get_bounds()
+        if self.fit_kernel:
+            bounds += self.kernel.get_bounds()
+        return bounds
+
     def get_value(self, *args, **kwargs):
         """
         A synonym for :func:`GP.lnlikelihood` provided for consistency with
@@ -628,7 +638,14 @@ class GP(object):
             v[n:n+l] = self.kernel.get_vector()
         return v
 
-    def set_vector(self, vector):
+    def check_vector(self, vector):
+        for i, (a, b) in enumerate(self.get_bounds()):
+            v = vector[i]
+            if (a is not None and v < a) or (b is not None and b < v):
+                return False
+        return True
+
+    def set_vector(self, vector, quiet=False):
         """
         Update the model parameters given a vector in the order specified by
         :func:`GP.get_parameter_names`.
@@ -636,6 +653,10 @@ class GP(object):
         """
         if len(vector) != len(self):
             raise ValueError("dimension mismatch")
+        if not self.check_vector(vector):
+            if quiet:
+                return False
+            raise ValueError("parameters out of bounds")
 
         n = 0
         if self.fit_mean:
@@ -651,6 +672,7 @@ class GP(object):
             l = len(self.kernel)
             self.kernel.set_vector(vector[n:n+l])
             self.computed = False
+        return True
 
     def freeze_parameter(self, parameter_name):
         """

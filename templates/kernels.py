@@ -141,11 +141,25 @@ class Kernel(object):
             n += self.metric.get_parameter_names(full=full)
         return n
 
+    def get_bounds(self):
+        bounds = [b for i, b in enumerate(self._parameter_bounds)
+                  if self._unfrozen[i]]
+        if self.stationary:
+            bounds += self.metric.get_bounds()
+        return bounds
+
     def get_vector(self):
         v = self._parameter_vector[self._unfrozen]
         if self.stationary:
             v = np.append(v, self.metric.get_vector())
         return v
+
+    def check_vector(self, vector):
+        for i, (a, b) in enumerate(self.get_bounds()):
+            v = vector[i]
+            if (a is not None and v < a) or (b is not None and b < v):
+                return False
+        return True
 
     def set_vector(self, vector):
         if len(self) != len(vector):
@@ -330,6 +344,9 @@ class _operator(Kernel):
     def set_parameter(self, parameter_name, value):
         self._wildcard_apply("set_parameter", parameter_name, value)
 
+    def get_bounds(self):
+        return self.k1.get_bounds() + self.k2.get_bounds()
+
 
 class Sum(_operator):
     is_kernel = False
@@ -359,19 +376,23 @@ class {{ spec.name }} (Kernel):
 
     def __init__(self,
                  {% for p in spec.params %}{{ p }}=None,
+                 {{ p }}_bounds=None,
                  {%- if p.startswith("ln_") %}
-                 {{ p[3:] }}=None,{% endif %}
+                 {{ p[3:] }}=None,
+                 {{ p[3:] }}_bounds=None,{% endif %}
                  {% endfor -%}
                  {% for con in spec.constants %}{{ con.name }}=None,
                  {% endfor -%}
                  {% if spec.stationary -%}
                  metric=None,
+                 metric_bounds=None,
                  lower=True,
                  block=None,
                  {% endif -%}
                  ndim=1,
                  axes=None):
         self._parameter_vector = np.empty({{ spec.params|length }})
+        self._parameter_bounds = [(None, None) for _ in xrange({{ spec.params|length }})]
         self._unfrozen = np.ones({{ spec.params|length }}, dtype=bool)
 
         {% for p in spec.params -%}
@@ -382,8 +403,20 @@ class {{ spec.name }} (Kernel):
             if {{ p[3:] }} <= 0.0:
                 raise ValueError("invalid parameter '{{ p[3:] }} <= 0.0'")
             {{ p }} = np.log({{ p[3:] }})
+            if {{ p[3:] }}_bounds is not None:
+                if len({{ p[3:] }}_bounds) != 2:
+                    raise ValueError("invalid bounds for '{{ p[3:] }}'")
+                a, b = {{ p[3:] }}_bounds
+                {{ p }}_bounds = (
+                    None if a is None else np.log(a),
+                    None if b is None else np.log(b),
+                )
         {%- endif %}
         self.{{ p }} = {{ p }}
+        if {{ p }}_bounds is not None:
+            if len({{ p }}_bounds) != 2:
+                raise ValueError("invalid bounds for '{{ p }}'")
+            self._parameter_bounds[{{ loop.index - 1}}] = {{ p }}_bounds
         {% endfor %}
         {% for con in spec.constants %}
         if {{ con.name }} is None:
@@ -393,7 +426,8 @@ class {{ spec.name }} (Kernel):
         {% if spec.stationary -%}
         if metric is None:
             raise ValueError("missing required parameter 'metric'")
-        self.metric = Metric(metric, ndim=ndim, axes=axes, lower=lower)
+        self.metric = Metric(metric, bounds=metric_bounds, ndim=ndim,
+                             axes=axes, lower=lower)
         self.ndim = self.metric.ndim
         self.axes = self.metric.axes
         self.block = block
