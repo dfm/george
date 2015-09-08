@@ -2,24 +2,28 @@
 
 from __future__ import division, print_function
 
-__all__ = ["izip", "imap", "xrange", "iteritems"]
+__all__ = [
+    "izip", "imap",
+    "xrange", "basestring",
+    "iteritems"
+]
 
-try:
-    xrange = xrange
+import sys
 
-except NameError:
-    xrange = range
-
-try:
+if sys.version_info[0] < 3:
     from itertools import izip, imap
 
-except ImportError:
+    xrange = xrange
+    basestring = basestring
+
+    def iteritems(d):
+        return d.iteritems()
+
+else:
     izip = zip
     imap = map
+    xrange = range
+    basestring = str
 
     def iteritems(d):
         return d.items()
-
-else:
-    def iteritems(d):
-        return d.iteritems()
