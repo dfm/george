@@ -2,8 +2,11 @@
 
 from __future__ import division, print_function
 
-__all__ = ["ModelingMixin", "supports_modeling_protocol",
-           "check_gradient"]
+__all__ = [
+    "ModelingMixin",
+    "supports_modeling_protocol",
+    "check_gradient"
+]
 
 import fnmatch
 import numpy as np

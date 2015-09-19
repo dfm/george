@@ -425,6 +425,16 @@ class GP(object):
 
         return grad
 
+    def nll(self, vector, y, quiet=True):
+        if not self.set_vector(vector, quiet=quiet):
+            return np.inf
+        return -self.lnlikelihood(y, quiet=quiet)
+
+    def grad_nll(self, vector, y, quiet=True):
+        if not self.set_vector(vector, quiet=quiet):
+            return np.zeros(len(vector))
+        return -self.grad_lnlikelihood(y, quiet=quiet)
+
     def predict(self, y, t,
                 return_cov=True,
                 return_var=False):
