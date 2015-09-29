@@ -167,7 +167,7 @@ class ModelingMixin(object):
         return func
 
 
-def supports_modeling_protocol(obj):
+def supports_modeling_protocol(obj, verbose=False):
     # The modeling protocol requires the object to have a length.
     try:
         len(obj)
@@ -190,6 +190,8 @@ def supports_modeling_protocol(obj):
     ]
     for method in methods:
         if not callable(getattr(obj, method, None)):
+            if verbose:
+                print(method)
             return False
     return True
 
