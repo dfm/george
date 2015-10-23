@@ -11,6 +11,24 @@ cimport numpy as np
 DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t
 
+cdef extern from "metrics.h" namespace "george::metrics":
+
+    void _custom_forward_sub (int n, double* L, double* b)
+    void _custom_backward_sub (int n, double* L, double* b)
+
+def custom_forward_sub(np.ndarray[DTYPE_t, ndim=1, mode='c'] L,
+                       np.ndarray[DTYPE_t, ndim=1, mode='c'] b):
+    cdef int n = b.shape[0]
+    _custom_forward_sub(n, <double*>L.data, <double*>b.data)
+    return b
+
+def custom_backward_sub(np.ndarray[DTYPE_t, ndim=1, mode='c'] L,
+                        np.ndarray[DTYPE_t, ndim=1, mode='c'] b):
+    cdef int n = b.shape[0]
+    _custom_backward_sub(n, <double*>L.data, <double*>b.data)
+    return b
+
+
 cdef extern from "solver.h" namespace "george":
 
     cdef cppclass Solver:

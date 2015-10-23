@@ -6,6 +6,8 @@
 #include "subspace.h"
 #include "constants.h"
 
+#include <iostream>
+
 using std::vector;
 using george::subspace::Subspace;
 
@@ -145,9 +147,9 @@ public:
         : Metric(ndim, naxes, naxes*(naxes+1)/2) {};
 
     void set_parameter (const unsigned int i, const double value) {
-        unsigned j;
+        unsigned j, d;
         this->updated_ = true;
-        for (j = 0; j <= i; j += j + 1) {
+        for (j = 0, d = 2; j <= i; j += d, ++d) {
             if (i == j) {
                 this->vector_[i] = exp(-value);
                 return;
@@ -156,8 +158,8 @@ public:
         this->vector_[i] = value;
     };
     double get_parameter (const unsigned int i) const {
-        unsigned j;
-        for (j = 0; j <= i; j += j + 1)
+        unsigned j, d;
+        for (j = 0, d = 2; j <= i; j += d, ++d)
             if (i == j)
                 return -log(this->vector_[i]);
         return this->vector_[i];
@@ -171,7 +173,9 @@ public:
             j = this->subspace_.get_axis(i);
             r[i] = x1[j] - x2[j];
         }
+
         _custom_forward_sub(n, &(this->vector_[0]), &(r[0]));
+
         r2 = 0.0;
         for (i = 0; i < n; ++i) r2 += r[i] * r[i];
         return r2;
