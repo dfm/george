@@ -5,6 +5,12 @@
 #include <cfloat>
 #include <vector>
 
+{% for spec in specs -%}
+{% for incl in spec.includes -%}
+#include {{ incl }}
+{% endfor %}
+{%- endfor %}
+
 #include "metrics.h"
 #include "subspace.h"
 
@@ -225,7 +231,7 @@ public:
             reparam_{{ param }}_,
             {% endfor -%}
             {%- for con in spec.constants %}
-            constant_{{ con.name }}),
+            constant_{{ con.name }}_,
             {%- endfor %}
             r2);
     };
@@ -323,7 +329,7 @@ public:
             param_{{ param }}_{%- if spec.constants or not loop.last %},{% endif -%}
             {% endfor %}
             {%- for con in spec.constants %}
-            constant_{{ con.name }}{%- if not loop.last %},{% endif -%}
+            constant_{{ con.name }}_{%- if not loop.last %},{% endif -%}
             {%- endfor %}
         );
         {% endfor %}
