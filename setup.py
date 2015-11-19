@@ -65,6 +65,7 @@ def find_eigen(hint=None):
         "/usr/include/eigen3",
         "/usr/include/local",
         "/usr/include",
+        "/usr/local/include",
     ]
 
     # Loop over search paths and check for the existence of the Eigen/Dense
