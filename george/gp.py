@@ -122,13 +122,29 @@ class GP(object):
 
     def _call_mean(self, x):
         if len(x.shape) == 2 and x.shape[1] == 1:
-            return self.mean.get_value(x[:, 0]).flatten()
-        return self.mean.get_value(x).flatten()
+            mu = self.mean.get_value(x[:, 0]).flatten()
+        else:
+            mu = self.mean.get_value(x).flatten()
+        if np.any(np.isnan(mu)) or np.any(np.isinf(mu)):
+            pars = "\n".join([" {0}: {1}".format(*a) for a in zip(
+                self.mean.get_parameter_names(), self.mean.get_vector()
+            )])
+            raise ValueError("mean function returned NaN or Inf for "
+                             "parameters:\n{0}".format(pars))
+        return mu
 
     def _call_mean_gradient(self, x):
         if len(x.shape) == 2 and x.shape[1] == 1:
-            return self.mean.get_gradient(x[:, 0])
-        return self.mean.get_gradient(x)
+            mu = self.mean.get_gradient(x[:, 0])
+        else:
+            mu = self.mean.get_gradient(x)
+        if np.any(np.isnan(mu)) or np.any(np.isinf(mu)):
+            pars = "\n".join([" {0}: {1}".format(*a) for a in zip(
+                self.mean.get_parameter_names(), self.mean.get_vector()
+            )])
+            raise ValueError("mean gradient function returned NaN or Inf for "
+                             "parameters:\n{0}".format(pars))
+        return mu
 
     @property
     def white_noise(self):
@@ -274,8 +290,8 @@ class GP(object):
 
         """
         self.recompute(quiet=False)
-        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self._call_mean(self._x),
+        mu = self._call_mean(self._x)
+        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] - mu,
                                  dtype=np.float64)
         b = np.empty_like(r)
         b[self.inds] = self.solver.apply_inverse(r, in_place=True)
@@ -365,8 +381,13 @@ class GP(object):
             failure. (default: ``False``)
 
         """
-        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self._call_mean(self._x),
+        try:
+            mu = self._call_mean(self._x)
+        except ValueError:
+            if quiet:
+                return -np.inf
+            raise
+        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] - mu,
                                  dtype=np.float64)
         if not self.recompute(quiet=quiet):
             return -np.inf
@@ -395,7 +416,13 @@ class GP(object):
             return np.zeros(len(self), dtype=np.float64)
 
         # Pre-compute some factors.
-        self._compute_alpha(y)
+        try:
+            self._compute_alpha(y)
+        except ValueError:
+            if quiet:
+                return np.zeros(len(self), dtype=np.float64)
+            raise
+
         if self.fit_white_noise or self.fit_kernel:
             K_inv = self.solver.get_inverse()
             A = np.einsum("i,j", self._alpha, self._alpha) - K_inv
@@ -406,8 +433,13 @@ class GP(object):
 
         if self.fit_mean and len(self.mean):
             l = len(self.mean)
-            grad[n:n+l] = np.dot(self._call_mean_gradient(self._x),
-                                 self._alpha)
+            try:
+                mu = self._call_mean_gradient(self._x)
+            except ValueError:
+                if quiet:
+                    return np.zeros(len(self), dtype=np.float64)
+                raise
+            grad[n:n+l] = np.dot(mu, self._alpha)
             n += l
 
         if self.fit_white_noise:
