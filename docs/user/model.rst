@@ -134,7 +134,7 @@ both a burn-in and production chain:
     ndim = len(initial)
     nwalkers = 32
     p0 = [np.array(initial) + 1e-8 * np.random.randn(ndim)
-          for i in xrange(nwalkers)]
+          for i in range(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob1, args=data)
 
     print("Running burn-in...")
@@ -303,7 +303,7 @@ As before, let's run MCMC on this model:
     initial = np.array([0, 0, -1.0, 0.1, 0.4])
     ndim = len(initial)
     p0 = [np.array(initial) + 1e-8 * np.random.randn(ndim)
-          for i in xrange(nwalkers)]
+          for i in range(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob2, args=data)
 
     print("Running first burn-in...")
@@ -312,7 +312,7 @@ As before, let's run MCMC on this model:
     sampler.reset()
 
     # Re-sample the walkers near the best walker from the previous burn-in.
-    p0 = [p + 1e-8 * np.random.randn(ndim) for i in xrange(nwalkers)]
+    p0 = [p + 1e-8 * np.random.randn(ndim) for i in range(nwalkers)]
 
     print("Running second burn-in...")
     p0, _, _ = sampler.run_mcmc(p0, 250)
