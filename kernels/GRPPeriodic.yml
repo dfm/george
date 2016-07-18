@@ -1,13 +1,11 @@
 name: GRPPeriodicKernel
 stationary: false
-params: [ln_amplitude, ln_qfactor, ln_frequency]
+params: [ln_qfactor, ln_frequency]
 
 doc: |
     The generalized Rybicki Press kernel
 
 reparams:
-    ampfactor:
-        return exp(ln_amplitude);
     qfactor:
         return exp(-ln_qfactor);
     ffactor:
@@ -15,20 +13,15 @@ reparams:
 
 value: |
     double delta = fabs(x1 - x2);
-    return ampfactor * exp(-qfactor * delta) * cos(delta * ffactor);
+    return exp(-qfactor * delta) * cos(delta * ffactor);
 
 grad:
-    ln_amplitude: |
-        double delta = fabs(x1 - x2);
-        return ampfactor * exp(-qfactor * delta) * cos(delta * ffactor);
-
     ln_qfactor: |
         double delta = fabs(x1 - x2),
-               k = ampfactor * exp(-qfactor * delta) * cos(delta * ffactor);
+               k = exp(-qfactor * delta) * cos(delta * ffactor);
         return k * qfactor * delta;
 
     ln_frequency: |
         double delta = fabs(x1 - x2),
-               k = ampfactor * exp(-qfactor * delta),
                r = delta * ffactor;
-        return -k * r * sin(r);
+        return -exp(-qfactor * delta) * r * sin(r);

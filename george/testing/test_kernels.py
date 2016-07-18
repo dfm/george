@@ -160,12 +160,10 @@ def test_combine():
 
 
 def test_grp():
-    do_kernel_t(kernels.GRPKernel(qfactor=1.0, amplitude=10.0))
-    do_kernel_t(kernels.GRPKernel(qfactor=1.0, amplitude=3.0, ndim=2))
-    do_kernel_t(kernels.GRPKernel(qfactor=5.0, amplitude=17.5, ndim=5))
+    do_kernel_t(kernels.GRPKernel(qfactor=1.0))
+    do_kernel_t(kernels.GRPKernel(qfactor=1.0, ndim=2))
+    do_kernel_t(kernels.GRPKernel(qfactor=5.0, ndim=5))
 
 def test_grp_periodic():
-    do_kernel_t(kernels.GRPPeriodicKernel(qfactor=17.0, amplitude=5.0,
-                                          frequency=3.0))
-    do_kernel_t(kernels.GRPPeriodicKernel(qfactor=1.0, amplitude=10.0,
-                                          frequency=1.0, ndim=2))
+    do_kernel_t(kernels.GRPPeriodicKernel(qfactor=17.0, frequency=3.0))
+    do_kernel_t(kernels.GRPPeriodicKernel(qfactor=1.0, frequency=1.0, ndim=2))
