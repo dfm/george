@@ -1,0 +1,37 @@
+name: MaternGeneralKernel
+stationary: true
+constants: [{name: nu, type: double}]
+includes: [
+    <boost/math/special_functions/gamma.hpp>,
+    <boost/math/special_functions/bessel.hpp>
+]
+
+doc: |
+    The Matern kernel is stationary kernel where the value at a
+    given radius :math:`r^2` is given by:
+
+    .. math::
+
+        k(r^2) = \frac{1}{\Gamma(\nu)\,2^{\nu-1}}\,
+                 \left( 2\,\nu\,r^2 \right)^{\nu/2}\,
+                 K_\nu \left (\sqrt{2\,\nu\,r^2} \right )
+
+reparams:
+    factor:
+        return 1.0 / (boost::math::tgamma(nu) * pow(2, nu-1.0));
+
+value: |
+    double K_nu, r = sqrt(2.0 * nu * r2);
+    if (std::abs(r) < DBL_EPSILON) return 1.0;
+    K_nu = boost::math::cyl_bessel_k(nu, r);
+    return pow(r, nu) * K_nu * factor;
+
+grad:
+    r2: |
+        // http://www.wolframalpha.com/input/?i=D%5Bx%5Enu+*+K%5Bnu%2C+x%5D%2C+x%5D
+        double K_nu, K_nu_pm_1, drdr2, r = sqrt(2.0 * nu * r2);
+        if (std::abs(r) < DBL_EPSILON) return 0.0;
+        K_nu = boost::math::cyl_bessel_k(nu, r);
+        K_nu_pm_1 = boost::math::cyl_bessel_k(nu+1.0, r) + boost::math::cyl_bessel_k(nu-1.0, r);
+        drdr2 = 0.5 * sqrt(2.0 * nu / r2);
+        return -0.5 * drdr2 * pow(r, nu-1.0) * (r*K_nu_pm_1-2*nu*K_nu) * factor;

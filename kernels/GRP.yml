@@ -1,0 +1,26 @@
+name: GRPKernel
+stationary: false
+params: [ln_amplitude, ln_qfactor]
+
+doc: |
+    The generalized Rybicki Press kernel
+
+reparams:
+    ampfactor:
+        return exp(ln_amplitude);
+    qfactor:
+        return exp(-ln_qfactor);
+
+value: |
+    double delta = fabs(x1 - x2);
+    return ampfactor * exp(-qfactor * delta);
+
+grad:
+    ln_amplitude: |
+        double delta = fabs(x1 - x2);
+        return ampfactor * exp(-qfactor * delta);
+
+    ln_qfactor: |
+        double delta = fabs(x1 - x2),
+               k = ampfactor * exp(-qfactor * delta);
+        return k * qfactor * delta;
