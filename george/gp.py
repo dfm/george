@@ -158,7 +158,8 @@ class GP(object):
         :param x: ``(nsamples,)`` or ``(nsamples, ndim)``
             The independent coordinates of the data points.
 
-        :param yerr: (optional) ``(nsamples,)`` or scalar
+        :param yerr: (optional)
+            ``(nsamples,)``, ``(nsamples, nsamples)`` or scalar
             The Gaussian uncertainties on the data points at coordinates
             ``x``. These values will be added in quadrature to the diagonal of
             the covariance matrix.
@@ -175,7 +176,14 @@ class GP(object):
         self._x, self.inds = self.parse_samples(x, sort)
         self._x = np.ascontiguousarray(self._x, dtype=np.float64)
         try:
-            self._yerr = float(yerr) * np.ones(len(x))
+            if isinstance(yerr, np.ndarray):
+                if yerr.ndim == 1:
+                    assert yerr.size == len(x)
+                else:
+                    assert yerr.shape[0] == len(x) and yerr.shape[1] == len(x)
+                self._yerr = 1*yerr
+            else:
+                self._yerr = float(yerr) * np.ones(len(x))
         except TypeError:
             self._yerr = self._check_dimensions(yerr)[self.inds]
         self._yerr = np.ascontiguousarray(self._yerr, dtype=np.float64)
@@ -377,7 +385,8 @@ class GP(object):
         :param y: ``(nsamples, )``
             The observations at the coordinates ``x``.
 
-        :param yerr: (optional) ``(nsamples,)`` or scalar
+        :param yerr: (optional)
+            ``(nsamples,)``, ``(nsamples, nsamples)`` or scalar
             The Gaussian uncertainties on the data points at coordinates
             ``x``. These values will be added in quadrature to the diagonal of
             the covariance matrix.

@@ -3,7 +3,8 @@
 from __future__ import division, print_function
 
 __all__ = [
-    "test_gradient", "test_prediction", "test_repeated_prediction_cache"
+    "test_gradient", "test_prediction", "test_repeated_prediction_cache",
+    'test_prediction_fullrankcovmatrix'
 ]
 
 import numpy as np
@@ -111,3 +112,39 @@ def test_repeated_prediction_cache():
     assert not np.allclose(a0, a1), \
         "Different kernel parameters must give different alphas " \
         "(problem with GP cache)."
+
+
+def test_prediction_fullrankcovmatrix(solver=BasicSolver):
+    """Basic sanity checks for GP regression,
+        this time with a full rank yerr covariance matrix"""
+
+    kernel = kernels.ExpSquaredKernel(1.0)
+    gp = GP(kernel, solver=solver)
+
+    nobj = 4
+    x = np.random.randn(nobj)
+    x.sort()
+    y = np.random.randn(nobj)
+    x_pred = np.random.randn(nobj)
+    chol = np.random.uniform(size=nobj*nobj).reshape((nobj, nobj))
+    yerr_full = np.dot(chol, chol.transpose())
+    yerr_diag = np.diag(yerr_full)
+    yerr_diag_full = np.diag(yerr_diag)
+
+    gp.compute(x, yerr=yerr_diag)
+    mu_diag, cov_diag = gp.predict(y, x_pred)
+
+    gp.compute(x, yerr=yerr_diag_full)
+    mu_diag_full, cov_diag_full = gp.predict(y, x_pred)
+
+    assert np.allclose(mu_diag, mu_diag_full), \
+        "GPs with diagonal error matrix and only diagonal provided should agree"
+    assert np.allclose(cov_diag, cov_diag_full), \
+        "GPs with diagonal error matrix and only diagonal provided should agree"
+
+    gp.compute(x, yerr=yerr_full)
+    mu_full, cov_full = gp.predict(y, x_pred)
+
+    assert np.all(cov_full > -1e-15), \
+        "Covariance matrix must be nonnegative ({0}).\n{1}" \
+        .format(solver.__name__, cov_full)
