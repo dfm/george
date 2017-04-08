@@ -1,47 +1,42 @@
-# Much of this script was adapted from astropy/astropy.
-
+sudo: false
 language: python
-
+addons:
+    apt:
+        packages:
+            - libeigen3-dev
 env:
     global:
-        - NUMPY_VERSION=1.8
+        - NUMPY_VERSION=1.12
 
 matrix:
     include:
         # All the versions of Python.
-        - python: 2.6
         - python: 2.7
-        - python: 3.3
+          env: NUMPY_VERSION=1.10
+        - python: 2.7
+          env: NUMPY_VERSION=1.11
+        - python: 2.7
+          env: NUMPY_VERSION=1.12
         - python: 3.4
-
-        # Old versions of NumPy.
-        - python: 2.6
-          env: NUMPY_VERSION=1.7
-        - python: 2.7
-          env: NUMPY_VERSION=1.7
-        - python: 3.3
-          env: NUMPY_VERSION=1.7
-
-        - python: 2.6
-          env: NUMPY_VERSION=1.6
-        - python: 2.7
-          env: NUMPY_VERSION=1.6
+          env: NUMPY_VERSION=1.11
+        - python: 3.5
+          env: NUMPY_VERSION=1.12
+        - python: 3.6
+          env: NUMPY_VERSION=1.11
+        - python: 3.6
+          env: NUMPY_VERSION=1.12
 
 before_install:
-    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+    - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
     - chmod +x miniconda.sh
-    - ./miniconda.sh -b
-    - export PATH=/home/travis/miniconda/bin:$PATH
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --yes conda
 
 install:
-    - sudo apt-get install -qq libeigen3-dev
-
     - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
     - source activate test
-
     - conda install --yes numpy=$NUMPY_VERSION scipy nose pip Cython
-
     - CXX=g++ python setup.py build_ext --inplace
 
 script:
