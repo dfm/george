@@ -63,7 +63,10 @@ class BasicSolver(object):
         """
         # Compute the kernel matrix.
         K = self.kernel.value(x)
-        K[np.diag_indices_from(K)] += yerr ** 2
+        if x.size == yerr.size:  # yerr is diagonal only
+            K[np.diag_indices_from(K)] += yerr ** 2
+        else:  # yerr is full square matrix
+            K += yerr ** 2
 
         # Factor the matrix and compute the log-determinant.
         self._factor = (cholesky(K, overwrite_a=True, lower=False), False)
