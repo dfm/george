@@ -61,6 +61,7 @@ def find_hodlr(hint=None):
         "./hodlr/header",
         "/usr/local/include",
         "/usr/include/local",
+        "/usr/include",
     ]
 
     # Loop over search paths and check for the existence of the Eigen/Dense
