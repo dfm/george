@@ -52,7 +52,7 @@ def lnprob_ind(p, t, y, invar):
 def fit_ind(initial, data, nwalkers=32):
     ndim = len(initial)
     p0 = [np.array(initial) + 1e-8 * np.random.randn(ndim)
-          for i in xrange(nwalkers)]
+          for i in range(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob_ind, args=data)
 
     print("Running burn-in")
@@ -91,7 +91,7 @@ def lnprob_gp(p, t, y, yerr):
 def fit_gp(initial, data, nwalkers=32):
     ndim = len(initial)
     p0 = [np.array(initial) + 1e-8 * np.random.randn(ndim)
-          for i in xrange(nwalkers)]
+          for i in range(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob_gp, args=data)
 
     print("Running burn-in")
@@ -100,7 +100,7 @@ def fit_gp(initial, data, nwalkers=32):
 
     print("Running second burn-in")
     p = p0[np.argmax(lnp)]
-    p0 = [p + 1e-8 * np.random.randn(ndim) for i in xrange(nwalkers)]
+    p0 = [p + 1e-8 * np.random.randn(ndim) for i in range(nwalkers)]
     p0, _, _ = sampler.run_mcmc(p0, 500)
     sampler.reset()
 
