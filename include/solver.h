@@ -89,7 +89,7 @@ public:
         // Set up the solver object.
         if (solver_ != NULL) delete solver_;
         solver_ = new HODLR_Tree<HODLRSolverMatrix> (matrix_, n, nleaf_);
-        solver_->assemble_Matrix(diag, tol_, 's', seed);
+        solver_->assemble_Matrix(diag, tol_, 's'); // deleted ", seed" from the end of this entry
 
         // Factorize the matrix.
         solver_->compute_Factor();
