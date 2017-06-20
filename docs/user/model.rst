@@ -174,7 +174,7 @@ These results seem, at face value, pretty satisfying.
 But, since we know the true model parameters that were used to simulate the
 data, we can assess our original assumption of uncorrelated noise.
 To do this, we'll plot all the projections of our posterior samples using
-`triangle.py <https://github.com/dfm/triangle.py>`_ and over plot the true
+`corner.py <https://github.com/dfm/corner.py>`_ and over plot the true
 values:
 
 .. image:: ../_static/model/ind-corner.png
