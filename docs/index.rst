@@ -18,13 +18,21 @@ George is being actively developed in `a public repository on GitHub
 <https://github.com/dfm/george>`_ so if you have any trouble, `open an issue
 <https://github.com/dfm/george/issues>`_ there.
 
+.. image:: https://img.shields.io/badge/GitHub-dfm%2Fgeorge-blue.svg?style=flat
+    :target: https://github.com/dfm/george
+.. image:: http://img.shields.io/badge/license-MIT-blue.svg?style=flat
+    :target: https://github.com/dfm/george/blob/master/LICENSE
+.. image:: http://img.shields.io/travis/dfm/george/master.svg?style=flat
+    :target: https://travis-ci.org/dfm/george
+.. image:: https://ci.appveyor.com/api/projects/status/xy4ts3v3sk5lo5ll?svg=true&style=flat
+    :target: https://ci.appveyor.com/project/dfm/george
+
 
 .. toctree::
    :maxdepth: 2
    :caption: User Guide
 
    user/quickstart
-   user/upgrade
    user/kernels
    user/gp
    user/solvers

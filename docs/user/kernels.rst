@@ -75,9 +75,9 @@ behavior and these are controlled using the :ref:`modeling`.
     k = 2.0 * kernels.Matern32Kernel(5.0)
 
     print(k.get_parameter_names())
-    # ['k1:ln_constant', 'k2:ln_M_0_0']
+    # ['k1:log_constant', 'k2:metric:log_M_0_0']
 
-    print(k.get_vector())
+    print(k.get_parameter_vector())
     # [ 0.69314718  1.60943791]
 
 You'll notice that, in this case, the parameter vector is the logarithm of
@@ -93,13 +93,13 @@ follows:
 
     import numpy as np
 
-    k["k1:ln_constant"] = np.log(10.0)
-    print(k.get_vector())
+    k["k1:log_constant"] = np.log(10.0)
+    print(k.get_parameter_vector())
     # [ 2.30258509  1.60943791]
 
     # ... or:
     k[0] = np.log(2.0)
-    print(k.get_vector())
+    print(k.get_parameter_vector())
     # [ 0.69314718  1.60943791]
 
 Finally, if you want to update the entire vector, you can use the
@@ -107,7 +107,7 @@ Finally, if you want to update the entire vector, you can use the
 
 .. code-block:: python
 
-    k.set_vector(k.get_vector() + np.random.randn(2))
+    k.set_parameter_vector(k.get_parameter_vector() + np.random.randn(2))
 
 Another feature common to the kernels is that you can "freeze" and "thaw"
 parameters by name.
@@ -117,22 +117,22 @@ fixed and fit for only the scale length:
 .. code-block:: python
 
     k = 2.0 * kernels.Matern32Kernel(5.0)
-    k.freeze_parameter("k1:ln_constant")
+    k.freeze_parameter("k1:log_constant")
 
     print(k.get_parameter_names())
-    # ['k2:ln_M_0_0']
+    # ['k2:metric:log_M_0_0']
 
-    print(k.get_vector())
+    print(k.get_parameter_vector())
     # [ 1.60943791]
 
 Bringing a parameter back into the fold is as easy as
 
 .. code-block:: python
 
-    k.thaw_parameter("k1:ln_constant")
+    k.thaw_parameter("k1:log_constant")
 
     print(k.get_parameter_names())
-    # ['k1:ln_constant', 'k2:ln_M_0_0']
+    # ['k1:log_constant', 'k2:log_M_0_0']
 
     print(k.get_vector())
     # [ 0.69314718  1.60943791]
@@ -166,7 +166,7 @@ For example:
 
     from george.metrics import Metric
     m = Metric(2.0, ndim=2)
-    print(m.get_vector())
+    print(m.get_parameter_vector())
     # [ 0.69314718]
 
 gives a two-dimensional isotropic metric with
@@ -180,7 +180,7 @@ and
 .. code-block:: python
 
     m = Metric([2.0, 4.0], ndim=2)
-    print(m.get_vector())
+    print(m.get_parameter_vector())
     # [ 0.69314718  1.38629436]
 
 specifies the following matrix
@@ -197,7 +197,7 @@ For example:
 .. code-block:: python
 
     m = Metric([[2.0, 0.1], [0.1, 4.0]], ndim=2)
-    print(m.get_vector())
+    print(m.get_parameter_vector())
     # [ 0.34657359  0.07071068  0.69252179]
 
 All the stationary kernels take the ``metric`` specification as a keyword
@@ -206,7 +206,7 @@ argument:
 .. code-block:: python
 
     k = kernels.ExpSquaredKernel(metric=[[5.0, 0.1], [0.1, 4.0]], ndim=2)
-    print(k.get_vector())
+    print(k.get_parameter_vector())
     # [ 0.80471896  0.04472136  0.69289712]
 
 The currently available stationary kernels are:
@@ -234,7 +234,7 @@ input space where you only want to apply the periodicity along the first
 
 .. code-block:: python
 
-    k = kernels.ExpSine2Kernel(gamma=0.1, period=5.0, ndim=3, axes=0)
+    k = kernels.ExpSine2Kernel(gamma=0.1, log_period=5.0, ndim=3, axes=0)
     k *= 10.0 * kernels.ExpSquaredKernel(metric=5.0, ndim=3, axes=0)
     k += 4.0 * kernels.Matern32Kernel(metric=4.0, ndim=3, axes=[1, 2])
 
@@ -269,7 +269,8 @@ This is equivalent to:
 
 .. code-block:: python
 
-    kernel = kernels.Product(kernels.ConstantKernel(constant=1e-3),
+    from math import log
+    kernel = kernels.Product(kernels.ConstantKernel(log_constant=log(1e-3)),
                              kernels.ExpSquaredKernel(3.4))
 
 As demonstrated in :ref:`hyper`, a mixture of kernels can be implemented with

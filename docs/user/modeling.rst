@@ -1,151 +1,41 @@
+.. module:: george.modeling
+
 .. _modeling:
 
-Modeling protocol
+Modeling Protocol
 =================
 
-Hyperparameter optimization—and fitting more generally—has always been a sore
-point in the george API.
+This module provides some infrastructure that makes it easy to implement
+abstract "models" to be used within the george framework. Many of the
+methods are probably more generally applicable but the implementation
+constraints can be simplified since we're just concerned about supporting the
+needs of george.
 
-In order to make hyperparameter optimization, george comes with a modeling
-language specification. To this end, any component of the model that is
-specified by parameters that we might want to fit should conform to a simple
-modeling protocol. Each element should expose a value, a parameter vector, and
-the gradient of the value with respect to these parameters. Some places where
-this comes in handy is for the hyperparameters of the kernels and the metrics.
+The basic premise is that a :class:`Model` is an object that has an ordered set
+of named parameters. These parameters are assumed to be continuous but they can
+have bounds. There is also the concept of an "active set" of parameters that
+are being varied in a fit procedure. The other parameters are "frozen" to a
+particular value. Frozen parameters can be "thawed" to be returned to the
+active set.
 
-The protocol
-------------
+There isn't a formal requirement for the "value" interface that a
+:class:`Model` subclass should implement but in some cases, a model will be
+expected to implement a ``get_value`` method that returns the "value" of the
+model (this can mean many different things but we'll motivate this with an
+example below) for the current setting of the parameters.
 
-We don't really care too much about the implementation details of your objects
-but if you want them to satisfy this protocol, they must satisfy all of the
-following methods:
+Since these models will be used in the context of Bayesian parameter estimation
+each model also implements a :func:`Model.log_prior` method that computes the
+log of the prior probability of the current setting of the model parameters.
 
-.. code-block:: python
+The full interface is described in detail below and the tutorials demonstrate
+the basic usage of the protocol.
 
-    import numpy as np
+.. autoclass:: george.modeling.Model
+   :inherited-members:
 
-    class ModelingProtocol(object):
+.. autoclass:: george.modeling.ModelSet
+   :members:
 
-        def __len__(self):
-            """
-            Return the number of (un-frozen) parameters exposed by this
-            object.
-
-            """
-            return 10
-
-        def get_parameter_names(self):
-            """
-            Return a list with the names of the parameters.
-
-            """
-            return ["param1", "param2", ...]
-
-        def get_vector(self):
-            """
-            Returns a numpy array with the current settings of all the
-            non-frozen parameters.
-
-            """
-            return np.array([self.par1, self.par2, ...])
-
-        def set_vector(self, vector):
-            """
-            Update the vector with a numpy array of the same shape and order
-            as ``get_vector``.
-
-            """
-            self.par1 = vector[0]
-            self.par2 = vector[1]
-            ...
-
-        def get_value(self, *args):
-            """
-            Get the value of this object at the current setting of the
-            parameters. This method can optionally take arguments. For a
-            kernel, these extra arguments would be the input coordinates.
-
-            """
-            return f(*args)
-
-        def get_gradient(self, *args):
-            """
-            Get the gradient of ``get_value`` with respect to the parameter
-            vector returned by ``get_vector``.
-
-            """
-            return dfdx(*args)
-
-        def freeze_parameter(self, parameter_name):
-            """
-            Fix the value of some parameter by name at its current value. This
-            parameter should no longer be returned by ``get_vector`` or
-            ``get_gradient``.
-
-            """
-            freeze(parameter_name)
-
-        def thaw_parameter(self, parameter_name):
-            """
-            The opposite of ``freeze_parameter``.
-
-            """
-            thaw(parameter_name)
-
-
-A simple example
-----------------
-
-Let's start with a simple example. Let's say that we want to implement a
-one-dimensional exponential-squared kernel
-
-.. math::
-
-    k(x_1, \, x_2) = a\,\exp\left(-\frac{(x_1-x_2)^2}{2\,l}\right)
-
-in pure-Python and fit for the logarithms of the parameters. In that case, the
-implementation would be something like the following:
-
-.. code-block:: python
-
-    import numpy as np
-
-    class MyNewExpSquared(object):
-
-        def __init__(self, a, l):
-            self.parameter_names = ["lna", "lnl"]
-            self.parameters = np.array([a, l])
-            self.unfrozen = np.ones_like(self.parameters, dtype=bool)
-
-        def __len__(self):
-            return np.sum(self.unfrozen)
-
-        def get_parameter_names(self):
-            return [n for i, n in enumerate(self.parameter_names)
-                    if self.unfrozen[i]]
-
-        def get_vector(self):
-            return np.log(self.parameters[self.unfrozen])
-
-        def set_vector(self, vector):
-            self.parameters[self.unfrozen] = np.exp(vector)
-
-        def get_value(self, x1, x2):
-            a, l = self.parameters
-            r2 = (x1 - x2)**2
-            return a * np.exp(-0.5 * r2 / l)
-
-        def get_gradient(self, x1, x2):
-            a, l = self.parameters
-            value = self.get_value(x1, x2)
-            grad = np.array((
-                value,
-                value * (0.5 * (x1 - x2)**2 / l)
-            ))
-            return grad[self.unfrozen]
-
-        def freeze_parameter(self, parameter_name):
-            self.unfrozen[self.parameter_names.index(parameter_name)] = False
-
-        def thaw_parameter(self, parameter_name):
-            self.unfrozen[self.parameter_names.index(parameter_name)] = True
+.. autoclass:: george.modeling.ConstantModel
+   :members:

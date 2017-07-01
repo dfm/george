@@ -140,7 +140,7 @@ class Model(object):
     def _get_name(self, name_or_index):
         try:
             int(name_or_index)
-        except TypeError:
+        except (TypeError, ValueError):
             return name_or_index
         return self.get_parameter_names()[int(name_or_index)]
 

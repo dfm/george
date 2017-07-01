@@ -69,7 +69,7 @@ class Metric(Model):
                 if np.any(metric <= 0.0):
                     raise ValueError("invalid (negative) metric")
                 for i, v in enumerate(metric):
-                    parameter_names.append("ln_M_{0}_{0}".format(i))
+                    parameter_names.append("log_M_{0}_{0}".format(i))
                     parameters.append(np.log(v))
             elif len(metric.shape) == 2:
                 self.metric_type = 2
@@ -87,7 +87,7 @@ class Metric(Model):
                 # Save the parameter vector.
                 k = 0
                 for i in range(len(self.axes)):
-                    parameter_names.append("ln_L_{0}_{0}".format(i))
+                    parameter_names.append("log_L_{0}_{0}".format(i))
                     parameters.append(params[k])
                     k += 1
                     for j in range(i+1, len(self.axes)):
@@ -99,7 +99,7 @@ class Metric(Model):
 
         else:
             self.metric_type = 0
-            parameter_names.append("ln_M_0_0")
+            parameter_names.append("log_M_0_0")
             parameters.append(np.log(metric))
 
         self.parameter_names = tuple(parameter_names)
