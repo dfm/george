@@ -1,12 +1,12 @@
 .. :changelog:
 
-1.0.0 (upcoming)
+0.3.0 (upcoming)
 ++++++++++++++++
 
-- Initial stable release
+- A lot of new features
 
 
-pre-1.0
+pre-0.3
 +++++++
 
 - This project has had a long and tumultuous history
