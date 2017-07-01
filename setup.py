@@ -120,9 +120,9 @@ class build_ext(_build_ext):
             opts.append("-DVERSION_INFO=\"{0:s}\""
                         .format(self.distribution.get_version()))
 
-            flags = ["-stdlib=libc++", "-fvisibility=hidden",
+            flags = ["-stdlib=libc++", "-funroll-loops",
                      "-Wno-unused-function", "-Wno-uninitialized",
-                     "-Wno-unused-local-typedefs", "-funroll-loops"]
+                     "-Wno-unused-local-typedefs"]
 
             # Mac specific flags and libraries
             if sys.platform == "darwin":
