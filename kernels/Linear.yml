@@ -1,7 +1,7 @@
 name: LinearKernel
 stationary: false
 constants: [{name: order, type: double}]
-params: [ln_gamma2]
+params: [log_gamma2]
 
 doc: |
     The linear regression kernel
@@ -15,18 +15,18 @@ doc: |
         The power :math:`P`. This parameter is a *constant*; it is not
         included in the parameter vector.
 
-    :param gamma2:
+    :param log_gamma2:
         The scale factor :math:`\gamma^2`.
 
 reparams:
     inv_gamma2:
-        return exp(-ln_gamma2);
+        return exp(-log_gamma2);
 
 value: |
     if (order == 0.0) return inv_gamma2;
     return pow(x1 * x2, order) * inv_gamma2;
 
 grad:
-    ln_gamma2: |
+    log_gamma2: |
         if (order == 0.0) return -inv_gamma2;
         return -pow(x1 * x2, order) * inv_gamma2;

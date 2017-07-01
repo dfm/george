@@ -1,6 +1,6 @@
 name: LocalGaussianKernel
 stationary: false
-params: [location, ln_width]
+params: [location, log_width]
 
 doc: |
     A local Gaussian kernel.
@@ -12,11 +12,11 @@ doc: |
     :param location:
         The location :math:`x_0` of the Gaussian.
 
-    :param width:
+    :param log_width:
         The (squared) width :math:`w` of the Gaussian.
 
 reparams:
-    inv_2w: return 0.5 * exp(-ln_width);
+    inv_2w: return 0.5 * exp(-log_width);
 
 value: |
     double d1 = x1 - location, d2 = x2 - location;
@@ -26,7 +26,7 @@ grad:
     location: |
         double d1 = x1 - location, d2 = x2 - location;
         return 2 * exp(-(d1*d1 + d2*d2) * inv_2w) * inv_2w * (d1 + d2);
-    ln_width: |
+    log_width: |
         double d1 = x1 - location, d2 = x2 - location,
                arg = (d1*d1 + d2*d2) * inv_2w;
         return exp(-arg) * arg;

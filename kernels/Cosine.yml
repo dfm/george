@@ -1,6 +1,6 @@
 name: CosineKernel
 stationary: false
-params: [ln_period]
+params: [log_period]
 
 doc: |
     The simplest periodic kernel. This
@@ -13,17 +13,17 @@ doc: |
     kernel should probably always be multiplied be a stationary kernel
     (e.g. :class:`ExpSquaredKernel`) to allow quasi-periodic variations.
 
-    :param period:
+    :param log_period:
         The period of the oscillation.
 
 reparams:
     factor:
-        return 2 * M_PI * exp(-ln_period);
+        return 2 * M_PI * exp(-log_period);
 
 value: |
     return cos((x1 - x2) * factor);
 
 grad:
-    ln_period: |
+    log_period: |
         double r = factor * (x1 - x2);
         return r * sin(r);

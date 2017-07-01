@@ -26,21 +26,21 @@ def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-3, solver=BasicSolver,
     gp.compute(x, yerr=0.1)
 
     # Compute the initial gradient.
-    grad0 = gp.grad_lnlikelihood(y)
-    vector = gp.get_vector()
+    grad0 = gp.grad_log_likelihood(y)
+    vector = gp.get_parameter_vector()
 
     for i, v in enumerate(vector):
         # Compute the centered finite difference approximation to the gradient.
         vector[i] = v + eps
-        gp.set_vector(vector)
+        gp.set_parameter_vector(vector)
         lp = gp.lnlikelihood(y)
 
         vector[i] = v - eps
-        gp.set_vector(vector)
+        gp.set_parameter_vector(vector)
         lm = gp.lnlikelihood(y)
 
         vector[i] = v
-        gp.set_vector(vector)
+        gp.set_parameter_vector(vector)
 
         grad = 0.5 * (lp - lm) / eps
         assert np.abs(grad - grad0[i]) < 5 * eps, \

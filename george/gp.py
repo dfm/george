@@ -4,13 +4,13 @@ from __future__ import division, print_function
 
 __all__ = ["GP"]
 
-import fnmatch
+import warnings
 import numpy as np
 from scipy.linalg import LinAlgError
 
+from . import kernels
 from .solvers import TrivialSolver, BasicSolver
-from .models import ConstantModel, CallableModel
-from .modeling import supports_modeling_protocol
+from .modeling import ModelSet, ConstantModel
 from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 
@@ -19,7 +19,7 @@ from .utils import multivariate_gaussian_samples, nd_sort_samples
 TINY = 1.25e-12
 
 
-class GP(object):
+class GP(ModelSet):
     """
     The basic Gaussian Process object.
 
@@ -28,8 +28,8 @@ class GP(object):
 
     :param fit_kernel: (optional)
         If ``True``, the parameters of the kernel will be included in all
-        the relevant methods (:func:`get_vector`, :func:`grad_lnlikelihood`,
-        etc.). (default: ``True``)
+        the relevant methods (:func:`get_parameter_vector`,
+        :func:`grad_log_likelihood`, etc.). (default: ``True``)
 
     :param mean: (optional)
         A description of the mean function. See :py:attr:`mean` for more
@@ -37,8 +37,8 @@ class GP(object):
 
     :param fit_mean: (optional)
         If ``True``, the parameters of the mean function will be included in
-        all the relevant methods (:func:`get_vector`,
-        :func:`grad_lnlikelihood`, etc.). (default: ``False``)
+        all the relevant methods (:func:`get_parameter_vector`,
+        :func:`grad_log_likelihood`, etc.). (default: ``False``)
 
     :param white_noise: (optional)
         A description of the logarithm of the white noise variance added to
@@ -47,8 +47,8 @@ class GP(object):
 
     :param fit_white_noise: (optional)
         If ``True``, the parameters of :py:attr:`white_noise` will be included
-        in all the relevant methods (:func:`get_vector`,
-        :func:`grad_lnlikelihood`, etc.). (default: ``False``)
+        in all the relevant methods (:func:`get_parameter_vector`,
+        :func:`grad_log_likelihood`, etc.). (default: ``False``)
 
     :param solver: (optional)
         The solver to use for linear algebra as documented in :ref:`solvers`.
@@ -63,26 +63,37 @@ class GP(object):
                  kernel=None,
                  fit_kernel=True,
                  mean=None,
-                 fit_mean=False,
-                 white_noise=np.log(TINY),
-                 fit_white_noise=False,
+                 fit_mean=None,
+                 white_noise=None,
+                 fit_white_noise=None,
                  solver=None,
                  **kwargs):
         self._computed = False
         self._alpha = None
         self._y = None
 
-        self.kernel = kernel
-        self.fit_kernel = False if kernel is None else fit_kernel
+        super(GP, self).__init__([
+            ("mean",
+             ConstantModel(0.0) if mean is None else _parse_model(mean)),
+            ("white_noise", ConstantModel(np.log(TINY))
+             if white_noise is None else _parse_model(white_noise)),
+            ("kernel", kernels.EmptyKernel() if kernel is None else kernel),
+        ])
 
-        self.mean = mean
-        self.fit_mean = fit_mean
-
-        self.white_noise = white_noise
-        self.fit_white_noise = fit_white_noise
+        if not fit_kernel:
+            self.models["kernel"].freeze_all_parameters()
+        if mean is None or (fit_mean is not None and not fit_mean):
+            self.models["mean"].freeze_all_parameters()
+        if white_noise is None or (fit_white_noise is not None and
+                                   not fit_white_noise):
+            self.models["white_noise"].freeze_all_parameters()
 
         if solver is None:
-            solver = TrivialSolver if kernel is None else BasicSolver
+            trivial = (
+                kernel is None or
+                kernel.kernel_type == kernels.EmptyKernel.kernel_type
+            )
+            solver = TrivialSolver if trivial else BasicSolver
         self.solver_type = solver
         self.solver_kwargs = kwargs
         self.solver = None
@@ -99,38 +110,18 @@ class GP(object):
         coordinates.
 
         """
-        return self._mean
-
-    @mean.setter
-    def mean(self, mean):
-        if mean is None:
-            self._mean = ConstantModel(0.)
-        else:
-            try:
-                val = float(mean)
-
-            except TypeError:
-                if supports_modeling_protocol(mean):
-                    self._mean = mean
-                elif callable(mean):
-                    self._mean = CallableModel(mean)
-                else:
-                    raise ValueError("invalid mean function")
-
-            else:
-                self._mean = ConstantModel(val)
+        return self.models["mean"]
 
     def _call_mean(self, x):
         if len(x.shape) == 2 and x.shape[1] == 1:
             mu = self.mean.get_value(x[:, 0]).flatten()
         else:
             mu = self.mean.get_value(x).flatten()
-        if np.any(np.isnan(mu)) or np.any(np.isinf(mu)):
-            pars = "\n".join([" {0}: {1}".format(*a) for a in zip(
-                self.mean.get_parameter_names(), self.mean.get_vector()
-            )])
+        if not np.all(np.isfinite(mu)):
             raise ValueError("mean function returned NaN or Inf for "
-                             "parameters:\n{0}".format(pars))
+                             "parameters:\n{0}".format(
+                                 self.mean.get_parameter_dict(
+                                     include_frozen=True)))
         return mu
 
     def _call_mean_gradient(self, x):
@@ -139,11 +130,10 @@ class GP(object):
         else:
             mu = self.mean.get_gradient(x)
         if np.any(np.isnan(mu)) or np.any(np.isinf(mu)):
-            pars = "\n".join([" {0}: {1}".format(*a) for a in zip(
-                self.mean.get_parameter_names(), self.mean.get_vector()
-            )])
             raise ValueError("mean gradient function returned NaN or Inf for "
-                             "parameters:\n{0}".format(pars))
+                             "parameters:\n{0}".format(
+                                 self.mean.get_parameter_dict(
+                                     include_frozen=True)))
         return mu
 
     @property
@@ -162,25 +152,7 @@ class GP(object):
         by earlier versions of this module.
 
         """
-        return self._white_noise
-
-    @white_noise.setter
-    def white_noise(self, white_noise):
-        try:
-            val = float(white_noise)
-
-        except TypeError:
-            if supports_modeling_protocol(white_noise):
-                self._white_noise = white_noise
-            elif callable(white_noise):
-                self._mean = CallableModel(white_noise)
-            else:
-                raise ValueError("invalid white noise function")
-
-        else:
-            self._white_noise = ConstantModel(val)
-
-        self.computed = False
+        return self.models["white_noise"]
 
     def _call_white_noise(self, x):
         if len(x.shape) == 2 and x.shape[1] == 1:
@@ -199,9 +171,9 @@ class GP(object):
 
         """
         return (
-            self._computed
-            and self.solver.computed
-            and (self.kernel is None or not self.kernel.dirty)
+            self._computed and
+            self.solver.computed and
+            (self.kernel is None or not self.kernel.dirty)
         )
 
     @computed.setter
@@ -273,8 +245,8 @@ class GP(object):
         # Recalculate alpha only if y is not the same as the previous y.
         if self._alpha is None or not np.array_equiv(y, self._y):
             self._y = y
-            r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                     - self._call_mean(self._x),
+            r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] -
+                                     self._call_mean(self._x),
                                      dtype=np.float64)
             self._alpha = self.solver.apply_inverse(r, in_place=True)
 
@@ -297,7 +269,7 @@ class GP(object):
         b[self.inds] = self.solver.apply_inverse(r, in_place=True)
         return b
 
-    def compute(self, x, yerr=TINY, sort=True, **kwargs):
+    def compute(self, x, yerr=0.0, sort=True, **kwargs):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
@@ -334,8 +306,8 @@ class GP(object):
         yerr = np.sqrt(self._yerr2 + np.exp(self._call_white_noise(self._x)))
         self.solver.compute(self._x, yerr, **kwargs)
 
-        self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
-                              + self.solver.log_determinant)
+        self._const = -0.5 * (len(self._x) * np.log(2 * np.pi) +
+                              self.solver.log_determinant)
         self.computed = True
         self._alpha = None
 
@@ -366,6 +338,11 @@ class GP(object):
         return True
 
     def lnlikelihood(self, y, quiet=False):
+        warnings.warn("'lnlikelihood' is deprecated. Use 'log_likelihood'",
+                      DeprecationWarning)
+        return self.log_likelihood(y, quiet=quiet)
+
+    def log_likelihood(self, y, quiet=False):
         """
         Compute the logarithm of the marginalized likelihood of a set of
         observations under the Gaussian process model. You must call
@@ -381,6 +358,8 @@ class GP(object):
             failure. (default: ``False``)
 
         """
+        if not self.recompute(quiet=quiet):
+            return -np.inf
         try:
             mu = self._call_mean(self._x)
         except ValueError:
@@ -389,15 +368,19 @@ class GP(object):
             raise
         r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] - mu,
                                  dtype=np.float64)
-        if not self.recompute(quiet=quiet):
-            return -np.inf
         ll = self._const - 0.5 * np.dot(r, self.solver.apply_inverse(r))
         return ll if np.isfinite(ll) else -np.inf
 
     def grad_lnlikelihood(self, y, quiet=False):
+        warnings.warn("'grad_lnlikelihood' is deprecated. "
+                      "Use 'grad_log_likelihood'",
+                      DeprecationWarning)
+        return self.grad_log_likelihood(y, quiet=quiet)
+
+    def grad_log_likelihood(self, y, quiet=False):
         """
-        Compute the gradient of :func:`GP.lnlikelihood` as a function of the
-        parameters returned by :func:`GP.get_vector`. You must call
+        Compute the gradient of :func:`GP.log_likelihood` as a function of the
+        parameters returned by :func:`GP.get_parameter_vector`. You must call
         :func:`GP.compute` before this function.
 
         :param y: ``(nsamples,)``
@@ -423,7 +406,7 @@ class GP(object):
                 return np.zeros(len(self), dtype=np.float64)
             raise
 
-        if self.fit_white_noise or self.fit_kernel:
+        if len(self.white_noise) or len(self.kernel):
             K_inv = self.solver.get_inverse()
             A = np.einsum("i,j", self._alpha, self._alpha) - K_inv
 
@@ -431,8 +414,8 @@ class GP(object):
         grad = np.empty(len(self))
         n = 0
 
-        if self.fit_mean and len(self.mean):
-            l = len(self.mean)
+        l = len(self.mean)
+        if l:
             try:
                 mu = self._call_mean_gradient(self._x)
             except ValueError:
@@ -442,30 +425,32 @@ class GP(object):
             grad[n:n+l] = np.dot(mu, self._alpha)
             n += l
 
-        if self.fit_white_noise:
-            l = len(self.white_noise)
+        l = len(self.white_noise)
+        if l:
             wn = self._call_white_noise(self._x)
             wng = self._call_white_noise_gradient(self._x)
             grad[n:n+l] = 0.5 * np.sum((np.exp(wn)*np.diag(A))[None, :]*wng,
                                        axis=1)
             n += l
 
-        if self.fit_kernel and len(self.kernel):
-            l = len(self.kernel)
+        l = len(self.kernel)
+        if l:
             Kg = self.kernel.get_gradient(self._x)
             grad[n:n+l] = 0.5 * np.einsum("ijk,ij", Kg, A)
 
         return grad
 
     def nll(self, vector, y, quiet=True):
-        if not self.set_vector(vector, quiet=quiet):
+        self.set_parameter_vector(vector)
+        if not np.isfinite(self.log_prior()):
             return np.inf
-        return -self.lnlikelihood(y, quiet=quiet)
+        return -self.log_likelihood(y, quiet=quiet)
 
     def grad_nll(self, vector, y, quiet=True):
-        if not self.set_vector(vector, quiet=quiet):
+        self.set_parameter_vector(vector)
+        if not np.isfinite(self.log_prior()):
             return np.zeros(len(vector))
-        return -self.grad_lnlikelihood(y, quiet=quiet)
+        return -self.grad_log_likelihood(y, quiet=quiet)
 
     def predict(self, y, t,
                 return_cov=True,
@@ -598,171 +583,26 @@ class GP(object):
         x2, _ = self.parse_samples(x2, False)
         return self.kernel.get_value(x1, x2)
 
-    #
-    # Modeling protocol.
-    #
-    def __len__(self):
-        n = 0
-        if self.fit_mean:
-            n += len(self.mean)
-        if self.fit_white_noise:
-            n += len(self.white_noise)
-        if self.fit_kernel:
-            n += len(self.kernel)
-        return n
-
-    def get_parameter_names(self, full=False):
-        """
-        Returns the list of parameter names following the modeling protocol.
-        Parameters related to the mean function (included if ``fit_mean`` is
-        ``True``) are prefixed with ``mean:``, parameters for the white noise
-        function are prefixed with ``white:``, and parameters for the kernel
-        are prefixed with ``kernel:``.
-
-        """
-        n = []
-        if self.fit_mean:
-            n += map("mean:{0}".format,
-                     self.mean.get_parameter_names(full=full))
-        if self.fit_white_noise:
-            n += map("white:{0}".format,
-                     self.white_noise.get_parameter_names(full=full))
-        if self.fit_kernel:
-            n += map("kernel:{0}".format,
-                     self.kernel.get_parameter_names(full=full))
-        return n
-
-    def get_bounds(self):
-        bounds = []
-        if self.fit_mean:
-            bounds += self.mean.get_bounds()
-        if self.fit_white_noise:
-            bounds += self.white_noise.get_bounds()
-        if self.fit_kernel:
-            bounds += self.kernel.get_bounds()
-        return bounds
-
     def get_value(self, *args, **kwargs):
         """
-        A synonym for :func:`GP.lnlikelihood` provided for consistency with
+        A synonym for :func:`GP.log_likelihood` provided for consistency with
         the modeling protocol.
 
         """
-        return self.lnlikelihood(*args, **kwargs)
+        return self.log_likelihood(*args, **kwargs)
 
     def get_gradient(self, *args, **kwargs):
         """
-        A synonym for :func:`GP.grad_lnlikelihood` provided for consistency
+        A synonym for :func:`GP.grad_log_likelihood` provided for consistency
         with the modeling protocol.
 
         """
-        return self.grad_lnlikelihood(*args, **kwargs)
+        return self.grad_log_likelihood(*args, **kwargs)
 
-    def get_vector(self):
-        """
-        As specified by the modeling protocol, this returns the vector of
-        fitting parameters for this model in the order specified by
-        :func:`GP.get_parameter_names`.
 
-        """
-        v = np.empty(len(self))
-        n = 0
-        if self.fit_mean:
-            l = len(self.mean)
-            v[n:n+l] = self.mean.get_vector()
-            n += l
-        if self.fit_white_noise:
-            l = len(self.white_noise)
-            v[n:n+l] = self.white_noise.get_vector()
-            n += l
-        if self.fit_kernel:
-            l = len(self.kernel)
-            v[n:n+l] = self.kernel.get_vector()
-        return v
-
-    def check_vector(self, vector):
-        for i, (a, b) in enumerate(self.get_bounds()):
-            v = vector[i]
-            if (a is not None and v < a) or (b is not None and b < v):
-                return False
-        return True
-
-    def set_vector(self, vector, quiet=False):
-        """
-        Update the model parameters given a vector in the order specified by
-        :func:`GP.get_parameter_names`.
-
-        """
-        if len(vector) != len(self):
-            raise ValueError("dimension mismatch")
-        if not self.check_vector(vector):
-            if quiet:
-                return False
-            raise ValueError("parameters out of bounds")
-
-        n = 0
-        if self.fit_mean:
-            l = len(self.mean)
-            self.mean.set_vector(vector[n:n+l])
-            n += l
-        if self.fit_white_noise:
-            l = len(self.white_noise)
-            self.white_noise.set_vector(vector[n:n+l])
-            n += l
-            self.computed = False
-        if self.fit_kernel:
-            l = len(self.kernel)
-            self.kernel.set_vector(vector[n:n+l])
-            self.computed = False
-        return True
-
-    def freeze_parameter(self, parameter_name):
-        """
-        Freeze (stop fitting for) a parameter by name. This name must be in
-        the list returned by :func:`GP.get_parameter_names`.
-
-        """
-        self._wildcard_apply("freeze_parameter", parameter_name)
-
-    def thaw_parameter(self, parameter_name):
-        """
-        The opposite of :func:`GP.freeze_parameter`. Thaw (start fitting for)
-        a parameter by name.
-
-        """
-        self._wildcard_apply("thaw_parameter", parameter_name)
-
-    def get_parameter(self, parameter_name):
-        r = self._wildcard_apply("get_parameter", parameter_name)
-        if len(r) == 1:
-            r = r[0]
-        try:
-            return float(r)
-        except TypeError:
-            return np.array(r, dtype=float)
-
-    def set_parameter(self, parameter_name, value):
-        self._wildcard_apply("set_parameter", parameter_name, value)
-
-    def _wildcard_apply(self, meth, pat, *args):
-        if len(set("[]*?") & set(pat)):
-            names = fnmatch.filter(self.get_parameter_names(full=True), pat)
-        else:
-            names = [pat]
-        elements = []
-        for name in names:
-            names = name.split(":")
-            if names[0] == "mean":
-                elements.append(
-                    getattr(self.mean, meth)(":".join(names[1:]), *args))
-            elif names[0] == "white":
-                elements.append(
-                    getattr(self.white_noise, meth)(":".join(names[1:]),
-                                                    *args))
-            elif names[0] == "kernel":
-                elements.append(
-                    getattr(self.kernel, meth)(":".join(names[1:]), *args))
-
-        if len(elements) == 0:
-            raise ValueError("invalid parameter '{0}'".format(pat))
-        return elements
+def _parse_model(model):
+    try:
+        val = float(model)
+    except TypeError:
+        return model
+    return ConstantModel(float(val))

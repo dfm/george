@@ -1,6 +1,6 @@
 name: ConstantKernel
 stationary: false
-params: [ln_constant]
+params: [log_constant]
 
 doc: |
     This kernel returns the constant
@@ -11,16 +11,16 @@ doc: |
 
     where :math:`c` is a parameter.
 
-    :param constant:
-        The constant value :math:`c` in the above equation.
+    :param log_constant:
+        The log of :math:`c` in the above equation.
 
 reparams:
     constant:
-        return exp(ln_constant);
+        return exp(log_constant);
 
 value: |
     return constant;
 
 grad:
-    ln_constant: |
+    log_constant: |
         return constant;

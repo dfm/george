@@ -5,12 +5,14 @@ from __future__ import division, print_function
 __all__ = ["TrivialSolver"]
 
 import numpy as np
+from ..kernels import EmptyKernel
 
 
 class TrivialSolver(object):
 
     def __init__(self, kernel=None):
-        if kernel is not None:
+        if (kernel is not None and
+                kernel.kernel_type != EmptyKernel.kernel_type):
             raise ValueError("the trivial solver doesn't work with a kernel")
         self.computed = False
         self.log_determinant = None

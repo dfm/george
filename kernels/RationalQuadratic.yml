@@ -1,6 +1,6 @@
 name: RationalQuadraticKernel
 stationary: true
-params: [ln_alpha]
+params: [log_alpha]
 
 doc: |
     This is equivalent to a "scale mixture" of :class:`ExpSquaredKernel`
@@ -10,12 +10,12 @@ doc: |
     .. math::
         k(r^2) = \left[1 - \frac{r^2}{2\,\alpha} \right]^\alpha
 
-    :param alpha:
+    :param log_alpha:
         The Gamma distribution parameter.
 
 reparams:
     alpha:
-        return exp(ln_alpha);
+        return exp(log_alpha);
 
 value: |
     return pow(1 + 0.5 * r2 / alpha, -alpha);
@@ -23,7 +23,7 @@ value: |
 grad:
     r2: |
         return -0.5 * pow(1 + 0.5 * r2 / alpha, -alpha-1);
-    ln_alpha: |
+    log_alpha: |
         double t1 = 1.0 + 0.5 * r2 / alpha,
                t2 = 2.0 * alpha * t1;
         return alpha * pow(t1, -alpha) * (r2 / t2 - log(t1));

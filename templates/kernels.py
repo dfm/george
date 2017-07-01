@@ -44,6 +44,15 @@ class Kernel(ModelSet):
         odict["_kernel"] = None
         return odict
 
+    # We must overload the ModelSet attribute getter to pass the requests
+    # to the "BaseKernel"
+    def __getattr__(self, name):
+        if "models" in self.__dict__:
+            if name in self.models:
+                return self.models[name]
+            return getattr(self.models[None], name)
+        raise AttributeError(name)
+
     @property
     def kernel(self):
         if self.dirty or self._kernel is None:
@@ -68,7 +77,7 @@ class Kernel(ModelSet):
 
     def __add__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Sum(ConstantKernel(constant=float(b) / self.ndim,
+            return Sum(ConstantKernel(log_constant=np.log(float(b)/self.ndim),
                                       ndim=self.ndim), self)
         return Sum(self, b)
 
@@ -77,7 +86,8 @@ class Kernel(ModelSet):
 
     def __mul__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Product(ConstantKernel(constant=float(b) / self.ndim,
+            log_constant = np.log(float(b)/self.ndim)
+            return Product(ConstantKernel(log_constant=log_constant,
                                           ndim=self.ndim), self)
         return Product(self, b)
 
@@ -97,31 +107,35 @@ class Kernel(ModelSet):
         else:
             return self.kernel.value_general(x1, x2)
 
-    def compute_gradient(self, x1, x2=None):
-        which = self.unfrozen.astype(np.uint32)
+    def get_gradient(self, x1, x2=None, include_frozen=False):
+        mask = (
+            np.ones(self.full_size, dtype=bool)
+            if include_frozen else self.unfrozen_mask
+        )
+        which = mask.astype(np.uint32)
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
             g = self.kernel.gradient_symmetric(which, x1)
         else:
             x2 = np.ascontiguousarray(x2, dtype=np.float64)
             g = self.kernel.gradient_general(which, x1, x2)
-        return g[:, :, self.unfrozen]
+        return g[:, :, mask]
 
     def test_gradient(self, x1, x2=None, eps=1.32e-6, **kwargs):
-        vector = self.get_vector()
+        vector = self.get_parameter_vector()
         g0 = self.get_gradient(x1, x2=x2)
 
         for i, v in enumerate(vector):
             vector[i] = v + eps
-            self.set_vector(vector)
+            self.set_parameter_vector(vector)
             kp = self.get_value(x1, x2=x2)
 
             vector[i] = v - eps
-            self.set_vector(vector)
+            self.set_parameter_vector(vector)
             km = self.get_value(x1, x2=x2)
 
             vector[i] = v
-            self.set_vector(vector)
+            self.set_parameter_vector(vector)
 
             grad = 0.5 * (kp - km) / eps
             assert np.allclose(g0[:, :, i], grad, **kwargs), \
@@ -197,11 +211,11 @@ class {{ spec.name }} (Kernel):
                  {% endfor -%}
                  {% if spec.stationary -%}
                  metric=None,
-                 bounds=None,
                  metric_bounds=None,
                  lower=True,
                  block=None,
                  {% endif -%}
+                 bounds=None,
                  ndim=1,
                  axes=None):
         {% for con in spec.constants %}
