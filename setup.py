@@ -211,7 +211,7 @@ if __name__ == "__main__":
         author_email="foreman.mackey@gmail.com",
         url="https://github.com/dfm/george",
         license="MIT",
-        packages=["george", "george.solvers", "george.testing"],
+        packages=["george", "george.solvers"],
         ext_modules=extensions,
         description="Blazingly fast Gaussian Processes for regression.",
         long_description=open("README.rst").read(),
