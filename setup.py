@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
 import os
-import re
+import tempfile
 
-try:
-    from setuptools import setup, Extension
-    from setuptools.command.build_ext import build_ext as _build_ext
-except ImportError:
-    from distutils.core import setup, Extension
-    from distutils.command.build_ext import build_ext as _build_ext
+import setuptools
+from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext as _build_ext
 
 
 def compile_kernels(fns):
@@ -39,6 +36,10 @@ def compile_kernels(fns):
     with open(fn, "w") as f:
         print("Saving Cython kernels to '{0}'".format(fn))
         f.write(PXD_TEMPLATE.render(specs=specs))
+    fn = os.path.join(output_dir, "solvers", "kerneldefs.pxd")
+    with open(fn, "w") as f:
+        print("Saving Cython kernels to '{0}'".format(fn))
+        f.write(PXD_TEMPLATE.render(specs=specs))
     fn = os.path.join(output_dir, "include", "kernels.h")
     with open(fn, "w") as f:
         print("Saving C++ kernels to '{0}'".format(fn))
@@ -48,75 +49,36 @@ def compile_kernels(fns):
         print("Saving Python kernels to '{0}'".format(fn))
         f.write(PYTHON_TEMPLATE.render(specs=specs))
 
-
-def find_eigen(hint=None):
+def has_flag(compiler, flagname):
+    """Return a boolean indicating whether a flag name is supported on
+    the specified compiler.
     """
-    Find the location of the Eigen 3 include directory. This will return
-    ``None`` on failure.
+    with tempfile.NamedTemporaryFile("w", suffix=".cpp") as f:
+        f.write("int main (int argc, char **argv) { return 0; }")
+        try:
+            compiler.compile([f.name], extra_postargs=[flagname])
+        except setuptools.distutils.errors.CompileError:
+            return False
+    return True
 
-    """
-    # List the standard locations including a user supplied hint.
-    search_dirs = [] if hint is None else hint
-    search_dirs += [
-        "/usr/local/include/eigen3",
-        "/usr/local/homebrew/include/eigen3",
-        "/opt/local/var/macports/software/eigen3",
-        "/opt/local/include/eigen3",
-        "/usr/include/eigen3",
-        "/usr/include/local",
-        "/usr/include",
-        "/usr/local/include",
-    ]
-
-    # Loop over search paths and check for the existence of the Eigen/Dense
-    # header.
-    for d in search_dirs:
-        path = os.path.join(d, "Eigen", "Dense")
-        if os.path.exists(path):
-            # Determine the version.
-            vf = os.path.join(d, "Eigen", "src", "Core", "util", "Macros.h")
-            if not os.path.exists(vf):
-                continue
-            src = open(vf, "r").read()
-            v1 = re.findall("#define EIGEN_WORLD_VERSION (.+)", src)
-            v2 = re.findall("#define EIGEN_MAJOR_VERSION (.+)", src)
-            v3 = re.findall("#define EIGEN_MINOR_VERSION (.+)", src)
-            if not len(v1) or not len(v2) or not len(v3):
-                continue
-            v = "{0}.{1}.{2}".format(v1[0], v2[0], v3[0])
-            print("Found Eigen version {0} in: {1}".format(v, d))
-            return d
-    return None
-
-
-def find_hodlr(hint=None):
-    """
-    Find the location of the HODLR include directory. This will return
-    ``None`` on failure.
-
-    """
-    # List the standard locations including a user supplied hint.
-    search_dirs = [] if hint is None else hint
-    search_dirs += [
-        "./hodlr/header",
-        "/usr/local/include",
-        "/usr/include/local",
-        "/usr/include",
-    ]
-
-    # Loop over search paths and check for the existence of the Eigen/Dense
-    # header.
-    for d in search_dirs:
-        paths = [
-            os.path.join(d, "HODLR_Matrix.hpp"),
-            os.path.join(d, "HODLR_Tree.hpp"),
-            os.path.join(d, "HODLR_Node.hpp"),
-        ]
-        if all(map(os.path.exists, paths)):
-            print("Found HODLR headers in: {0}".format(d))
-            return d
-    return None
-
+def has_library(compiler, libname):
+    """Return a boolean indicating whether a library is found."""
+    with tempfile.NamedTemporaryFile("w", suffix=".cpp") as srcfile:
+        srcfile.write("int main (int argc, char **argv) { return 0; }")
+        srcfile.flush()
+        outfn = srcfile.name + ".so"
+        try:
+            compiler.link_executable(
+                [srcfile.name],
+                outfn,
+                libraries=[libname],
+            )
+        except setuptools.distutils.errors.LinkError:
+            return False
+        if not os.path.exists(outfn):
+            return False
+        os.remove(outfn)
+    return True
 
 class build_ext(_build_ext):
     """
@@ -124,49 +86,86 @@ class build_ext(_build_ext):
     and HODLR before compiling.
 
     """
+    c_opts = {
+        "msvc": ["/EHsc", "/DNODEBUG"],
+        "unix": ["-DNODEBUG"],
+    }
 
-    def build_extension(self, ext):
-        dirs = ext.include_dirs + self.compiler.include_dirs
+    def build_extensions(self):
+        # The include directory for the celerite headers
+        localincl = "vendor"
+        if not os.path.exists(os.path.join(localincl, "hodlr", "header",
+                                           "HODLR_Matrix.hpp")):
+            raise RuntimeError("couldn't find HODLR headers")
+        if not os.path.exists(os.path.join(localincl, "eigen_3.3.4", "Eigen",
+                                           "Core")):
+            raise RuntimeError("couldn't find Eigen headers")
 
-        # Look for the Eigen headers and make sure that we can find them.
-        eigen_include = find_eigen(hint=dirs)
-        if eigen_include is None:
-            raise RuntimeError("Required library Eigen 3 not found. "
-                               "Check the documentation for solutions.")
+        # Add the pybind11 include directory
+        import numpy
+        include_dirs = [
+            "george",
+            os.path.join("george", "include"),
+            os.path.join(localincl, "hodlr", "header"),
+            os.path.join(localincl, "eigen_3.3.4"),
+            numpy.get_include(),
+        ]
+        for ext in self.extensions:
+            ext.include_dirs = include_dirs + ext.include_dirs
 
-        # Look for the HODLR headers and make sure that we can find them.
-        hodlr_include = find_hodlr(hint=dirs)
-        if hodlr_include is None:
-            raise RuntimeError("Required library HODLR not found. "
-                               "Check the documentation for solutions.")
+        # Compiler flags
+        ct = self.compiler.compiler_type
+        opts = self.c_opts.get(ct, [])
+        if ct == "unix":
+            opts.append("-DVERSION_INFO=\"{0:s}\""
+                        .format(self.distribution.get_version()))
 
-        # Update the extension's include directories.
-        ext.include_dirs += [eigen_include, hodlr_include]
-        ext.extra_compile_args += ["-Wno-unused-function",
-                                   "-Wno-uninitialized"]
+            flags = ["-stdlib=libc++", "-fvisibility=hidden",
+                     "-Wno-unused-function", "-Wno-uninitialized",
+                     "-Wno-unused-local-typedefs", "-funroll-loops"]
+
+            # Mac specific flags and libraries
+            if sys.platform == "darwin":
+                flags += ["-march=native", "-mmacosx-version-min=10.9"]
+                for lib in ["m", "c++"]:
+                    for ext in self.extensions:
+                        ext.libraries.append(lib)
+                for ext in self.extensions:
+                    ext.extra_link_args += ["-mmacosx-version-min=10.9",
+                                            "-march=native"]
+            else:
+                libraries = ["m", "stdc++", "c++"]
+                for lib in libraries:
+                    if not has_library(self.compiler, lib):
+                        continue
+                    for ext in self.extensions:
+                        ext.libraries.append(lib)
+
+            # Check the flags
+            print("testing compiler flags")
+            for flag in flags:
+                if has_flag(self.compiler, flag):
+                    opts.append(flag)
+
+        elif ct == "msvc":
+            opts.append("/DVERSION_INFO=\\\"{0:s}\\\""
+                        .format(self.distribution.get_version()))
+
+        for ext in self.extensions:
+            ext.extra_compile_args = opts
 
         # Run the standard build procedure.
-        _build_ext.build_extension(self, ext)
+        _build_ext.build_extensions(self)
 
 
 if __name__ == "__main__":
     import sys
     import glob
-    import numpy
 
     # Publish the library to PyPI.
     if "publish" in sys.argv[-1]:
         os.system("python setup.py sdist upload")
         sys.exit()
-
-    # Set up the C++-extension.
-    libraries = []
-    if os.name == "posix":
-        libraries.append("m")
-    include_dirs = [
-        os.path.join("george", "include"),
-        numpy.get_include(),
-    ]
 
     # If the kernel specifications are included (development mode) re-compile
     # them first.
@@ -181,8 +180,9 @@ if __name__ == "__main__":
     # exists.
     kern_fn = os.path.join("george", "cython_kernel")
     hodlr_fn = os.path.join("george", "solvers", "hodlr")
-    if (os.path.exists(kern_fn + ".pyx") and os.path.exists(hodlr_fn + ".pyx")
-            and os.path.exists(os.path.join("george", "kerneldefs.pxd"))):
+    if (os.path.exists(kern_fn + ".pyx") and
+            os.path.exists(hodlr_fn + ".pyx") and
+            os.path.exists(os.path.join("george", "kerneldefs.pxd"))):
         from Cython.Build import cythonize
         kern_fn += ".pyx"
         hodlr_fn += ".pyx"
@@ -191,10 +191,8 @@ if __name__ == "__main__":
         hodlr_fn += ".cpp"
         cythonize = lambda x: x
 
-    kern_ext = Extension("george.cython_kernel", sources=[kern_fn],
-                         libraries=libraries, include_dirs=include_dirs)
-    hodlr_ext = Extension("george.solvers.hodlr", sources=[hodlr_fn],
-                          libraries=libraries, include_dirs=include_dirs)
+    kern_ext = Extension("george.cython_kernel", sources=[kern_fn])
+    hodlr_ext = Extension("george.solvers.hodlr", sources=[hodlr_fn])
     extensions = cythonize([kern_ext, hodlr_ext])
 
     # Hackishly inject a constant into builtins to enable importing of the
@@ -210,15 +208,18 @@ if __name__ == "__main__":
         name="george",
         version=george.__version__,
         author="Daniel Foreman-Mackey",
-        author_email="danfm@nyu.edu",
+        author_email="foreman.mackey@gmail.com",
         url="https://github.com/dfm/george",
         license="MIT",
         packages=["george", "george.solvers", "george.testing"],
         ext_modules=extensions,
         description="Blazingly fast Gaussian Processes for regression.",
         long_description=open("README.rst").read(),
-        package_data={"": ["README.rst", "LICENSE",
-                           "george/include/*.h", "hodlr/header/*.hpp", ]},
+        package_data={
+            "": ["README.rst", "LICENSE",
+                 os.path.join("george", "include", "*.h"),
+                 os.path.join("vendor", "hodlr", "header", "*.hpp")]
+        },
         include_package_data=True,
         cmdclass=dict(build_ext=build_ext),
         classifiers=[
