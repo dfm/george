@@ -9,7 +9,7 @@ __all__ = [
 import pickle
 import numpy as np
 
-from .. import GP, kernels, BasicSolver, HODLRSolver
+from george import GP, kernels, BasicSolver, HODLRSolver
 
 
 def _fake_compute(arg, *args, **kwargs):

@@ -6,8 +6,8 @@ __all__ = ["test_trivial_solver", "test_basic_solver", "test_hodlr_solver"]
 
 import numpy as np
 
-from .. import kernels
-from .. import TrivialSolver, BasicSolver, HODLRSolver
+from george import kernels
+from george import TrivialSolver, BasicSolver, HODLRSolver
 
 
 def test_trivial_solver(N=100, seed=1234):

@@ -7,8 +7,8 @@ __all__ = [
 
 import numpy as np
 
-from .. import kernels, GP
-from ..solvers import hodlr
+from george import kernels, GP
+from george.solvers import hodlr
 
 
 def test_custom_cholesky(seed=1234, ndim=5):

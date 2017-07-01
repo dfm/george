@@ -6,9 +6,7 @@ __all__ = ["test_tutorial"]
 
 import numpy as np
 
-from .. import kernels
-from ..gp import GP
-from .. import BasicSolver, HODLRSolver
+from george import kernels, GP, BasicSolver, HODLRSolver
 
 
 def test_tutorial():

@@ -14,8 +14,7 @@ __all__ = [
 
 import numpy as np
 
-from .. import kernels
-from ..gp import GP
+from george import kernels, GP
 
 
 def test_dtype(seed=123):

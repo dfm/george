@@ -9,7 +9,7 @@ __all__ = [
 
 import numpy as np
 
-from .. import kernels, GP, BasicSolver, HODLRSolver
+from george import kernels, GP, BasicSolver, HODLRSolver
 
 
 def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-3, solver=BasicSolver,

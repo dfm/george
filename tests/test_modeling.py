@@ -14,10 +14,9 @@ __all__ = [
 
 import numpy as np
 
-from ..gp import GP
-from .. import kernels
-from ..models import ConstantModel, CallableModel
-from ..modeling import check_gradient, ModelingMixin
+from george import GP, kernels
+from george.models import ConstantModel, CallableModel
+from george.modeling import check_gradient, ModelingMixin
 
 
 def test_constant_mean():
