@@ -1,0 +1,20 @@
+name: Matern32Kernel
+stationary: true
+
+doc: |
+    The Matern-3/2 kernel is stationary kernel where the value at a
+    given radius :math:`r^2` is given by:
+
+    .. math::
+
+        k(r^2) = \left( 1+\sqrt{3\,r^2} \right)\,
+                 \exp \left (-\sqrt{3\,r^2} \right )
+
+value: |
+    double r = sqrt(3.0 * r2);
+    return (1.0 + r) * exp(-r);
+
+grad:
+    r2: |
+        double r = sqrt(3.0 * r2);
+        return -3.0 * 0.5 * exp(-r);

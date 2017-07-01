@@ -1,0 +1,29 @@
+name: CosineKernel
+stationary: false
+params: [log_period]
+
+doc: |
+    The simplest periodic kernel. This
+
+    .. math::
+        k(\mathbf{x}_i,\,\mathbf{x}_j) = \cos\left(
+            \frac{2\,\pi\,|x_i - x_j|}{P} \right)
+
+    where the parameter :math:`P` is the period of the oscillation. This
+    kernel should probably always be multiplied be a stationary kernel
+    (e.g. :class:`ExpSquaredKernel`) to allow quasi-periodic variations.
+
+    :param log_period:
+        The period of the oscillation.
+
+reparams:
+    factor:
+        return 2 * M_PI * exp(-log_period);
+
+value: |
+    return cos((x1 - x2) * factor);
+
+grad:
+    log_period: |
+        double r = factor * (x1 - x2);
+        return r * sin(r);

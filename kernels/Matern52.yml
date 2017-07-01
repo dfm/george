@@ -1,0 +1,20 @@
+name: Matern52Kernel
+stationary: true
+
+doc: |
+    The Matern-5/2 kernel is stationary kernel where the value at a
+    given radius :math:`r^2` is given by:
+
+    .. math::
+
+        k(r^2) = \left( 1+\sqrt{5\,r^2}+ \frac{5\,r^2}{3} \right)\,
+                 \exp \left (-\sqrt{5\,r^2} \right )
+
+value: |
+    double r = sqrt(5.0 * r2);
+    return (1 + r + 5.0 * r2 / 3.0) * exp(-r);
+
+grad:
+    r2: |
+        double r = sqrt(5.0 * r2);
+        return -5 * (1 + r) * exp(-r) / 6.0;

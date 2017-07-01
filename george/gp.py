@@ -4,11 +4,13 @@ from __future__ import division, print_function
 
 __all__ = ["GP"]
 
+import warnings
 import numpy as np
-import scipy.optimize as op
 from scipy.linalg import LinAlgError
 
-from .basic import BasicSolver
+from . import kernels
+from .solvers import TrivialSolver, BasicSolver
+from .modeling import ModelSet, ConstantModel
 from .utils import multivariate_gaussian_samples, nd_sort_samples
 
 
@@ -17,18 +19,36 @@ from .utils import multivariate_gaussian_samples, nd_sort_samples
 TINY = 1.25e-12
 
 
-class GP(object):
+class GP(ModelSet):
     """
     The basic Gaussian Process object.
 
     :param kernel:
         An instance of a subclass of :class:`kernels.Kernel`.
 
+    :param fit_kernel: (optional)
+        If ``True``, the parameters of the kernel will be included in all
+        the relevant methods (:func:`get_parameter_vector`,
+        :func:`grad_log_likelihood`, etc.). (default: ``True``)
+
     :param mean: (optional)
-        A description of the mean function; can be a callable or a scalar. If
-        scalar, the mean is assumed constant. Otherwise, the function will be
-        called with the array of independent coordinates as the only argument.
-        (default: ``0.0``)
+        A description of the mean function. See :py:attr:`mean` for more
+        information. (default: ``0.0``)
+
+    :param fit_mean: (optional)
+        If ``True``, the parameters of the mean function will be included in
+        all the relevant methods (:func:`get_parameter_vector`,
+        :func:`grad_log_likelihood`, etc.). (default: ``False``)
+
+    :param white_noise: (optional)
+        A description of the logarithm of the white noise variance added to
+        the diagonal of the covariance matrix. See :py:attr:`white_noise` for
+        more information. (default: ``log(TINY)``)
+
+    :param fit_white_noise: (optional)
+        If ``True``, the parameters of :py:attr:`white_noise` will be included
+        in all the relevant methods (:func:`get_parameter_vector`,
+        :func:`grad_log_likelihood`, etc.). (default: ``False``)
 
     :param solver: (optional)
         The solver to use for linear algebra as documented in :ref:`solvers`.
@@ -39,32 +59,110 @@ class GP(object):
 
     """
 
-    def __init__(self, kernel, mean=None, solver=BasicSolver, **kwargs):
-        self.kernel = kernel
+    def __init__(self,
+                 kernel=None,
+                 fit_kernel=True,
+                 mean=None,
+                 fit_mean=None,
+                 white_noise=None,
+                 fit_white_noise=None,
+                 solver=None,
+                 **kwargs):
         self._computed = False
         self._alpha = None
         self._y = None
-        self.mean = mean
 
+        super(GP, self).__init__([
+            ("mean",
+             ConstantModel(0.0) if mean is None else _parse_model(mean)),
+            ("white_noise", ConstantModel(np.log(TINY))
+             if white_noise is None else _parse_model(white_noise)),
+            ("kernel", kernels.EmptyKernel() if kernel is None else kernel),
+        ])
+
+        if not fit_kernel:
+            self.models["kernel"].freeze_all_parameters()
+        if mean is None or (fit_mean is not None and not fit_mean):
+            self.models["mean"].freeze_all_parameters()
+        if white_noise is None or (fit_white_noise is not None and
+                                   not fit_white_noise):
+            self.models["white_noise"].freeze_all_parameters()
+
+        if solver is None:
+            trivial = (
+                kernel is None or
+                kernel.kernel_type == kernels.EmptyKernel.kernel_type
+            )
+            solver = TrivialSolver if trivial else BasicSolver
         self.solver_type = solver
         self.solver_kwargs = kwargs
         self.solver = None
 
     @property
     def mean(self):
-        return self._mean
+        """
+        An object (following the modeling protocol) that specifies the mean
+        function of the GP. You can safely set this to a scalar, a callable,
+        or an instance of a class satisfying the modeling protocol. In each
+        case, the mean will be evaluated (either by calling the function or
+        evaluating the :func:`get_value` method) at the input coordinates and
+        it should return the one-dimensional mean evaluated at these
+        coordinates.
 
-    @mean.setter
-    def mean(self, mean):
-        if mean is None:
-            self._mean = _default_mean(0.)
+        """
+        return self.models["mean"]
+
+    def _call_mean(self, x):
+        if len(x.shape) == 2 and x.shape[1] == 1:
+            mu = self.mean.get_value(x[:, 0]).flatten()
         else:
-            try:
-                val = float(mean)
-            except TypeError:
-                self._mean = mean
-            else:
-                self._mean = _default_mean(val)
+            mu = self.mean.get_value(x).flatten()
+        if not np.all(np.isfinite(mu)):
+            raise ValueError("mean function returned NaN or Inf for "
+                             "parameters:\n{0}".format(
+                                 self.mean.get_parameter_dict(
+                                     include_frozen=True)))
+        return mu
+
+    def _call_mean_gradient(self, x):
+        if len(x.shape) == 2 and x.shape[1] == 1:
+            mu = self.mean.get_gradient(x[:, 0])
+        else:
+            mu = self.mean.get_gradient(x)
+        if np.any(np.isnan(mu)) or np.any(np.isinf(mu)):
+            raise ValueError("mean gradient function returned NaN or Inf for "
+                             "parameters:\n{0}".format(
+                                 self.mean.get_parameter_dict(
+                                     include_frozen=True)))
+        return mu
+
+    @property
+    def white_noise(self):
+        """
+        An object (following the modeling protocol) that specifies the
+        natural logarithm of the white noise variance added to the diagonal of
+        the covariance matrix. You can safely set this to a scalar, a callable,
+        or an instance of a class satisfying the modeling protocol. In each
+        case, it will be evaluated (either by calling the function or
+        evaluating the :func:`get_value` method) at the input coordinates and
+        it should return the one-dimensional log-variance evaluated at these
+        coordinates.
+
+        This functionality is preferred to the ``WhiteKernel`` class provided
+        by earlier versions of this module.
+
+        """
+        return self.models["white_noise"]
+
+    def _call_white_noise(self, x):
+        if len(x.shape) == 2 and x.shape[1] == 1:
+            return self.white_noise.get_value(x[:, 0]).flatten()
+        return self.white_noise.get_value(x).flatten()
+
+    def _call_white_noise_gradient(self, x):
+        if len(x.shape) == 2 and x.shape[1] == 1:
+            return self.white_noise.get_gradient(x[:, 0])
+        return self.white_noise.get_gradient(x)
 
     @property
     def computed(self):
@@ -73,15 +171,15 @@ class GP(object):
 
         """
         return (
-            self._computed
-            and self.solver.computed
-            and not self.kernel.dirty
+            self._computed and
+            self.solver.computed and
+            (self.kernel is None or not self.kernel.dirty)
         )
 
     @computed.setter
     def computed(self, v):
         self._computed = v
-        if v:
+        if v and self.kernel is not None:
             self.kernel.dirty = False
 
     def parse_samples(self, t, sort=False):
@@ -97,9 +195,9 @@ class GP(object):
             one-dimensional samples otherwise, the size of the second
             dimension is assumed to be the dimension of the input space.
 
-        :param sort:
+        :param sort: (optional)
             A boolean flag indicating whether or not the samples should be
-            sorted.
+            sorted. (default: ``False``)
 
         Returns a tuple ``(samples, inds)`` where
 
@@ -128,7 +226,8 @@ class GP(object):
             inds = np.arange(t.shape[0], dtype=int)
 
         # Double check the dimensions against the kernel.
-        if len(t.shape) != 2 or t.shape[1] != self.kernel.ndim:
+        if len(t.shape) != 2 or (self.kernel is not None and
+                                 t.shape[1] != self.kernel.ndim):
             raise ValueError("Dimension mismatch")
 
         return t[inds], inds
@@ -146,11 +245,31 @@ class GP(object):
         # Recalculate alpha only if y is not the same as the previous y.
         if self._alpha is None or not np.array_equiv(y, self._y):
             self._y = y
-            r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                     - self.mean(self._x), dtype=np.float64)
+            r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] -
+                                     self._call_mean(self._x),
+                                     dtype=np.float64)
             self._alpha = self.solver.apply_inverse(r, in_place=True)
 
-    def compute(self, x, yerr=TINY, sort=True, **kwargs):
+    def apply_inverse(self, y):
+        """
+        Self-consistently apply the inverse of the computed kernel matrix to
+        some vector or matrix of samples. This method subtracts the mean,
+        sorts the samples, then returns the samples in the correct (unsorted)
+        order.
+
+        :param y: ``(nsamples, )`` or ``(nsamples, K)``
+            The vector (or matrix) of sample values.
+
+        """
+        self.recompute(quiet=False)
+        mu = self._call_mean(self._x)
+        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] - mu,
+                                 dtype=np.float64)
+        b = np.empty_like(r)
+        b[self.inds] = self.solver.apply_inverse(r, in_place=True)
+        return b
+
+    def compute(self, x, yerr=0.0, sort=True, **kwargs):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
@@ -175,19 +294,21 @@ class GP(object):
         self._x, self.inds = self.parse_samples(x, sort)
         self._x = np.ascontiguousarray(self._x, dtype=np.float64)
         try:
-            self._yerr = float(yerr) * np.ones(len(x))
+            self._yerr2 = float(yerr)**2 * np.ones(len(x))
         except TypeError:
-            self._yerr = self._check_dimensions(yerr)[self.inds]
-        self._yerr = np.ascontiguousarray(self._yerr, dtype=np.float64)
+            self._yerr2 = self._check_dimensions(yerr)[self.inds] ** 2
+        self._yerr2 = np.ascontiguousarray(self._yerr2, dtype=np.float64)
 
         # Set up and pre-compute the solver.
         self.solver = self.solver_type(self.kernel, **(self.solver_kwargs))
-        self.solver.compute(self._x, self._yerr, **kwargs)
 
-        self._const = -0.5 * (len(self._x) * np.log(2 * np.pi)
-                              + self.solver.log_determinant)
+        # Include the white noise term.
+        yerr = np.sqrt(self._yerr2 + np.exp(self._call_white_noise(self._x)))
+        self.solver.compute(self._x, yerr, **kwargs)
+
+        self._const = -0.5 * (len(self._x) * np.log(2 * np.pi) +
+                              self.solver.log_determinant)
         self.computed = True
-
         self._alpha = None
 
     def recompute(self, quiet=False, **kwargs):
@@ -195,15 +316,20 @@ class GP(object):
         Re-compute a previously computed model. You might want to do this if
         the kernel parameters change and the kernel is labeled as ``dirty``.
 
+        :param quiet: (optional)
+            If ``True``, return false when the computation fails. Otherwise,
+            throw an error if something goes wrong. (default: ``False``)
+
         """
-        if self.kernel.dirty or not self.computed:
-            if not (hasattr(self, "_x") and hasattr(self, "_yerr")):
+        if not self.computed:
+            if not (hasattr(self, "_x") and hasattr(self, "_yerr2")):
                 raise RuntimeError("You need to compute the model first")
             try:
                 # Update the model making sure that we store the original
                 # ordering of the points.
                 initial_order = np.array(self.inds)
-                self.compute(self._x, self._yerr, sort=False, **kwargs)
+                self.compute(self._x, np.sqrt(self._yerr2), sort=False,
+                             **kwargs)
                 self.inds = initial_order
             except (ValueError, LinAlgError):
                 if quiet:
@@ -212,9 +338,15 @@ class GP(object):
         return True
 
     def lnlikelihood(self, y, quiet=False):
+        warnings.warn("'lnlikelihood' is deprecated. Use 'log_likelihood'",
+                      DeprecationWarning)
+        return self.log_likelihood(y, quiet=quiet)
+
+    def log_likelihood(self, y, quiet=False):
         """
-        Compute the ln-likelihood of a set of observations under the Gaussian
-        process model. You must call ``compute`` before this function.
+        Compute the logarithm of the marginalized likelihood of a set of
+        observations under the Gaussian process model. You must call
+        :func:`GP.compute` before this function.
 
         :param y: ``(nsamples, )``
             The observations at the coordinates provided in the ``compute``
@@ -226,17 +358,30 @@ class GP(object):
             failure. (default: ``False``)
 
         """
-        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds]
-                                 - self.mean(self._x), dtype=np.float64)
         if not self.recompute(quiet=quiet):
             return -np.inf
+        try:
+            mu = self._call_mean(self._x)
+        except ValueError:
+            if quiet:
+                return -np.inf
+            raise
+        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] - mu,
+                                 dtype=np.float64)
         ll = self._const - 0.5 * np.dot(r, self.solver.apply_inverse(r))
         return ll if np.isfinite(ll) else -np.inf
 
     def grad_lnlikelihood(self, y, quiet=False):
+        warnings.warn("'grad_lnlikelihood' is deprecated. "
+                      "Use 'grad_log_likelihood'",
+                      DeprecationWarning)
+        return self.grad_log_likelihood(y, quiet=quiet)
+
+    def grad_log_likelihood(self, y, quiet=False):
         """
-        Compute the gradient of the ln-likelihood function as a function of
-        the kernel parameters.
+        Compute the gradient of :func:`GP.log_likelihood` as a function of the
+        parameters returned by :func:`GP.get_parameter_vector`. You must call
+        :func:`GP.compute` before this function.
 
         :param y: ``(nsamples,)``
             The list of observations at coordinates ``x`` provided to the
@@ -251,23 +396,68 @@ class GP(object):
         # Make sure that the model is computed and try to recompute it if it's
         # dirty.
         if not self.recompute(quiet=quiet):
-            return np.zeros(len(self.kernel), dtype=float)
+            return np.zeros(len(self), dtype=np.float64)
 
         # Pre-compute some factors.
-        self._compute_alpha(y)
-        K_inv = self.solver.apply_inverse(np.eye(self._alpha.size),
-                                          in_place=True)
-        Kg = self.kernel.gradient(self._x)
+        try:
+            self._compute_alpha(y)
+        except ValueError:
+            if quiet:
+                return np.zeros(len(self), dtype=np.float64)
+            raise
 
-        # Calculate the gradient.
-        A = np.outer(self._alpha, self._alpha) - K_inv
-        g = 0.5 * np.einsum('ijk,ij', Kg, A)
+        if len(self.white_noise) or len(self.kernel):
+            K_inv = self.solver.get_inverse()
+            A = np.einsum("i,j", self._alpha, self._alpha) - K_inv
 
-        return g
+        # Compute each component of the gradient.
+        grad = np.empty(len(self))
+        n = 0
 
-    def predict(self, y, t, mean_only=False):
+        l = len(self.mean)
+        if l:
+            try:
+                mu = self._call_mean_gradient(self._x)
+            except ValueError:
+                if quiet:
+                    return np.zeros(len(self), dtype=np.float64)
+                raise
+            grad[n:n+l] = np.dot(mu, self._alpha)
+            n += l
+
+        l = len(self.white_noise)
+        if l:
+            wn = self._call_white_noise(self._x)
+            wng = self._call_white_noise_gradient(self._x)
+            grad[n:n+l] = 0.5 * np.sum((np.exp(wn)*np.diag(A))[None, :]*wng,
+                                       axis=1)
+            n += l
+
+        l = len(self.kernel)
+        if l:
+            Kg = self.kernel.get_gradient(self._x)
+            grad[n:n+l] = 0.5 * np.einsum("ijk,ij", Kg, A)
+
+        return grad
+
+    def nll(self, vector, y, quiet=True):
+        self.set_parameter_vector(vector)
+        if not np.isfinite(self.log_prior()):
+            return np.inf
+        return -self.log_likelihood(y, quiet=quiet)
+
+    def grad_nll(self, vector, y, quiet=True):
+        self.set_parameter_vector(vector)
+        if not np.isfinite(self.log_prior()):
+            return np.zeros(len(vector))
+        return -self.grad_log_likelihood(y, quiet=quiet)
+
+    def predict(self, y, t,
+                return_cov=True,
+                return_var=False):
         """
-        Compute the conditional predictive distribution of the model.
+        Compute the conditional predictive distribution of the model. You must
+        call :func:`GP.compute` before this function.
 
         :param y: ``(nsamples,)``
             The observations to condition the model on.
@@ -276,10 +466,23 @@ class GP(object):
             The coordinates where the predictive distribution should be
             computed.
 
-        Returns a tuple ``(mu, cov)`` where
+        :param return_cov: (optional)
+            If ``True``, the full covariance matrix is computed and returned.
+            Otherwise, only the mean prediction is computed. (default:
+            ``True``)
 
-        * **mu** ``(ntest,)`` is the mean of the predictive distribution, and
-        * **cov** ``(ntest, ntest)`` is the predictive covariance.
+        :param return_var: (optional)
+            If ``True``, only return the diagonal of the predictive covariance;
+            this will be faster to compute than the full covariance matrix.
+            This overrides ``return_cov`` so, if both are set to ``True``,
+            only the diagonal is computed. (default: ``False``)
+
+        Returns ``mu``, ``(mu, cov)``, or ``(mu, var)`` depending on the values
+        of ``return_cov`` and ``return_var``. These output values are:
+
+        * **mu** ``(ntest,)``: mean of the predictive distribution,
+        * **cov** ``(ntest, ntest)``: the predictive covariance matrix, and
+        * **var** ``(ntest,)``: the diagonal elements of ``cov``.
 
         """
         self.recompute()
@@ -287,21 +490,26 @@ class GP(object):
         xs, i = self.parse_samples(t, False)
 
         # Compute the predictive mean.
-        Kxs = self.kernel.value(xs, self._x)
-        mu = np.dot(Kxs, self._alpha) + self.mean(xs)
-        if mean_only:
+        Kxs = self.kernel.get_value(xs, self._x)
+        mu = np.dot(Kxs, self._alpha) + self._call_mean(xs)
+        if not (return_var or return_cov):
             return mu
 
-        # Compute the predictive covariance.
         KxsT = np.ascontiguousarray(Kxs.T, dtype=np.float64)
-        cov = self.kernel.value(xs)
-        cov -= np.dot(Kxs, self.solver.apply_inverse(KxsT, in_place=True))
+        if return_var:
+            var = self.kernel.get_value(xs, diag=True)
+            var -= np.sum(Kxs.T*self.solver.apply_inverse(KxsT, in_place=True),
+                          axis=0)
+            return mu, var
 
+        cov = self.kernel.get_value(xs)
+        cov -= np.dot(Kxs, self.solver.apply_inverse(KxsT, in_place=True))
         return mu, cov
 
     def sample_conditional(self, y, t, size=1):
         """
-        Draw samples from the predictive conditional distribution.
+        Draw samples from the predictive conditional distribution. You must
+        call :func:`GP.compute` before this function.
 
         :param y: ``(nsamples, )``
             The observations to condition the model on.
@@ -313,7 +521,7 @@ class GP(object):
         :param size: (optional)
             The number of samples to draw. (default: ``1``)
 
-        Returns **samples** ``(N, ntest)``, a list of predictions at
+        Returns **samples** ``(size, ntest)``, a list of predictions at
         coordinates given by ``t``.
 
         """
@@ -343,7 +551,7 @@ class GP(object):
 
             # Generate samples using the precomputed factorization.
             samples = self.solver.apply_sqrt(np.random.randn(size, n))
-            samples += self.mean(self._x)
+            samples += self._call_mean(self._x)
 
             # Reorder the samples correctly.
             results = np.empty_like(samples)
@@ -352,100 +560,49 @@ class GP(object):
 
         x, _ = self.parse_samples(t, False)
         cov = self.get_matrix(x)
-        return multivariate_gaussian_samples(cov, size, mean=self.mean(x))
+        cov[np.diag_indices_from(cov)] += TINY
+        return multivariate_gaussian_samples(cov, size,
+                                             mean=self._call_mean(x))
 
-    def get_matrix(self, t):
+    def get_matrix(self, x1, x2=None):
         """
-        Get the covariance matrix at a given set of independent coordinates.
+        Get the covariance matrix at a given set or two of independent
+        coordinates.
 
-        :param t: ``(nsamples,)`` or ``(nsamples, ndim)``
-            The list of samples.
+        :param x1: ``(nsamples,)`` or ``(nsamples, ndim)``
+            A list of samples.
 
-        """
-        r, _ = self.parse_samples(t, False)
-        return self.kernel.value(r)
-
-    def optimize(self, x, y, yerr=TINY, sort=True, dims=None, verbose=True,
-                 **kwargs):
-        """
-        A simple and not terribly robust non-linear optimization algorithm for
-        the kernel hyperpararmeters.
-
-        :param x: ``(nsamples,)`` or ``(nsamples, ndim)``
-            The independent coordinates of the data points.
-
-        :param y: ``(nsamples, )``
-            The observations at the coordinates ``x``.
-
-        :param yerr: (optional) ``(nsamples,)`` or scalar
-            The Gaussian uncertainties on the data points at coordinates
-            ``x``. These values will be added in quadrature to the diagonal of
-            the covariance matrix.
-
-        :param sort: (optional)
-            Should the samples be sorted before computing the covariance
-            matrix?
-
-        :param dims: (optional)
-            If you only want to optimize over some parameters, list their
-            indices here.
-
-        :param verbose: (optional)
-            Display the results of the call to :func:`scipy.optimize.minimize`?
-            (default: ``True``)
-
-        Returns ``(pars, results)`` where ``pars`` is the list of optimized
-        parameters and ``results`` is the results object returned by
-        :func:`scipy.optimize.minimize`.
+        :param x2: ``(nsamples,)`` or ``(nsamples, ndim)`` (optional)
+            A second list of samples. If this is given, the cross covariance
+            matrix is computed. Otherwise, the auto-covariance is evaluated.
 
         """
-        self.compute(x, yerr, sort=sort)
+        x1, _ = self.parse_samples(x1, False)
+        if x2 is None:
+            return self.kernel.get_value(x1)
+        x2, _ = self.parse_samples(x2, False)
+        return self.kernel.get_value(x1, x2)
 
-        # By default, optimize all the hyperparameters.
-        if dims is None:
-            dims = np.ones(len(self.kernel), dtype=bool)
-        dims = np.arange(len(self.kernel))[dims]
+    def get_value(self, *args, **kwargs):
+        """
+        A synonym for :func:`GP.log_likelihood` provided for consistency with
+        the modeling protocol.
 
-        # Define the objective function and gradient.
-        def nll(pars):
-            self.kernel[dims] = pars
-            ll = self.lnlikelihood(y, quiet=True)
-            if not np.isfinite(ll):
-                return 1e25  # The optimizers can't deal with infinities.
-            return -ll
+        """
+        return self.log_likelihood(*args, **kwargs)
 
-        def grad_nll(pars):
-            self.kernel[dims] = pars
-            return -self.grad_lnlikelihood(y, quiet=True)[dims]
+    def get_gradient(self, *args, **kwargs):
+        """
+        A synonym for :func:`GP.grad_log_likelihood` provided for consistency
+        with the modeling protocol.
 
-        # Run the optimization.
-        p0 = self.kernel.vector[dims]
-        results = op.minimize(nll, p0, jac=grad_nll, **kwargs)
-
-        if verbose:
-            print(results.message)
-
-        return self.kernel.vector[dims], results
+        """
+        return self.grad_log_likelihood(*args, **kwargs)
 
 
-class _default_mean(object):
-
-    def __init__(self, value):
-        self.value = value
-
-    def __call__(self, t):
-        return self.value + np.zeros(len(t), dtype=float)
-
-    def __len__(self):
-        return 1
-
-    @property
-    def vector(self):
-        return np.array([self.value])
-
-    @vector.setter
-    def vector(self, value):
-        self.value = float(value)
-
-    def lnprior(self):
-        return 0.0
+def _parse_model(model):
+    try:
+        val = float(model)
+    except TypeError:
+        return model
+    return ConstantModel(float(val))

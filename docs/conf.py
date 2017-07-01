@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
-
-d = os.path.dirname
-sys.path.insert(0, d(d(os.path.abspath(__file__))))
 import george
 
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.mathjax",
+    "sphinx.ext.napoleon",
 ]
 templates_path = ["_templates"]
 source_suffix = ".rst"
@@ -20,7 +17,7 @@ master_doc = "index"
 
 # General information about the project.
 project = u"George"
-copyright = u"2013-2014 Dan Foreman-Mackey"
+copyright = u"2012-2017 Dan Foreman-Mackey"
 
 version = george.__version__
 release = george.__version__

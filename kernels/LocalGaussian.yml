@@ -1,0 +1,32 @@
+name: LocalGaussianKernel
+stationary: false
+params: [location, log_width]
+
+doc: |
+    A local Gaussian kernel.
+
+    .. math::
+        k(\mathbf{x}_i,\,\mathbf{x}_j) = \exp\left(
+            -\frac{(x_i - x_0)^2 + (x_j - x_0)^2}{2\,w} \right))
+
+    :param location:
+        The location :math:`x_0` of the Gaussian.
+
+    :param log_width:
+        The (squared) width :math:`w` of the Gaussian.
+
+reparams:
+    inv_2w: return 0.5 * exp(-log_width);
+
+value: |
+    double d1 = x1 - location, d2 = x2 - location;
+    return exp(-(d1*d1 + d2*d2) * inv_2w);
+
+grad:
+    location: |
+        double d1 = x1 - location, d2 = x2 - location;
+        return 2 * exp(-(d1*d1 + d2*d2) * inv_2w) * inv_2w * (d1 + d2);
+    log_width: |
+        double d1 = x1 - location, d2 = x2 - location,
+               arg = (d1*d1 + d2*d2) * inv_2w;
+        return exp(-arg) * arg;

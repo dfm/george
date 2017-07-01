@@ -66,3 +66,27 @@ def numerical_gradient(f, x, dx=1.234e-6):
         x[i] += dx
         g[i] = 0.5 * (fp - fm) / dx
     return g
+
+
+def check_gradient(obj, *args, **kwargs):
+    eps = kwargs.pop("eps", 1.23e-5)
+
+    grad0 = obj.get_gradient(*args, **kwargs)
+    vector = obj.get_parameter_vector()
+    for i, v in enumerate(vector):
+        # Compute the centered finite difference approximation to the gradient.
+        vector[i] = v + eps
+        obj.set_parameter_vector(vector)
+        p = obj.get_value(*args, **kwargs)
+
+        vector[i] = v - eps
+        obj.set_parameter_vector(vector)
+        m = obj.get_value(*args, **kwargs)
+
+        vector[i] = v
+        obj.set_parameter_vector(vector)
+
+        grad = 0.5 * (p - m) / eps
+        assert np.allclose(grad0[i], grad), \
+            "grad computation failed for '{0}' ({1})" \
+            .format(obj.get_parameter_names()[i], i)

@@ -1,0 +1,26 @@
+name: ConstantKernel
+stationary: false
+params: [log_constant]
+
+doc: |
+    This kernel returns the constant
+
+    .. math::
+
+        k(\mathbf{x}_i,\,\mathbf{x}_j) = c
+
+    where :math:`c` is a parameter.
+
+    :param log_constant:
+        The log of :math:`c` in the above equation.
+
+reparams:
+    constant:
+        return exp(log_constant);
+
+value: |
+    return constant;
+
+grad:
+    log_constant: |
+        return constant;

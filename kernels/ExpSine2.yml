@@ -1,0 +1,39 @@
+name: ExpSine2Kernel
+stationary: false
+params: [gamma, log_period]
+
+doc: |
+    The exp-sine-squared kernel is a commonly used periodic kernel. Unlike
+    the :class:`CosineKernel`, this kernel never has negative covariance
+    which might be useful for your problem. Here's the equation:
+
+    .. math::
+        k(\mathbf{x}_i,\,\mathbf{x}_j) =
+            \exp \left( -\Gamma\,\sin^2\left[
+                \frac{\pi}{P}\,\left|x_i-x_j\right|
+            \right] \right)
+
+    :param gamma:
+        The scale :math:`\Gamma` of the correlations.
+
+    :param log_period:
+        The log of the period :math:`P` of the oscillation (in the same units
+        as :math:`\mathbf{x}`).
+
+reparams:
+    factor:
+        return M_PI * exp(-log_period);
+
+value: |
+    double s = sin((x1 - x2) * factor);
+    return exp(-gamma * s * s);
+
+grad:
+    gamma: |
+        double s = sin((x1 - x2) * factor), s2 = s * s;
+        return -s2 * exp(-gamma * s2);
+    log_period: |
+        double arg = (x1 - x2) * factor,
+               s = sin(arg), c = cos(arg),
+               A = exp(-gamma * s * s);
+        return 2 * gamma * arg * c * s * A;

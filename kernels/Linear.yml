@@ -1,0 +1,32 @@
+name: LinearKernel
+stationary: false
+constants: [{name: order, type: double}]
+params: [log_gamma2]
+
+doc: |
+    The linear regression kernel
+
+    .. math::
+
+        k(\mathbf{x}_i,\,\mathbf{x}_j) =
+            \frac{(\mathbf{x}_i \cdot \mathbf{x}_j)^P}{\gamma^2}
+
+    :param order:
+        The power :math:`P`. This parameter is a *constant*; it is not
+        included in the parameter vector.
+
+    :param log_gamma2:
+        The scale factor :math:`\gamma^2`.
+
+reparams:
+    inv_gamma2:
+        return exp(-log_gamma2);
+
+value: |
+    if (order == 0.0) return inv_gamma2;
+    return pow(x1 * x2, order) * inv_gamma2;
+
+grad:
+    log_gamma2: |
+        if (order == 0.0) return -inv_gamma2;
+        return -pow(x1 * x2, order) * inv_gamma2;

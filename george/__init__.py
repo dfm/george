@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__version__ = "0.2.1"
+__version__ = "0.3.0.dev0"
 
 try:
     __GEORGE_SETUP__
@@ -8,9 +8,13 @@ except NameError:
     __GEORGE_SETUP__ = False
 
 if not __GEORGE_SETUP__:
-    __all__ = ["kernels", "GP", "BasicSolver", "HODLRSolver"]
+    __all__ = [
+        "kernels",
+        "GP", "Metric",
+        "TrivialSolver", "BasicSolver", "HODLRSolver",
+    ]
 
     from . import kernels
     from .gp import GP
-    from .basic import BasicSolver
-    from .hodlr import HODLRSolver
+    from .metrics import Metric
+    from .solvers import TrivialSolver, BasicSolver, HODLRSolver

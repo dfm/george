@@ -1,0 +1,15 @@
+name: ExpSquaredKernel
+stationary: true
+
+doc: |
+    The exponential-squared kernel is a stationary kernel where the value
+    at a given radius :math:`r^2` is given by:
+
+    .. math::
+
+        k(r^2) = \exp \left ( -\frac{r^2}{2} \right )
+
+value: return exp(-0.5 * r2);
+
+grad:
+    r2: return -0.5 * exp(-0.5 * r2);

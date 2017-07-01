@@ -1,0 +1,9 @@
+name: george
+
+dependencies:
+  - python=3.5
+  - cython
+  - numpy
+  - scipy
+  - pyyaml
+  - jinja2

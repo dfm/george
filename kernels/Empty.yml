@@ -1,0 +1,5 @@
+name: EmptyKernel
+stationary: false
+doc: This kernel is a no-op
+value: |
+    return 0.0;
