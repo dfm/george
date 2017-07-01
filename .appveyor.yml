@@ -1,5 +1,6 @@
 build: false
 image: Visual Studio 2015
+shallow_clone: false
 platform:
 - x86
 - x64

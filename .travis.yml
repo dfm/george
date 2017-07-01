@@ -1,35 +1,42 @@
 sudo: false
+language: c
 
-language: python
+matrix:
+    include:
 
-addons:
-    apt:
-        packages:
-            - libeigen3-dev
+        # Linux, Python 2.7
+        - os: linux
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.10
+        - os: linux
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.11
+        - os: linux
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.12
 
-python:
-    - "2.7"
-    - "3.3"
-    - "3.4"
+        # Linux, Python 3.4
+        - os: linux
+          env: PYTHON_VERSION=3.4 NUMPY_VERSION=1.11
 
-env:
-    - NUMPY_VERSION=1.8
-    - NUMPY_VERSION=1.9
+        # Linux, Python 3.5
+        - os: linux
+          env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.12
 
-before_install:
-    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-    - chmod +x miniconda.sh
-    - ./miniconda.sh -b
-    - export PATH=/home/travis/miniconda2/bin:$PATH
-    - conda update --yes conda
+        # Linux, Python 3.6
+        - os: linux
+          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.11
+        - os: linux
+          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.12
+        - os: linux
+          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.12 AUTOGRAD=''
+        - os: linux
+          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.12 AUTODIFF_LIBRARY=stan
+
+        # OSX
+        - os: osx
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.12
+        - os: osx
+          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.12
 
 install:
-    - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
-    - source activate test
+    - source .ci/travis.sh
 
-    - conda install --yes numpy=$NUMPY_VERSION scipy nose Cython PyYAML jinja2
-
-    - CXX=g++ python setup.py build_ext --inplace
-
-script:
-    - nosetests -v
+script: py.test -v
