@@ -43,4 +43,4 @@ matrix:
 install:
     - source .ci/travis.sh
 
-script: py.test -v
+script: py.test -v george

@@ -57,12 +57,12 @@ public:
     // Parameter vector spec.
     unsigned size () const { return kernel1_->size() + kernel2_->size(); };
     unsigned get_ndim () const { return kernel1_->get_ndim(); }
-    void set_parameter (const unsigned i, const double value) {
+    void set_parameter (unsigned i, const double value) {
         unsigned n = kernel1_->size();
         if (i < n) kernel1_->set_parameter(i, value);
         else kernel2_->set_parameter(i-n, value);
     };
-    double get_parameter (const unsigned i) const {
+    double get_parameter (unsigned i) const {
         unsigned n = kernel1_->size();
         if (i < n) return kernel1_->get_parameter(i);
         return kernel2_->get_parameter(i-n);
@@ -392,7 +392,7 @@ public:
 
     unsigned get_ndim () const { return subspace_.get_ndim(); };
     unsigned get_axis (const unsigned i) const { return subspace_.get_axis(i); };
-    void set_axis (const unsigned i, const unsigned value) { subspace_.set_axis(i, value); };
+    void set_axis (unsigned i, unsigned value) { subspace_.set_axis(i, value); };
 
     double get_parameter (unsigned i) const {
         {% for param in spec.params -%}
