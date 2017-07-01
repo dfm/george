@@ -57,7 +57,7 @@ public:
     // Parameter vector spec.
     unsigned size () const { return kernel1_->size() + kernel2_->size(); };
     unsigned get_ndim () const { return kernel1_->get_ndim(); }
-    void set_parameter (unsigned i, const double value) {
+    void set_parameter (unsigned i, double value) {
         unsigned n = kernel1_->size();
         if (i < n) kernel1_->set_parameter(i, value);
         else kernel2_->set_parameter(i-n, value);
