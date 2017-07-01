@@ -39,7 +39,7 @@ George is being actively developed in `a public repository on GitHub
    tutorials/model
    tutorials/hyper
    tutorials/scaling
-   tutorials/new_kernel
+   tutorials/new-kernel
 
 
 Contributors

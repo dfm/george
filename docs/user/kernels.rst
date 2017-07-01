@@ -269,8 +269,7 @@ This is equivalent to:
 
 .. code-block:: python
 
-    from math import sqrt
-    kernel = kernels.Product(kernels.ConstantKernel(constant=sqrt(1e-3)),
+    kernel = kernels.Product(kernels.ConstantKernel(constant=1e-3),
                              kernels.ExpSquaredKernel(3.4))
 
 As demonstrated in :ref:`hyper`, a mixture of kernels can be implemented with
