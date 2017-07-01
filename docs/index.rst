@@ -51,7 +51,7 @@ Contributors
 License & Attribution
 ---------------------
 
-Copyright 2014 Daniel Foreman-Mackey and contributors.
+Copyright 2012-2017 Daniel Foreman-Mackey and contributors.
 
 George is being developed by `Dan Foreman-Mackey <http://dan.iel.fm>`_ in a
 `public GitHub repository <https://github.com/dfm/george>`_.
