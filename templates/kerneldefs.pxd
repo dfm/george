@@ -158,7 +158,8 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
             raise TypeError("Unknown metric type: {0}".format(
                 kernel_spec.__class__.__name__))
 
-        for i, p in enumerate(metric_spec.parameters):
+        metric_params = metric_spec.get_parameter_vector(include_frozen=True)
+        for i, p in enumerate(metric_params):
             kernel.set_metric_parameter(i, p)
         {% else %}
         kernel = new {{ spec.name }} (
