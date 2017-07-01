@@ -14,6 +14,7 @@ environment:
 install:
 - cmd: '"%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM%'
 - ps: |
+    git submodule update --init --recursive
     if ($env:CONDA -eq "27") { $env:CONDA = "" }
     if ($env:PLATFORM -eq "x64") { $env:CONDA = "$env:CONDA-x64" }
     $env:PATH = "C:\Miniconda$env:CONDA\;C:\Miniconda$env:CONDA\Scripts\;$env:PATH"
