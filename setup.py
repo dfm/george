@@ -215,11 +215,7 @@ if __name__ == "__main__":
         ext_modules=extensions,
         description="Blazingly fast Gaussian Processes for regression.",
         long_description=open("README.rst").read(),
-        package_data={
-            "": ["README.rst", "LICENSE",
-                 os.path.join("george", "include", "*.h"),
-                 os.path.join("vendor", "hodlr", "header", "*.hpp")]
-        },
+        package_data={"": ["README.rst", "LICENSE"]},
         include_package_data=True,
         cmdclass=dict(build_ext=build_ext),
         classifiers=[
