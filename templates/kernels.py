@@ -50,7 +50,8 @@ class Kernel(ModelSet):
         if "models" in self.__dict__:
             if name in self.models:
                 return self.models[name]
-            return getattr(self.models[None], name)
+            if None in self.models:
+                return getattr(self.models[None], name)
         raise AttributeError(name)
 
     @property

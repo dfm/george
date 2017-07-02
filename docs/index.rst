@@ -1,3 +1,6 @@
+.. note:: This documentation is for the development version of george.
+    Previous versions are available at `dfm.io/george <http://dfm.io/george>`_.
+
 George
 ======
 

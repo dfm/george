@@ -64,6 +64,13 @@ cdef class HODLRSolver:
         specific but if you need more precision, try deceasing this number
         (at the cost of a longer runtime). (default: ``1e-12``)
 
+    :param seed: (optional)
+        There is a stochastic component in the HODLR factorization step.
+        Use this parameter (it should be an integer) to seed this random
+        step and ensure deterministic results. Normally the randomization
+        shouldn't make a big difference but as the matrix becomes poorly
+        conditioned, it will have a larger effect.
+
     """
 
     cdef object kernel_spec
@@ -72,14 +79,19 @@ cdef class HODLRSolver:
     cdef unsigned int nleaf
     cdef double tol
     cdef unsigned int dim
+    cdef int seed
 
-    def __cinit__(self, kernel_spec, unsigned int nleaf=100, double tol=1e-12):
+    def __cinit__(self, kernel_spec, unsigned int nleaf=100, double tol=1e-12,
+                  seed=None):
         self.kernel_spec = kernel_spec
         self.kernel = kerneldefs.parse_kernel(kernel_spec)
         self.solver = new Solver(self.kernel, nleaf, tol)
         self.nleaf = nleaf
         self.tol = tol
         self.dim = -1
+        if seed is None:
+            seed = time.time()
+        self.seed = seed
 
     def __reduce__(self):
         return _rebuild, (self.kernel_spec, self.nleaf, self.tol)
@@ -89,9 +101,8 @@ cdef class HODLRSolver:
         del self.kernel
 
     def compute(self, np.ndarray[DTYPE_t, ndim=2] x,
-                np.ndarray[DTYPE_t, ndim=1] yerr, seed=None):
+                np.ndarray[DTYPE_t, ndim=1] yerr):
         """
-        compute(x, yerr, seed=None)
         Compute and factorize the covariance matrix.
 
         :param x: ``(nsamples, ndim)``
@@ -101,13 +112,6 @@ cdef class HODLRSolver:
             The Gaussian uncertainties on the data points at coordinates
             ``x``. These values will be added in quadrature to the diagonal of
             the covariance matrix.
-
-        :param seed: (optional)
-            There is a stochastic component in the HODLR factorization step.
-            Use this parameter (it should be an integer) to seed this random
-            step and ensure deterministic results. Normally the randomization
-            shouldn't make a big difference but as the matrix becomes poorly
-            conditioned, it will have a larger effect.
 
         """
         # Check the input dimensions.
@@ -119,13 +123,9 @@ cdef class HODLRSolver:
         # Save the dimension of the problem.
         self.dim = n
 
-        # Seed with the time if no seed is provided.
-        if seed is None:
-            seed = time.time()
-
         # Compute the matrix.
         cdef int info
-        info = self.solver.compute(n, <double*>x.data, <double*>yerr.data, seed)
+        info = self.solver.compute(n, <double*>x.data, <double*>yerr.data, self.seed)
         if info != 0:
             raise np.linalg.LinAlgError(info)
 
