@@ -1,6 +1,6 @@
 .. module:: george.modeling
 
-.. _modeling:
+.. _modeling-protocol:
 
 Modeling Protocol
 =================
@@ -38,4 +38,7 @@ the basic usage of the protocol.
    :members:
 
 .. autoclass:: george.modeling.ConstantModel
+   :members:
+
+.. autoclass:: george.modeling.CallableModel
    :members:
