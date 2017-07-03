@@ -80,6 +80,18 @@ def has_library(compiler, libname):
         os.remove(outfn)
     return True
 
+def cpp_flag(compiler):
+    """Return the -std=c++[11/14] compiler flag.
+    The c++14 is prefered over c++11 (when it is available).
+    """
+    if has_flag(compiler, "-std=c++14"):
+        return "-std=c++14"
+    elif has_flag(compiler, "-std=c++11"):
+        return "-std=c++11"
+    else:
+        raise RuntimeError('Unsupported compiler -- at least C++11 support '
+                           'is needed!')
+
 class build_ext(_build_ext):
     """
     A custom extension builder that finds the include directories for Eigen
@@ -119,6 +131,8 @@ class build_ext(_build_ext):
         if ct == "unix":
             opts.append("-DVERSION_INFO=\"{0:s}\""
                         .format(self.distribution.get_version()))
+            print("testing C++14/C++11 support")
+            opts.append(cpp_flag(self.compiler))
 
             flags = ["-stdlib=libc++", "-funroll-loops",
                      "-Wno-unused-function", "-Wno-uninitialized",

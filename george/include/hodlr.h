@@ -145,7 +145,7 @@ private:
     int rank = 0;
     double norm = 0.0, tol2 = tol * tol;
     std::vector<int> index(n_rows);
-    std::iota(index.begin(), index.end(), 0);
+    for (int n = 0; n < n_rows; ++n) index[n] = n;
 
     while (1) {
       int i, j, k;
