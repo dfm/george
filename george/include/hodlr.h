@@ -34,13 +34,13 @@ public:
         std::mt19937& random,
         int direction = 0,
         Node<KernelType>* parent = NULL)
-    : start_(start)
-    , size_(size)
-    , direction_(direction)
-    , diag_(diag)
+    : diag_(diag)
     , kernel_(kernel)
     , parent_(parent)
     , children_(2)
+    , start_(start)
+    , size_(size)
+    , direction_(direction)
     , U_(2)
     , V_(2)
   {
@@ -98,12 +98,18 @@ public:
 
   double log_determinant () const { return log_det_; };
 
-  void apply_inverse (Eigen::MatrixXd& x) const {
+  void solve (Eigen::MatrixXd& x) const {
     if (!is_leaf_) {
-      children_[0]->apply_inverse(x);
-      children_[1]->apply_inverse(x);
+      children_[0]->solve(x);
+      children_[1]->solve(x);
     }
     apply_inverse(x, 0);
+  };
+
+  Eigen::MatrixXd dot_solve (Eigen::MatrixXd& x) const {
+    Eigen::MatrixXd b = x;
+    solve(b);
+    return x.transpose() * b;
   };
 
   Eigen::MatrixXd get_exact_matrix () const {

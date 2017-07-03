@@ -4,8 +4,6 @@
 #include <cmath>
 #include <vector>
 
-using std::vector;
-
 namespace george {
 namespace subspace {
 
@@ -21,7 +19,7 @@ public:
 
 private:
     unsigned ndim_, naxes_;
-    vector<unsigned> axes_;
+    std::vector<unsigned> axes_;
 };
 
 }; // namespace subspace

@@ -8,9 +8,6 @@
 
 #include <iostream>
 
-using std::vector;
-using george::subspace::Subspace;
-
 namespace george {
 namespace metrics {
 
@@ -59,8 +56,8 @@ public:
 protected:
     int status_;
     bool updated_;
-    vector<double> vector_;
-    Subspace subspace_;
+    std::vector<double> vector_;
+    george::subspace::Subspace subspace_;
 };
 
 class IsotropicMetric : public Metric {
@@ -168,7 +165,7 @@ public:
     double value (const double* x1, const double* x2) {
         unsigned i, j, n = this->subspace_.get_naxes();
         double r2;
-        vector<double> r(n);
+        std::vector<double> r(n);
         for (i = 0; i < n; ++i) {
             j = this->subspace_.get_axis(i);
             r[i] = x1[j] - x2[j];
@@ -186,7 +183,7 @@ public:
     double gradient (const double* x1, const double* x2, double* grad) {
         unsigned i, j, k, n = this->subspace_.get_naxes();
         double r2;
-        vector<double> r(n), Lir(n);
+        std::vector<double> r(n), Lir(n);
         for (i = 0; i < n; ++i) {
             j = this->subspace_.get_axis(i);
             r[i] = x1[j] - x2[j];

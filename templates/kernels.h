@@ -14,10 +14,6 @@
 #include "metrics.h"
 #include "subspace.h"
 
-using std::vector;
-using george::metrics::Metric;
-using george::subspace::Subspace;
-
 namespace george {
 
 namespace kernels {
@@ -517,7 +513,7 @@ public:
 
 private:
     unsigned size_;
-    Subspace subspace_;
+    george::subspace::Subspace subspace_;
     {% for param in spec.params -%}
     double param_{{ param }}_;
     {% endfor %}
