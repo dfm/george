@@ -6,6 +6,7 @@ __all__ = ["test_trivial_solver", "test_basic_solver", "test_hodlr_solver"]
 
 import numpy as np
 
+import george
 from george import kernels
 from george import TrivialSolver, BasicSolver, HODLRSolver
 
@@ -54,3 +55,16 @@ def test_basic_solver(**kwargs):
 
 def test_hodlr_solver(**kwargs):
     _test_solver(HODLRSolver, **kwargs)
+
+def test_strange_hodlr_bug():
+    np.random.seed(1234)
+    x = np.sort(np.random.uniform(0, 10, 50000))
+    yerr = 0.1 * np.ones_like(x)
+    y = np.sin(x)
+
+    kernel = np.var(y) * kernels.ExpSquaredKernel(1.0)
+
+    gp_hodlr = george.GP(kernel, solver=HODLRSolver, seed=42)
+    n = 200
+    gp_hodlr.compute(x[:n], yerr[:n])
+    gp_hodlr.log_likelihood(y[:n])

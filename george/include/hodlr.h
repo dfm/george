@@ -165,7 +165,7 @@ private:
               for (int m = 0; m < n_cols; ++m)
                 V_out(m, n) = kernel_->get_value(start_row + n, start_col + m);
           }
-          return -1;
+          return max_rank;
         }
 
         // Choose a random row
