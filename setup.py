@@ -15,8 +15,8 @@ def compile_kernels(fns):
     template_dir = "templates"
     output_dir = "george"
 
-    with open(os.path.join(template_dir, "kerneldefs.pxd")) as f:
-        PXD_TEMPLATE = Template(f.read())
+    with open(os.path.join(template_dir, "parser.h")) as f:
+        PARSER_TEMPLATE = Template(f.read())
     with open(os.path.join(template_dir, "kernels.h")) as f:
         CPP_TEMPLATE = Template(f.read())
     with open(os.path.join(template_dir, "kernels.py")) as f:
@@ -32,15 +32,11 @@ def compile_kernels(fns):
         specs.append(spec)
     print("Found {0} kernel specifications".format(len(specs)))
 
-    fn = os.path.join(output_dir, "kerneldefs.pxd")
+    fn = os.path.join(output_dir, "include", "george", "parser.h")
     with open(fn, "w") as f:
-        print("Saving Cython kernels to '{0}'".format(fn))
-        f.write(PXD_TEMPLATE.render(specs=specs))
-    fn = os.path.join(output_dir, "solvers", "kerneldefs.pxd")
-    with open(fn, "w") as f:
-        print("Saving Cython kernels to '{0}'".format(fn))
-        f.write(PXD_TEMPLATE.render(specs=specs))
-    fn = os.path.join(output_dir, "include", "kernels.h")
+        print("Saving parser to '{0}'".format(fn))
+        f.write(PARSER_TEMPLATE.render(specs=specs))
+    fn = os.path.join(output_dir, "include", "george", "kernels.h")
     with open(fn, "w") as f:
         print("Saving C++ kernels to '{0}'".format(fn))
         f.write(CPP_TEMPLATE.render(specs=specs))
@@ -115,12 +111,13 @@ class build_ext(_build_ext):
 
         # Add the pybind11 include directory
         import numpy
+        import pybind11
         include_dirs = [
-            "george",
             os.path.join("george", "include"),
-            os.path.join(localincl, "hodlr", "header"),
             os.path.join(localincl, "eigen_3.3.4"),
             numpy.get_include(),
+            pybind11.get_include(False),
+            pybind11.get_include(True),
         ]
         for ext in self.extensions:
             ext.include_dirs = include_dirs + ext.include_dirs
@@ -190,24 +187,14 @@ if __name__ == "__main__":
         if "kernels" in sys.argv:
             sys.exit()
 
-    # Check for the Cython source (development mode) and compile it if it
-    # exists.
-    kern_fn = os.path.join("george", "cython_kernel")
-    hodlr_fn = os.path.join("george", "solvers", "hodlr")
-    if (os.path.exists(kern_fn + ".pyx") and
-            os.path.exists(hodlr_fn + ".pyx") and
-            os.path.exists(os.path.join("george", "kerneldefs.pxd"))):
-        from Cython.Build import cythonize
-        kern_fn += ".pyx"
-        hodlr_fn += ".pyx"
-    else:
-        kern_fn += ".cpp"
-        hodlr_fn += ".cpp"
-        cythonize = lambda x: x
-
-    kern_ext = Extension("george.cython_kernel", sources=[kern_fn])
-    hodlr_ext = Extension("george.solvers.hodlr", sources=[hodlr_fn])
-    extensions = cythonize([kern_ext, hodlr_ext])
+    extensions = [
+        Extension("george.kernel_interface",
+                  sources=[os.path.join("george", "kernel_interface.cpp")],
+                  language="c++"),
+        Extension("george.solvers.hodlr",
+                  sources=[os.path.join("george", "solvers", "hodlr.cpp")],
+                  language="c++"),
+    ]
 
     # Hackishly inject a constant into builtins to enable importing of the
     # package before the library is built.

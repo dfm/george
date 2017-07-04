@@ -45,7 +45,6 @@ public:
   {
     solver_ = NULL;
     matrix_ = new SolverMatrix(kernel_);
-    status_ = SOLVER_OK;
     computed_ = 0;
   };
   ~Solver () {
@@ -53,10 +52,7 @@ public:
     delete matrix_;
   };
 
-  //
-  // Accessors.
-  //
-  int get_status () const { return status_; };
+  int get_status () const { return 0; };
   int get_computed () const { return computed_; };
   double get_log_determinant () const { return logdet_; };
 
@@ -91,8 +87,7 @@ public:
 
     // Update the bookkeeping flags.
     computed_ = 1;
-    status_ = SOLVER_OK;
-    return status_;
+    return 0;
   };
 
   void apply_inverse (const int n, const int nrhs,
@@ -109,7 +104,7 @@ public:
 private:
   double logdet_, tol_;
   int min_size_;
-  int status_, computed_;
+  int computed_;
 
   kernels::Kernel* kernel_;
   SolverMatrix* matrix_;

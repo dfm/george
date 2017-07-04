@@ -13,7 +13,7 @@ import numpy as np
 
 from .modeling import Model, ModelSet
 from .metrics import Metric, Subspace
-from .cython_kernel import CythonKernel
+from .kernel_interface import KernelInterface
 
 
 class Kernel(ModelSet):
@@ -58,7 +58,7 @@ class Kernel(ModelSet):
     def kernel(self):
         if self.dirty or self._kernel is None:
             try:
-                self._kernel = CythonKernel(self)
+                self._kernel = KernelInterface(self)
             except AttributeError as e:
                 raise RuntimeError()
             self.dirty = False

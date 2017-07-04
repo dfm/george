@@ -9,10 +9,10 @@ dist
 .syntastic_c_config
 .syntastic_cpp_config
 build
-.coverage
 *.cpp
+.coverage
 george/kernels.py
 george/kerneldefs.pxd
 george/solvers/kerneldefs.pxd
-george/include/kernels.h
+george/include/george/kernels.h
 kernels/MyLocalGaussian.yml

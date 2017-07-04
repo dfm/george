@@ -80,7 +80,7 @@ stationary_kernels = [
 ]
 
 @pytest.mark.parametrize("kernel_type,kwargs", stationary_kernels)
-def do_stationary_t(kernel_type, kwargs):
+def test_stationary(kernel_type, kwargs):
     def build_kernel(metric, **more):
         kws = dict(kwargs, **more)
         return kernel_type(metric=metric, **kws)

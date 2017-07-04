@@ -24,7 +24,7 @@ int main () {
   Eigen::VectorXd diag(N);
   diag.setOnes();
 
-  george::hodlr::Node<MyKernel> solver(diag, &kernel, 0, N, 10, 1.234e-5, random);
+  george::hodlr::Node<MyKernel> solver(diag, &kernel, 0, N, 10, 0.1, random);
 
   Eigen::MatrixXd K = solver.get_exact_matrix();
   Eigen::MatrixXd x = Eigen::MatrixXd::Random(N, 5), b,
