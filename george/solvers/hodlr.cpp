@@ -9,11 +9,13 @@
 
 namespace py = pybind11;
 
+using RowMatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
 class SolverMatrix {
   public:
     SolverMatrix (george::kernels::Kernel* kernel)
       : kernel_(kernel) {};
-    void set_input_coordinates (Eigen::MatrixXd x) {
+    void set_input_coordinates (RowMatrixXd x) {
       if (x.cols() != kernel_->get_ndim()) {
         throw george::dimension_mismatch();
       }
@@ -28,7 +30,7 @@ class SolverMatrix {
 
   private:
     george::kernels::Kernel* kernel_;
-    Eigen::MatrixXd t_;
+    RowMatrixXd t_;
 };
 
 class Solver {
@@ -54,18 +56,26 @@ public:
   int get_computed () const { return computed_; };
   double log_determinant () const { return log_det_; };
 
-  int compute (const Eigen::MatrixXd& x, const Eigen::VectorXd& yerr) {
+  int compute (const py::array_t<double>& x, const py::array_t<double>& yerr) {
+    computed_ = 0;
 
     // Random number generator for reproducibility
     std::random_device r;
     std::mt19937 random(r());
     random.seed(seed_);
 
-    int n = x.rows();
-    computed_ = 0;
-    Eigen::VectorXd diag;
-    diag.array() = yerr.array() * yerr.array();
-    matrix_->set_input_coordinates(x);
+    // Extract the data from the numpy arrays
+    auto x_p = x.unchecked<2>();
+    auto yerr_p = yerr.unchecked<1>();
+    size_t n = x_p.shape(0), ndim = x_p.shape(1);
+    RowMatrixXd X(n, ndim);
+    Eigen::VectorXd diag(n);
+    for (size_t i = 0; i < n; ++i) {
+      diag(i) = yerr_p(i) * yerr_p(i);
+      for (size_t j = 0; j < ndim; ++j) X(i, j) = x_p(i, j);
+    }
+
+    matrix_->set_input_coordinates(X);
 
     // Set up the solver object.
     if (solver_ != NULL) delete solver_;
@@ -80,7 +90,9 @@ public:
     return 0;
   };
 
-  void apply_inverse (Eigen::MatrixXd& x) {
+  template <typename Derived>
+  void apply_inverse (Eigen::MatrixBase<Derived>& x) {
+    if (!computed_) throw george::not_computed();
     solver_->solve(x);
   };
 
@@ -99,9 +111,6 @@ private:
 
 
 PYBIND11_PLUGIN(hodlr) {
-  typedef Eigen::MatrixXd matrix_t;
-  typedef Eigen::VectorXd vector_t;
-
   py::module m("hodlr", R"delim(
 Docs...
 )delim");
@@ -122,6 +131,12 @@ Docs...
     return alpha;
   }, py::arg("x"), py::arg("in_place") = false);
 
+  solver.def("dot_solve", [](Solver& self, const Eigen::VectorXd& x){
+    Eigen::VectorXd alpha = x;
+    self.apply_inverse(alpha);
+    return double(x.transpose() * alpha);
+  });
+
   solver.def("get_inverse", [](Solver& self){
     int n = self.size();
     Eigen::MatrixXd eye(n, n);
@@ -129,6 +144,7 @@ Docs...
     self.apply_inverse(eye);
     return eye;
   });
+
 
   return m.ptr();
 }

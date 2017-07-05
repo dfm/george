@@ -7,17 +7,22 @@ __all__ = [
     "test_apply_inverse",
 ]
 
+import pytest
 import numpy as np
+from itertools import product
 
 from george import kernels, GP, BasicSolver, HODLRSolver
 
-
-def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-3, solver=BasicSolver,
-                   **kwargs):
+@pytest.mark.parametrize("solver,white_noise",
+                         product([BasicSolver, HODLRSolver], [None, 0.1]))
+def test_gradient(solver, white_noise, seed=123, N=100, ndim=3, eps=1.32e-3):
     np.random.seed(seed)
 
     # Set up the solver.
     kernel = 1.0 * kernels.ExpSquaredKernel(0.5, ndim=ndim)
+    kwargs = dict()
+    if white_noise is not None:
+        kwargs = dict(white_noise=white_noise, fit_white_noise=True)
     gp = GP(kernel, solver=solver, **kwargs)
 
     # Sample some data.
@@ -48,17 +53,8 @@ def _test_gradient(seed=123, N=100, ndim=3, eps=1.32e-3, solver=BasicSolver,
             .format(i, solver.__name__, np.abs(grad - grad0[i]))
 
 
-def test_gradient(**kwargs):
-    _test_gradient(solver=BasicSolver, **kwargs)
-    _test_gradient(solver=HODLRSolver, **kwargs)
-
-    _test_gradient(solver=BasicSolver, white_noise=0.1, fit_white_noise=True,
-                   **kwargs)
-    _test_gradient(solver=HODLRSolver, white_noise=0.1, fit_white_noise=True,
-                   **kwargs)
-
-
-def _test_prediction(solver=BasicSolver):
+@pytest.mark.parametrize("solver", [BasicSolver, HODLRSolver])
+def test_prediction(solver):
     """Basic sanity checks for GP regression."""
 
     kernel = kernels.ExpSquaredKernel(1.0)
@@ -88,11 +84,6 @@ def _test_prediction(solver=BasicSolver):
     assert np.all(var > 0), \
         "Variance must be positive away from training points ({0}).\n{1}" \
         .format(solver.__name__, var)
-
-
-def test_prediction(**kwargs):
-    _test_prediction(solver=BasicSolver, **kwargs)
-    _test_prediction(solver=HODLRSolver, **kwargs)
 
 
 def test_repeated_prediction_cache():
@@ -132,8 +123,8 @@ def test_repeated_prediction_cache():
         "predictive covariance."
 
 
-def _test_apply_inverse(seed=1234, N=100, ndim=3, solver=BasicSolver,
-                        yerr=0.1):
+@pytest.mark.parametrize("solver", [BasicSolver, HODLRSolver])
+def test_apply_inverse(solver, seed=1234, N=100, ndim=1, yerr=0.1):
     np.random.seed(seed)
 
     # Set up the solver.
@@ -147,12 +138,10 @@ def _test_apply_inverse(seed=1234, N=100, ndim=3, solver=BasicSolver,
 
     K = gp.get_matrix(x)
     K[np.diag_indices_from(K)] += yerr**2
+
     b1 = np.linalg.solve(K, y)
     b2 = gp.apply_inverse(y)
+    print(b1)
+    print(b2)
     assert np.allclose(b1, b2), \
         "Apply inverse with a sort isn't working"
-
-
-def test_apply_inverse(**kwargs):
-    _test_apply_inverse(solver=BasicSolver, **kwargs)
-    _test_apply_inverse(solver=HODLRSolver, **kwargs)

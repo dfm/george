@@ -248,7 +248,7 @@ class GP(ModelSet):
             r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] -
                                      self._call_mean(self._x),
                                      dtype=np.float64)
-            self._alpha = self.solver.apply_inverse(r, in_place=True)
+            self._alpha = self.solver.apply_inverse(r, in_place=True).flatten()
 
     def apply_inverse(self, y):
         """
@@ -368,7 +368,7 @@ class GP(ModelSet):
             raise
         r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] - mu,
                                  dtype=np.float64)
-        ll = self._const - 0.5 * np.dot(r, self.solver.apply_inverse(r))
+        ll = self._const - 0.5 * self.solver.dot_solve(r)
         return ll if np.isfinite(ll) else -np.inf
 
     def grad_lnlikelihood(self, y, quiet=False):

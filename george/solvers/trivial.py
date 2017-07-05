@@ -28,5 +28,8 @@ class TrivialSolver(object):
         y[:] *= self._ivar
         return y
 
+    def dot_solve(self, y):
+        return np.sum(y**2 * self._ivar)
+
     def apply_sqrt(self, r):
         return r * np.sqrt(self._ivar)

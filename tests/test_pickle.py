@@ -3,9 +3,10 @@
 from __future__ import division, print_function, absolute_import
 
 __all__ = [
-    "test_basic_pickle", "test_hodlr_pickle",
+    "test_pickle", "test_pickle",
 ]
 
+import pytest
 import pickle
 import numpy as np
 
@@ -16,7 +17,10 @@ def _fake_compute(arg, *args, **kwargs):
     assert 0, "Unpickled GP shouldn't need to be computed"
 
 
-def _test_pickle(solver, success, N=50, seed=123):
+@pytest.mark.xfail
+@pytest.mark.parametrize("solver,success", [(BasicSolver, True),
+                                            (HODLRSolver, False)])
+def test_pickle(solver, success, N=50, seed=123):
     np.random.seed(seed)
     kernel = 0.1 * kernels.ExpSquaredKernel(1.5)
     kernel.pars = [1, 2]
@@ -29,11 +33,3 @@ def _test_pickle(solver, success, N=50, seed=123):
     if success:
         gp.compute = _fake_compute
     gp.lnlikelihood(np.sin(x))
-
-
-def test_basic_pickle(**kwargs):
-    _test_pickle(BasicSolver, True, **kwargs)
-
-
-def test_hodlr_pickle(**kwargs):
-    _test_pickle(HODLRSolver, False, **kwargs)

@@ -5,12 +5,13 @@ from __future__ import division, print_function
 __all__ = [
 ]
 
+import pytest
 import numpy as np
 
 from george import kernels, GP
 from george.solvers import hodlr
 
-
+@pytest.mark.xfail
 def test_custom_cholesky(seed=1234, ndim=5):
     np.random.seed(seed)
 

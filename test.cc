@@ -3,7 +3,7 @@
 
 #include <Eigen/Core>
 
-#include "hodlr.h"
+#include "george/hodlr.h"
 
 class MyKernel {
 public:
@@ -24,7 +24,7 @@ int main () {
   Eigen::VectorXd diag(N);
   diag.setOnes();
 
-  george::hodlr::Node<MyKernel> solver(diag, &kernel, 0, N, 10, 0.1, random);
+  george::hodlr::Node<MyKernel> solver(diag, &kernel, 0, N, 57, 0.1, random);
 
   Eigen::MatrixXd K = solver.get_exact_matrix();
   Eigen::MatrixXd x = Eigen::MatrixXd::Random(N, 5), b,

@@ -20,7 +20,8 @@ private:
   int start_, size_, direction_, rank_;
   bool is_leaf_;
   std::vector<Eigen::MatrixXd> U_, V_;
-  Eigen::FullPivLU<Eigen::MatrixXd> S_;
+  Eigen::FullPivLU<Eigen::MatrixXd> lu_;
+  Eigen::LDLT<Eigen::MatrixXd> ldlt_;
   double log_det_;
 
 public:
@@ -80,11 +81,16 @@ public:
     }
 
     // Compute a factorize the inner matrix S
-    compute_S();
+    factorize();
 
     // Compute the determinant
-    Eigen::MatrixXd lu = S_.matrixLU();
-    for (int n = 0; n < lu.rows(); ++n) log_det_ += log(std::abs(lu(n, n)));
+    if (is_leaf_) {
+      Eigen::VectorXd diag = ldlt_.vectorD();
+      for (int n = 0; n < diag.rows(); ++n) log_det_ += log(std::abs(diag(n)));
+    } else {
+      Eigen::MatrixXd lu = lu_.matrixLU();
+      for (int n = 0; n < lu.rows(); ++n) log_det_ += log(std::abs(lu(n, n)));
+    }
 
     Node<KernelType>* node = parent_;
     int start = start_, ind = direction_;
@@ -98,7 +104,8 @@ public:
 
   double log_determinant () const { return log_det_; };
 
-  void solve (Eigen::MatrixXd& x) const {
+  template <typename Derived>
+  void solve (Eigen::MatrixBase<Derived>& x) const {
     if (!is_leaf_) {
       children_[0]->solve(x);
       children_[1]->solve(x);
@@ -106,7 +113,7 @@ public:
     apply_inverse(x, 0);
   };
 
-  Eigen::MatrixXd dot_solve (Eigen::MatrixXd& x) const {
+  Eigen::VectorXd dot_solve (Eigen::MatrixXd& x) const {
     Eigen::MatrixXd b = x;
     solve(b);
     return x.transpose() * b;
@@ -213,26 +220,26 @@ private:
     return rank;
   };
 
-  void compute_S () {
+  void factorize () {
     Eigen::MatrixXd S;
     if (is_leaf_) {
       S = get_exact_matrix();
+      ldlt_.compute(S);
     } else {
       S.resize(2*rank_, 2*rank_);
       S.setIdentity();
       S.block(0, rank_, rank_, rank_) = V_[1].transpose() * U_[1];
       S.block(rank_, 0, rank_, rank_) = V_[0].transpose() * U_[0];
+      lu_.compute(S);
     }
-
-    // Compute the LU decomposition
-    S_.compute(S);
   };
 
-  void apply_inverse (Eigen::MatrixXd& x, int start) const {
+  template <typename Derived>
+  void apply_inverse (Eigen::MatrixBase<Derived>& x, int start) const {
     int nrhs = x.cols();
     start = start_ - start;
     if (is_leaf_) {
-      x.block(start, 0, size_, nrhs) = S_.solve(x.block(start, 0, size_, nrhs));
+      x.block(start, 0, size_, nrhs) = ldlt_.solve(x.block(start, 0, size_, nrhs));
       return;
     }
 
@@ -240,7 +247,7 @@ private:
     Eigen::MatrixXd temp(2*rank_, nrhs);
     temp.block(0, 0, rank_, nrhs)     = V_[1].transpose() * x.block(start+s1, 0, s2, nrhs);
     temp.block(rank_, 0, rank_, nrhs) = V_[0].transpose() * x.block(start, 0, s1, nrhs);
-    temp = S_.solve(temp);
+    temp = lu_.solve(temp);
 
     x.block(start, 0, s1, nrhs)    -= U_[0] * temp.block(0, 0, rank_, nrhs);
     x.block(start+s1, 0, s2, nrhs) -= U_[1] * temp.block(rank_, 0, rank_, nrhs);

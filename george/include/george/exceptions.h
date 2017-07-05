@@ -11,6 +11,12 @@ struct dimension_mismatch : public std::exception {
   }
 };
 
+struct not_computed : public std::exception {
+  const char * what () const throw () {
+    return "you must call 'compute' first";
+  }
+};
+
 }
 
 #endif

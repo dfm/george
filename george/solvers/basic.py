@@ -87,6 +87,13 @@ class BasicSolver(object):
         """
         return cho_solve(self._factor, y, overwrite_b=in_place)
 
+    def dot_solve(self, y):
+        r"""
+        TODO
+
+        """
+        return np.dot(y.T, cho_solve(self._factor, y))
+
     def apply_sqrt(self, r):
         """
         Apply the Cholesky square root of the covariance matrix to the input
