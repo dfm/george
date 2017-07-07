@@ -36,6 +36,12 @@ class SolverMatrix {
 class Solver {
 public:
 
+  Solver () {
+    solver_ = NULL;
+    kernel_ = NULL;
+    matrix_ = NULL;
+    computed_ = 0;
+  };
   Solver (py::object kernel_spec, int min_size = 100, double tol = 0.1, int seed = 0)
     : kernel_spec_(kernel_spec)
     , tol_(tol)
@@ -49,12 +55,24 @@ public:
   };
   ~Solver () {
     if (solver_ != NULL) delete solver_;
-    delete matrix_;
-    delete kernel_;
+    if (matrix_ != NULL) delete matrix_;
+    if (kernel_ != NULL) delete kernel_;
   };
 
   auto serialize () const {
     return std::make_tuple(kernel_spec_, min_size_, tol_, seed_);
+  };
+
+  void deserialize (py::object kernel_spec, int min_size, double tol, int seed) {
+    kernel_spec_ = kernel_spec;
+    min_size_ = min_size;
+    tol_ = tol;
+    seed_ = seed;
+
+    solver_ = NULL;
+    kernel_ = george::parse_kernel_spec(kernel_spec);
+    matrix_ = new SolverMatrix(kernel_);
+    computed_ = 0;
   };
 
   int get_status () const { return 0; };
@@ -157,11 +175,13 @@ Docs...
 
   solver.def("__setstate__", [](Solver& self, py::tuple t) {
     if (t.size() != 4) throw std::runtime_error("Invalid state!");
-    new (&self) Solver(
-        t[0].cast<py::object>(),
-        t[1].cast<int>(),
-        t[2].cast<double>(),
-        t[3].cast<int>());
+    new (&self) Solver();
+    self.deserialize(
+      t[0].cast<py::object>(),
+      t[1].cast<int>(),
+      t[2].cast<double>(),
+      t[3].cast<int>()
+    );
   });
 
   return m.ptr();
