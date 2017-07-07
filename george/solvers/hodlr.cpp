@@ -60,7 +60,7 @@ public:
   };
 
   auto serialize () const {
-    return std::make_tuple(kernel_spec_, min_size_, tol_, seed_);
+    return std::make_tuple(min_size_, tol_, seed_, kernel_spec_);
   };
 
   void deserialize (py::object kernel_spec, int min_size, double tol, int seed) {
@@ -177,10 +177,10 @@ Docs...
     if (t.size() != 4) throw std::runtime_error("Invalid state!");
     new (&self) Solver();
     self.deserialize(
-      t[0].cast<py::object>(),
-      t[1].cast<int>(),
-      t[2].cast<double>(),
-      t[3].cast<int>()
+      t[3].cast<py::object>(),
+      t[0].cast<int>(),
+      t[1].cast<double>(),
+      t[2].cast<int>()
     );
   });
 
