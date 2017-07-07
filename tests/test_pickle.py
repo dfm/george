@@ -6,6 +6,7 @@ __all__ = [
     "test_pickle", "test_pickle",
 ]
 
+import sys
 import pytest
 import pickle
 import numpy as np
@@ -17,7 +18,7 @@ def _fake_compute(arg, *args, **kwargs):
     assert 0, "Unpickled GP shouldn't need to be computed"
 
 
-# @pytest.mark.xfail
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3")
 @pytest.mark.parametrize("solver,success", [(BasicSolver, True),
                                             (HODLRSolver, False)])
 def test_pickle(solver, success, N=50, seed=123):
