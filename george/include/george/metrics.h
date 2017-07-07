@@ -126,7 +126,7 @@ namespace george {
     }
 
     inline void _custom_backward_sub (size_t n, double* L, double* b) {
-      long i, j;
+      long long i, j;
       size_t k, k0 = (n + 1) * n / 2;
       for (i = n - 1; i >= 0; --i) {
         k = k0 - n + i;
