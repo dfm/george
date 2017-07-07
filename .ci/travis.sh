@@ -23,5 +23,5 @@ conda install -c conda-forge pybind11
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   python setup.py install
 else
-  CXX=g++-4.8 CC=gcc-4.8 python setup.py build_ext $BUILD_ARGS install
+  CXX=g++-4.9 CC=gcc-4.9 python setup.py build_ext $BUILD_ARGS install
 fi
