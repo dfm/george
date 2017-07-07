@@ -11,8 +11,8 @@
 {% endfor %}
 {%- endfor %}
 
-#include "metrics.h"
-#include "subspace.h"
+#include "george/metrics.h"
+#include "george/subspace.h"
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643383279502884e+00
@@ -31,12 +31,12 @@ public:
                            const unsigned* which, double* grad) {};
 
     // Parameter vector spec.
-    virtual unsigned size () const { return 0; }
-    virtual unsigned get_ndim () const { return 0; }
-    virtual void set_parameter (unsigned i, double v) {};
-    virtual double get_parameter (unsigned i) const { return 0.0; };
-    virtual void set_metric_parameter (unsigned i, double v) {};
-    virtual void set_axis (unsigned i, unsigned v) {};
+    virtual size_t size () const { return 0; }
+    virtual size_t get_ndim () const { return 0; }
+    virtual void set_parameter (size_t i, double v) {};
+    virtual double get_parameter (size_t i) const { return 0.0; };
+    virtual void set_metric_parameter (size_t i, double v) {};
+    virtual void set_axis (size_t i, size_t v) {};
 };
 
 
@@ -55,15 +55,15 @@ public:
     Kernel* get_kernel2 () const { return kernel2_; };
 
     // Parameter vector spec.
-    unsigned size () const { return kernel1_->size() + kernel2_->size(); };
-    unsigned get_ndim () const { return kernel1_->get_ndim(); }
-    void set_parameter (unsigned i, double value) {
-        unsigned n = kernel1_->size();
+    size_t size () const { return kernel1_->size() + kernel2_->size(); };
+    size_t get_ndim () const { return kernel1_->get_ndim(); }
+    void set_parameter (size_t i, double value) {
+        size_t n = kernel1_->size();
         if (i < n) kernel1_->set_parameter(i, value);
         else kernel2_->set_parameter(i-n, value);
     };
-    double get_parameter (unsigned i) const {
-        unsigned n = kernel1_->size();
+    double get_parameter (size_t i) const {
+        size_t n = kernel1_->size();
         if (i < n) return kernel1_->get_parameter(i);
         return kernel2_->get_parameter(i-n);
     };
@@ -80,7 +80,7 @@ public:
     };
     void gradient (const double* x1, const double* x2, const unsigned* which,
                    double* grad) {
-        unsigned i, n1 = this->kernel1_->size(), n2 = this->size();
+        size_t i, n1 = this->kernel1_->size(), n2 = this->size();
 
         bool any = false;
         for (i = 0; i < n1; ++i) if (which[i]) { any = true; break; }
@@ -101,7 +101,7 @@ public:
     void gradient (const double* x1, const double* x2, const unsigned* which,
                    double* grad) {
         bool any;
-        unsigned i, n1 = this->kernel1_->size(), n2 = this->size();
+        size_t i, n1 = this->kernel1_->size(), n2 = this->size();
         double k;
 
         any = false;
@@ -138,11 +138,11 @@ public:
         {%- for con in spec.constants %}
         {{ con.type }} {{ con.name }},
         {%- endfor %}
-        const unsigned blocked,
+        int blocked,
         const double* min_block,
         const double* max_block,
-        const unsigned ndim,
-        const unsigned naxes
+        size_t ndim,
+        size_t naxes
     ) :
         size_({{ spec.params|length }}),
         metric_(ndim, naxes),
@@ -156,7 +156,7 @@ public:
         , constant_{{ con.name }}_({{ con.name }})
         {%- endfor %}
     {
-        unsigned i;
+        size_t i;
         if (blocked_) {
             for (i = 0; i < naxes; ++i) {
                 min_block_[i] = min_block[i];
@@ -166,15 +166,15 @@ public:
         update_reparams();
     };
 
-    unsigned get_ndim () const { return metric_.get_ndim(); };
+    size_t get_ndim () const { return metric_.get_ndim(); };
 
-    double get_parameter (unsigned i) const {
+    double get_parameter (size_t i) const {
         {% for param in spec.params -%}
         if (i == {{ loop.index - 1 }}) return param_{{ param }}_;
         {% endfor -%}
         return metric_.get_parameter(i - size_);
     };
-    void set_parameter (unsigned i, double value) {
+    void set_parameter (size_t i, double value) {
         {% for param in spec.params -%}
         if (i == {{ loop.index - 1 }}) {
             param_{{ param }}_ = value;
@@ -184,17 +184,17 @@ public:
         metric_.set_parameter(i - size_, value);
     };
 
-    double get_metric_parameter (unsigned i) const {
+    double get_metric_parameter (size_t i) const {
         return metric_.get_parameter(i);
     };
-    void set_metric_parameter (unsigned i, double value) {
+    void set_metric_parameter (size_t i, double value) {
         metric_.set_parameter(i, value);
     };
 
-    unsigned get_axis (unsigned i) const {
+    size_t get_axis (size_t i) const {
         return metric_.get_axis(i);
     };
-    void set_axis (unsigned i, unsigned value) {
+    void set_axis (size_t i, size_t value) {
         metric_.set_axis(i, value);
     };
 
@@ -214,7 +214,7 @@ public:
 
     double value (const double* x1, const double* x2) {
         if (blocked_) {
-            unsigned i, j;
+            size_t i, j;
             for (i = 0; i < min_block_.size(); ++i) {
                 j = metric_.get_axis(i);
                 if (x1[j] < min_block_[i] || x1[j] > max_block_[i] ||
@@ -269,7 +269,7 @@ public:
     void gradient (const double* x1, const double* x2, const unsigned* which,
                    double* grad) {
         bool out = false;
-        unsigned i, j, n = size();
+        size_t i, j, n = size();
         if (blocked_) {
             for (i = 0; i < min_block_.size(); ++i) {
                 j = metric_.get_axis(i);
@@ -320,7 +320,7 @@ public:
         }
     };
 
-    unsigned size () const { return metric_.size() + size_; };
+    size_t size () const { return metric_.size() + size_; };
 
     void update_reparams () {
         {% for param in spec.reparams -%}
@@ -349,9 +349,9 @@ public:
     {% endfor %}
 
 private:
-    unsigned size_;
+    size_t size_;
     M metric_;
-    unsigned blocked_;
+    int blocked_;
     std::vector<double> min_block_, max_block_;
     {% for param in spec.params -%}
     double param_{{ param }}_;
@@ -375,8 +375,8 @@ public:
         {%- for con in spec.constants %}
         {{ con.type }} {{ con.name }},
         {%- endfor %}
-        unsigned ndim,
-        unsigned naxes
+        size_t ndim,
+        size_t naxes
     ) :
         size_({{ spec.params|length }}),
         subspace_(ndim, naxes)
@@ -390,17 +390,17 @@ public:
         update_reparams();
     };
 
-    unsigned get_ndim () const { return subspace_.get_ndim(); };
-    unsigned get_axis (const unsigned i) const { return subspace_.get_axis(i); };
-    void set_axis (unsigned i, unsigned value) { subspace_.set_axis(i, value); };
+    size_t get_ndim () const { return subspace_.get_ndim(); };
+    size_t get_axis (size_t i) const { return subspace_.get_axis(i); };
+    void set_axis (size_t i, size_t value) { subspace_.set_axis(i, value); };
 
-    double get_parameter (unsigned i) const {
+    double get_parameter (size_t i) const {
         {% for param in spec.params -%}
         if (i == {{ loop.index - 1 }}) return param_{{ param }}_;
         {% endfor -%}
         return 0.0;
     };
-    void set_parameter (unsigned i, double value) {
+    void set_parameter (size_t i, double value) {
         {% for param in spec.params -%}
         if (i == {{ loop.index - 1 }}) {
             param_{{ param }}_ = value;
@@ -419,12 +419,12 @@ public:
             {%- for con in spec.constants %}
             {{ con.type }} {{ con.name }},
             {%- endfor %}
-            const double x1, const double x2) {
+            double x1, double x2) {
         {{ spec.value | indent(8) }}
     };
 
     double value (const double* x1, const double* x2) {
-        unsigned i, j, n = subspace_.get_naxes();
+        size_t i, j, n = subspace_.get_naxes();
         double value = 0.0;
         for (i = 0; i < n; ++i) {
             j = subspace_.get_axis(i);
@@ -454,7 +454,7 @@ public:
             {%- for con in spec.constants %}
             {{ con.type }} {{ con.name }},
             {%- endfor %}
-            const double x1, const double x2) {
+            double x1, double x2) {
         {{ spec.grad[param] | indent(8) }}
     };
     {% endfor -%}
@@ -466,7 +466,7 @@ public:
         {% endfor %}
 
         {% if spec.params -%}
-        unsigned i, j, n = subspace_.get_naxes();
+        size_t i, j, n = subspace_.get_naxes();
         for (i = 0; i < n; ++i) {
             j = subspace_.get_axis(i);
             {% for param in spec.params -%}
@@ -513,10 +513,10 @@ public:
     }
     {% endfor %}
 
-    unsigned size () const { return size_; };
+    size_t size () const { return size_; };
 
 private:
-    unsigned size_;
+    size_t size_;
     george::subspace::Subspace subspace_;
     {% for param in spec.params -%}
     double param_{{ param }}_;

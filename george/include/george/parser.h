@@ -4,8 +4,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
-#include "kernels.h"
-#include "exceptions.h"
+#include "george/kernels.h"
+#include "george/exceptions.h"
 
 namespace george {
 
@@ -24,7 +24,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     k1 = parse_kernel_spec(spec1);
     k2 = parse_kernel_spec(spec2);
     if (k1->get_ndim() != k2->get_ndim()) throw dimension_mismatch();
-    int op = py::int_(kernel_spec.attr("operator_type"));
+    size_t op = py::int_(kernel_spec.attr("operator_type"));
     if (op == 0) {
       return new kernels::Sum(k1, k2);
     } else if (op == 1) {
@@ -36,12 +36,12 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
 
 
   kernels::Kernel* kernel;
-  int kernel_type = py::int_(kernel_spec.attr("kernel_type"));
+  size_t kernel_type = py::int_(kernel_spec.attr("kernel_type"));
   switch (kernel_type) {
     
     case 0: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::CeleriteKernel (
           
@@ -63,7 +63,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     
     case 1: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::ConstantKernel (
           
@@ -82,7 +82,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     
     case 2: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::CosineKernel (
           
@@ -101,7 +101,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     
     case 3: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::DotProductKernel (
           
@@ -119,7 +119,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     
     case 4: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::EmptyKernel (
           
@@ -138,8 +138,8 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     case 5: {
       
       py::object metric = kernel_spec.attr("metric");
-      int metric_type = py::int_(metric.attr("metric_type"));
-      int ndim = py::int_(metric.attr("ndim"));
+      size_t metric_type = py::int_(metric.attr("metric_type"));
+      size_t ndim = py::int_(metric.attr("ndim"));
       py::list axes = py::list(metric.attr("axes"));
       bool blocked = py::bool_(kernel_spec.attr("blocked"));
       py::array_t<double> min_block = py::array_t<double>(kernel_spec.attr("min_block"));
@@ -198,7 +198,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     
     case 6: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::ExpSine2Kernel (
           
@@ -219,8 +219,8 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     case 7: {
       
       py::object metric = kernel_spec.attr("metric");
-      int metric_type = py::int_(metric.attr("metric_type"));
-      int ndim = py::int_(metric.attr("ndim"));
+      size_t metric_type = py::int_(metric.attr("metric_type"));
+      size_t ndim = py::int_(metric.attr("ndim"));
       py::list axes = py::list(metric.attr("axes"));
       bool blocked = py::bool_(kernel_spec.attr("blocked"));
       py::array_t<double> min_block = py::array_t<double>(kernel_spec.attr("min_block"));
@@ -279,7 +279,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     
     case 8: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::LinearKernel (
           
@@ -299,7 +299,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     
     case 9: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::LocalGaussianKernel (
           
@@ -320,8 +320,8 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     case 10: {
       
       py::object metric = kernel_spec.attr("metric");
-      int metric_type = py::int_(metric.attr("metric_type"));
-      int ndim = py::int_(metric.attr("ndim"));
+      size_t metric_type = py::int_(metric.attr("metric_type"));
+      size_t ndim = py::int_(metric.attr("ndim"));
       py::list axes = py::list(metric.attr("axes"));
       bool blocked = py::bool_(kernel_spec.attr("blocked"));
       py::array_t<double> min_block = py::array_t<double>(kernel_spec.attr("min_block"));
@@ -381,8 +381,8 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     case 11: {
       
       py::object metric = kernel_spec.attr("metric");
-      int metric_type = py::int_(metric.attr("metric_type"));
-      int ndim = py::int_(metric.attr("ndim"));
+      size_t metric_type = py::int_(metric.attr("metric_type"));
+      size_t ndim = py::int_(metric.attr("ndim"));
       py::list axes = py::list(metric.attr("axes"));
       bool blocked = py::bool_(kernel_spec.attr("blocked"));
       py::array_t<double> min_block = py::array_t<double>(kernel_spec.attr("min_block"));
@@ -441,7 +441,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     
     case 12: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::MyLocalGaussianKernel (
           
@@ -461,7 +461,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     
     case 13: {
       
-      int ndim = py::int_(kernel_spec.attr("ndim"));
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::PolynomialKernel (
           
@@ -482,8 +482,8 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
     case 14: {
       
       py::object metric = kernel_spec.attr("metric");
-      int metric_type = py::int_(metric.attr("metric_type"));
-      int ndim = py::int_(metric.attr("ndim"));
+      size_t metric_type = py::int_(metric.attr("metric_type"));
+      size_t ndim = py::int_(metric.attr("ndim"));
       py::list axes = py::list(metric.attr("axes"));
       bool blocked = py::bool_(kernel_spec.attr("blocked"));
       py::array_t<double> min_block = py::array_t<double>(kernel_spec.attr("min_block"));

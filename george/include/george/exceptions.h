@@ -5,17 +5,17 @@
 
 namespace george {
 
-struct dimension_mismatch : public std::exception {
-  const char * what () const throw () {
-    return "dimension mismatch";
-  }
-};
+  struct dimension_mismatch : public std::exception {
+    const char * what () const throw () {
+      return "dimension mismatch";
+    }
+  };
 
-struct not_computed : public std::exception {
-  const char * what () const throw () {
-    return "you must call 'compute' first";
-  }
-};
+  struct not_computed : public std::exception {
+    const char * what () const throw () {
+      return "you must call 'compute' first";
+    }
+  };
 
 }
 

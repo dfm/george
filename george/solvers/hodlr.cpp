@@ -16,7 +16,7 @@ class SolverMatrix {
     SolverMatrix (george::kernels::Kernel* kernel)
       : kernel_(kernel) {};
     void set_input_coordinates (RowMatrixXd x) {
-      if (x.cols() != kernel_->get_ndim()) {
+      if (size_t(x.cols()) != kernel_->get_ndim()) {
         throw george::dimension_mismatch();
       }
       t_ = x;

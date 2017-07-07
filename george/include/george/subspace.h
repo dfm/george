@@ -5,24 +5,26 @@
 #include <vector>
 
 namespace george {
-namespace subspace {
+  namespace subspace {
 
-class Subspace {
-public:
-    Subspace (unsigned ndim, unsigned naxes)
-        : ndim_(ndim), naxes_(naxes), axes_(naxes) {};
+    class Subspace {
+      public:
+        Subspace (size_t ndim, size_t naxes)
+          : ndim_(ndim)
+          , naxes_(naxes)
+          , axes_(naxes) {};
 
-    unsigned get_ndim () const { return ndim_; };
-    unsigned get_naxes () const { return naxes_; };
-    unsigned get_axis (const unsigned i) const { return axes_[i]; };
-    void set_axis (const unsigned i, const unsigned value) { axes_[i] = value; };
+        size_t get_ndim () const { return ndim_; };
+        size_t get_naxes () const { return naxes_; };
+        size_t get_axis (size_t i) const { return axes_[i]; };
+        void set_axis (size_t i, size_t value) { axes_[i] = value; };
 
-private:
-    unsigned ndim_, naxes_;
-    std::vector<unsigned> axes_;
-};
+      private:
+        size_t ndim_, naxes_;
+        std::vector<size_t> axes_;
+    };
 
-}; // namespace subspace
+  }; // namespace subspace
 }; // namespace george
 
 #endif
