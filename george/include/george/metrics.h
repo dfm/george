@@ -143,7 +143,7 @@ namespace george {
         GeneralMetric (size_t ndim, size_t naxes)
           : Metric(ndim, naxes, naxes*(naxes+1)/2) {};
 
-        void set_parameter (size_t i, const double value) {
+        void set_parameter (size_t i, double value) {
           size_t j, d;
           this->updated_ = true;
           for (j = 0, d = 2; j <= i; j += d, ++d) {
