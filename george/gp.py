@@ -232,10 +232,10 @@ class GP(ModelSet):
 
         return t[inds], inds
 
-    def _check_dimensions(self, y):
+    def _check_dimensions(self, y, check_dim=True):
         n, ndim = self._x.shape
         y = np.atleast_1d(y)
-        if len(y.shape) > 1:
+        if check_dim and len(y.shape) > 1:
             raise ValueError("The predicted dimension must be 1-D")
         if len(y) != n:
             raise ValueError("Dimension mismatch")
@@ -262,11 +262,20 @@ class GP(ModelSet):
 
         """
         self.recompute(quiet=False)
-        mu = self._call_mean(self._x)
-        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] - mu,
-                                 dtype=np.float64)
+        r = self._check_dimensions(y, check_dim=False)[self.inds]
+
+        # Broadcast the mean function
+        m = [slice(None)] + [np.newaxis for _ in range(len(r.shape) - 1)]
+        r -= self._call_mean(self._x)[m]
+
+        # Do the solve
+        r = np.asfortranarray(r, dtype=np.float64)
         b = np.empty_like(r)
-        b[self.inds] = self.solver.apply_inverse(r, in_place=True)
+        if len(r.shape) == 1:
+            b[self.inds] = self.solver.apply_inverse(r, in_place=True) \
+                .flatten()
+        else:
+            b[self.inds] = self.solver.apply_inverse(r, in_place=True)
         return b
 
     def compute(self, x, yerr=0.0, sort=True, **kwargs):

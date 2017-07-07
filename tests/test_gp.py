@@ -141,7 +141,11 @@ def test_apply_inverse(solver, seed=1234, N=100, ndim=1, yerr=0.1):
 
     b1 = np.linalg.solve(K, y)
     b2 = gp.apply_inverse(y)
-    print(b1)
-    print(b2)
+    assert np.allclose(b1, b2), \
+        "Apply inverse with a sort isn't working"
+
+    y = gp.sample(x, size=5).T
+    b1 = np.linalg.solve(K, y)
+    b2 = gp.apply_inverse(y)
     assert np.allclose(b1, b2), \
         "Apply inverse with a sort isn't working"
