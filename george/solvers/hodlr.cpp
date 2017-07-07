@@ -36,8 +36,9 @@ class SolverMatrix {
 class Solver {
 public:
 
-  Solver (py::object& kernel_spec, int min_size = 100, double tol = 0.1, int seed = 0)
-    : tol_(tol)
+  Solver (py::object kernel_spec, int min_size = 100, double tol = 0.1, int seed = 0)
+    : kernel_spec_(kernel_spec)
+    , tol_(tol)
     , min_size_(min_size)
     , seed_(seed)
   {
@@ -50,6 +51,10 @@ public:
     if (solver_ != NULL) delete solver_;
     delete matrix_;
     delete kernel_;
+  };
+
+  auto serialize () const {
+    return std::make_tuple(kernel_spec_, min_size_, tol_, seed_);
   };
 
   int get_status () const { return 0; };
@@ -99,6 +104,7 @@ public:
   int size () const { return size_; };
 
 private:
+  py::object kernel_spec_;
   double log_det_, tol_;
   int min_size_, seed_, size_;
   int computed_;
@@ -145,6 +151,18 @@ Docs...
     return eye;
   });
 
+  solver.def("__getstate__", [](const Solver& self) {
+    return self.serialize();
+  });
+
+  solver.def("__setstate__", [](Solver& self, py::tuple t) {
+    if (t.size() != 4) throw std::runtime_error("Invalid state!");
+    new (&self) Solver(
+        t[0].cast<py::object>(),
+        t[1].cast<int>(),
+        t[2].cast<double>(),
+        t[3].cast<int>());
+  });
 
   return m.ptr();
 }

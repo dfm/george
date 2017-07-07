@@ -17,7 +17,7 @@ def _fake_compute(arg, *args, **kwargs):
     assert 0, "Unpickled GP shouldn't need to be computed"
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 @pytest.mark.parametrize("solver,success", [(BasicSolver, True),
                                             (HODLRSolver, False)])
 def test_pickle(solver, success, N=50, seed=123):
