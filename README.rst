@@ -11,6 +11,8 @@ George
     :target: https://travis-ci.org/dfm/george
 .. image:: https://ci.appveyor.com/api/projects/status/xy4ts3v3sk5lo5ll?svg=true&style=flat
     :target: https://ci.appveyor.com/project/dfm/george
+.. image:: https://coveralls.io/repos/github/dfm/george/badge.svg?branch=master&style=flat
+    :target: https://coveralls.io/github/dfm/george?branch=master
 .. image:: https://readthedocs.org/projects/george/badge/?version=latest
     :target: http://george.readthedocs.io/en/latest/?badge=latest
 
