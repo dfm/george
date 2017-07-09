@@ -1,8 +1,11 @@
 name: george
 
+channels:
+  - conda-forge
+
 dependencies:
   - python=3.5
-  - cython
+  - pybind11
   - numpy
   - scipy
   - pyyaml
