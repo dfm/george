@@ -1,3 +1,0 @@
-[submodule "hodlr"]
-	path = vendor/hodlr
-	url = https://github.com/dfm/HODLR_Solver.git
