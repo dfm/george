@@ -9,3 +9,4 @@ exclude_lines =
     raise ImportError
     except ImportError
     def __len__
+    def __repr__
