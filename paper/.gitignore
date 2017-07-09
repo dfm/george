@@ -1,0 +1,12 @@
+*.aux
+*.brf
+*.log
+*.out
+*.pdf
+*.bbl
+*.blg
+*.dvi
+*.ps
+*.synctex.gz
+vc.tex
+old

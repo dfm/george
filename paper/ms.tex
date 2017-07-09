@@ -1,0 +1,223 @@
+% Copyright 2015-2017 Dan Foreman-Mackey and the co-authors listed below.
+
+\documentclass[modern, letterpaper]{aastex61}
+
+\pdfoutput=1
+
+\include{vc}
+
+\usepackage{microtype}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{natbib}
+\usepackage{multirow}
+\bibliographystyle{aasjournal}
+
+% ----------------------------------- %
+% start of AASTeX mods by DWH and DFM %
+% ----------------------------------- %
+
+% Matrix fix:
+% http://tex.stackexchange.com/questions/317824/letter-c-appearing-inside-pmatrix-environment-with-aastex
+%\makeatletter
+%\def\env@matrix{\hskip -\arraycolsep\let\@ifnextchar\new@ifnextchar\array{*{\c@MaxMatrixCols}c}}
+%\makeatother
+
+%% Column spacing in matrix
+%% http://tex.stackexchange.com/questions/275725/adjusting-separation-between-matrix-entries
+%\setlength\arraycolsep{25pt}
+
+%\setlength{\voffset}{0in}
+%\setlength{\hoffset}{0in}
+%\setlength{\textwidth}{6in}
+%\setlength{\textheight}{9in}
+%\setlength{\headheight}{0ex}
+%\setlength{\headsep}{\baselinestretch\baselineskip} % this is 2 lines in ``manuscript''
+%\setlength{\footnotesep}{0in}
+%\setlength{\topmargin}{-\headsep}
+%\setlength{\oddsidemargin}{0.25in}
+%\setlength{\evensidemargin}{0.25in}
+
+%\linespread{0.54} % close to 10/13 spacing in ``manuscript''
+%\setlength{\parindent}{0.54\baselineskip}
+%\hypersetup{colorlinks = false}
+%\makeatletter % you know you are living your life wrong when you need to do this
+%\long\def\frontmatter@title@above{
+%\vspace*{-\headsep}\vspace*{\headheight}
+%\noindent\footnotesize
+%{\noindent\footnotesize\textsc{\@journalinfo}}\par
+%{\noindent\scriptsize Preprint typeset using \LaTeX\ style AASTeX6 with modifications
+%}\par\vspace*{-\baselineskip}\vspace*{0.625in}
+%}%
+%\makeatother
+
+%% Section spacing:
+%\makeatletter
+%\let\origsection\section
+%\renewcommand\section{\@ifstar{\starsection}{\nostarsection}}
+%\newcommand\nostarsection[1]{\sectionprelude\origsection{#1}}
+%\newcommand\starsection[1]{\sectionprelude\origsection*{#1}}
+%\newcommand\sectionprelude{\vspace{1em}}
+%\let\origsubsection\subsection
+%\renewcommand\subsection{\@ifstar{\starsubsection}{\nostarsubsection}}
+%\newcommand\nostarsubsection[1]{\subsectionprelude\origsubsection{#1}}
+%\newcommand\starsubsection[1]{\subsectionprelude\origsubsection*{#1}}
+%\newcommand\subsectionprelude{\vspace{1em}}
+%\makeatother
+
+%\sloppy\sloppypar
+
+%%\widowpenalty=10000
+%\clubpenalty=1000000000
+
+% ------------------ %
+% end of AASTeX mods %
+% ------------------ %
+
+% Projects:
+\newcommand{\project}[1]{\textsf{#1}}
+\newcommand{\kepler}{\project{Kepler}}
+\newcommand{\lsst}{\project{LSST}}
+\newcommand{\tess}{\project{TESS}}
+\newcommand{\celerite}{\project{celerite}}
+\newcommand{\celeriteterm}{\emph{celerite}}
+\newcommand{\emcee}{\project{emcee}}
+
+\newcommand{\foreign}[1]{\emph{#1}}
+\newcommand{\etal}{\foreign{et\,al.}}
+\newcommand{\etc}{\foreign{etc.}}
+\newcommand{\ie}{\foreign{i.e.}}
+
+\newcommand{\figureref}[1]{\ref{fig:#1}}
+\newcommand{\Figure}[1]{Figure~\figureref{#1}}
+\newcommand{\figurelabel}[1]{\label{fig:#1}}
+
+\newcommand{\Table}[1]{Table~\ref{tab:#1}}
+\newcommand{\tablelabel}[1]{\label{tab:#1}}
+
+\renewcommand{\eqref}[1]{\ref{eq:#1}}
+\newcommand{\Eq}[1]{Equation~(\eqref{#1})}
+\newcommand{\eq}[1]{\Eq{#1}}
+\newcommand{\eqalt}[1]{Equation~\eqref{#1}}
+\newcommand{\eqlabel}[1]{\label{eq:#1}}
+
+\newcommand{\sectionname}{Section}
+\newcommand{\sectref}[1]{\ref{sect:#1}}
+\newcommand{\Sect}[1]{\sectionname~\sectref{#1}}
+\newcommand{\sect}[1]{\Sect{#1}}
+\newcommand{\sectalt}[1]{\sectref{#1}}
+\newcommand{\App}[1]{Appendix~\sectref{#1}}
+\newcommand{\app}[1]{\App{#1}}
+\newcommand{\sectlabel}[1]{\label{sect:#1}}
+
+\newcommand{\T}{\ensuremath{\mathrm{T}}}
+\newcommand{\dd}{\ensuremath{\,\mathrm{d}}}
+\newcommand{\unit}[1]{{\ensuremath{\,\mathrm{#1}}}}
+\newcommand{\bvec}[1]{{\ensuremath{\boldsymbol{#1}}}}
+
+% TO DOS
+\newcommand{\todo}[3]{{\color{#2}\emph{#1}: #3}}
+\newcommand{\dfmtodo}[1]{\todo{DFM}{red}{#1}}
+\newcommand{\agoltodo}[1]{\todo{Agol}{blue}{#1}}
+\newcommand{\racomment}[1]{{\color{magenta}#1}}
+
+\newcommand{\response}[1]{{\color{blue}#1}}
+
+
+% \shorttitle{}
+% \shortauthors{}
+% \submitted{Submitted to \textit{The Astrophysical Journal}}
+
+\begin{document}
+\sloppy\sloppypar\raggedbottom\frenchspacing
+
+\title{Gaussian processes in astronomy}
+
+\correspondingauthor{Daniel Foreman-Mackey}
+\email{formeman.mackey@gmail.com}
+
+\author[0000-0002-9328-5652]{Daniel Foreman-Mackey}
+\affiliation{NASA Sagan Fellow}
+\affiliation{Astronomy Department, University of Washington, Seattle, WA}
+\affiliation{Center for Computational Astrophysics, Flatiron Institute, New York, NY}
+
+\begin{abstract}\noindent
+
+    todo
+
+\end{abstract}
+
+\keywords{%
+ %methods: data analysis
+ %---
+ %methods: statistical
+ %---
+ %asteroseismology
+ %---
+ %stars: rotation
+ %---
+ %planetary systems
+}
+
+\section{Introduction}
+
+Face.
+
+\subsection{Code availability}
+
+Alongside this paper, we have released a well-tested and documented open
+source software package that implements the method and all of the examples
+discussed in these pages.
+This software is available on GitHub
+\url{https://github.com/dfm/george}\footnote{This version of the paper was
+generated with git commit \texttt{\githash} (\gitdate).} and Zenodo
+\dfmtodo{ADD ZENODO}, and it is made available under the MIT license.
+
+\acknowledgments
+It is a pleasure to thank
+for helpful discussions informing the ideas and code presented here.
+
+This work was performed in part under contract with the Jet Propulsion
+Laboratory (JPL) funded by NASA through the Sagan Fellowship Program executed
+by the NASA Exoplanet Science Institute.
+
+%This research made use of the NASA \project{Astrophysics Data System} and the
+%NASA Exoplanet Archive.
+%The Exoplanet Archive is operated by the California Institute of Technology,
+%under contract with NASA under the Exoplanet Exploration Program.
+
+%This paper includes data collected by the \kepler\ Mission. Funding for the
+%\kepler\ Mission is provided by the NASA Science Mission directorate.
+%We are grateful to the entire \kepler\ team, past and present.
+%These data were obtained from the Mikulski Archive for Space Telescopes
+%(MAST).
+%STScI is operated by the Association of Universities for Research in
+%Astronomy, Inc., under NASA contract NAS5-26555.
+%Support for MAST is provided by the NASA Office of Space Science via grant
+%NNX13AC07G and by other grants and contracts.
+
+%This research made use of Astropy, a community-developed core Python package
+%for Astronomy \citep{Astropy-Collaboration:2013}.
+
+\facility{Kepler}
+\software{%
+     %\project{AstroPy} \citep{Astropy-Collaboration:2013},
+     %\project{corner.py} \citep{Foreman-Mackey:2016},
+     %\project{Eigen} \citep{Guennebaud:2010},
+     %\project{emcee} \citep{Foreman-Mackey:2013},
+     %\project{george} \citep{Ambikasaran:2016},
+     %\project{Julia} \citep{Bezanzon:2012},
+     %\project{LAPACK} \citep{Anderson:1999},
+     %\project{matplotlib} \citep{Hunter:2007},
+     %\project{numpy} \citep{Van-Der-Walt:2011},
+     %\project{transit} \citep{Foreman-Mackey:2016a},
+     %\project{scipy} \citep{Jones:2001}.
+}
+
+%\vspace{5ex}
+%\appendix
+
+\bibliography{george}
+
+\end{document}

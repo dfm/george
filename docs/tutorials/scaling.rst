@@ -22,7 +22,7 @@ This notebook was made with the following version of george:
 
 .. parsed-literal::
 
-    '1.0.0.dev0'
+    '0.3.0.dev0'
 
 
 
@@ -84,7 +84,7 @@ could also use the approximate solver as follows:
 
 .. code:: python
 
-    gp_hodlr = george.GP(kernel, solver=george.HODLRSolver)
+    gp_hodlr = george.GP(kernel, solver=george.HODLRSolver, seed=42)
     gp_hodlr.compute(x[:100], yerr[:100])
     print(gp_hodlr.log_likelihood(y[:100]))
 
@@ -228,14 +228,13 @@ scale:
 
 
 The sklearn and basic solver perform similarly with george being
-consistently a factor of :math:`\sim 1.5` faster. This is not surprising
-because they both use LAPACK (via numpy/scipy) to naïvely compute the
-likelihood. GPy is consistently slower (probably because of Python
-overheads) even for small datasets but, like I mentioned previously,
-this wasn't really what GPy was designed to do and it comes with a lot
-of other features. For large datasets (:math:`N \gtrsim 1000`), the
-``HODLRSolver`` really shines. In practice, this gain is less
-significant for multidimensional inputs and some other kernels but for
-reasonably well-behaved time-series models, it might solve all of your
-problems!
+consistently slightly faster. This is not surprising because they both
+use LAPACK (via numpy/scipy) to naïvely compute the likelihood. GPy is
+consistently slower (probably because of Python overheads) even for
+small datasets but, like I mentioned previously, this wasn't really what
+GPy was designed to do and it comes with a lot of other features. For
+large datasets (:math:`N \gtrsim 1000`), the ``HODLRSolver`` really
+shines. In practice, this gain is less significant for multidimensional
+inputs and some other kernels but for reasonably well-behaved
+time-series models, it might solve all of your problems!
 
