@@ -89,11 +89,6 @@ def cpp_flag(compiler):
                            'is needed!')
 
 class build_ext(_build_ext):
-    """
-    A custom extension builder that finds the include directories for Eigen
-    and HODLR before compiling.
-
-    """
     c_opts = {
         "msvc": ["/EHsc", "/DNODEBUG"],
         "unix": ["-DNODEBUG"],
@@ -102,9 +97,6 @@ class build_ext(_build_ext):
     def build_extensions(self):
         # The include directory for the celerite headers
         localincl = "vendor"
-        if not os.path.exists(os.path.join(localincl, "hodlr", "header",
-                                           "HODLR_Matrix.hpp")):
-            raise RuntimeError("couldn't find HODLR headers")
         if not os.path.exists(os.path.join(localincl, "eigen_3.3.4", "Eigen",
                                            "Core")):
             raise RuntimeError("couldn't find Eigen headers")
