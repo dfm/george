@@ -16,8 +16,9 @@ conda update -q conda
 conda info -a
 conda create --yes -n test python=$PYTHON_VERSION
 source activate test
-conda install numpy=$NUMPY_VERSION scipy setuptools pytest jinja2 pyyaml
+conda install numpy=$NUMPY_VERSION scipy setuptools pytest pytest-cov jinja2 pyyaml pip
 conda install -c conda-forge pybind11
+pip install coveralls
 
 # Build the extension
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
