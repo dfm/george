@@ -39,7 +39,7 @@ matrix:
 install:
     - source .ci/travis.sh
 
-script: py.test -v --cov
+script: py.test -v --cov george
 
 after_success:
     - coveralls
