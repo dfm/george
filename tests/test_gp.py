@@ -15,7 +15,7 @@ from george import kernels, GP, BasicSolver, HODLRSolver
 
 @pytest.mark.parametrize("solver,white_noise",
                          product([BasicSolver, HODLRSolver], [None, 0.1]))
-def test_gradient(solver, white_noise, seed=123, N=100, ndim=3, eps=1.32e-3):
+def test_gradient(solver, white_noise, seed=123, N=305, ndim=3, eps=1.32e-3):
     np.random.seed(seed)
 
     # Set up the solver.
@@ -23,6 +23,8 @@ def test_gradient(solver, white_noise, seed=123, N=100, ndim=3, eps=1.32e-3):
     kwargs = dict()
     if white_noise is not None:
         kwargs = dict(white_noise=white_noise, fit_white_noise=True)
+    if solver == HODLRSolver:
+        kwargs["tol"] = 1e-8
     gp = GP(kernel, solver=solver, **kwargs)
 
     # Sample some data.
