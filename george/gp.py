@@ -80,6 +80,25 @@ class GP(ModelSet):
             ("kernel", kernels.EmptyKernel() if kernel is None else kernel),
         ])
 
+        # Default behavior for fit_mean and fit_white_noise. If a constant is
+        # provided and the fit_* parameter is not, we shouldn't try to fit
+        # that component.
+        try:
+            float(mean)
+        except TypeError:
+            pass
+        else:
+            fit_mean = False if fit_mean is None else fit_mean
+
+        try:
+            float(white_noise)
+        except TypeError:
+            pass
+        else:
+            fit_white_noise = (
+                False if fit_white_noise is None else fit_white_noise
+            )
+
         if not fit_kernel:
             self.models["kernel"].freeze_all_parameters()
         if mean is None or (fit_mean is not None and not fit_mean):
