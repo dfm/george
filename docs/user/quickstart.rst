@@ -39,7 +39,7 @@ checkout the required HODLR submodule:
 
 .. code-block:: bash
 
-    git clone --recursive https://github.com/dfm/george.git
+    git clone https://github.com/dfm/george.git
     cd george
 
 Then, install the package by running the following command:

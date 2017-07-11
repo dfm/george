@@ -3,8 +3,9 @@
 0.3.0 (upcoming)
 ++++++++++++++++
 
-- A lot of new features
-
+- New modeling protocol for parameter fitting
+- Rewritten HODLR algorithm - more stable and better performance
+- New interface for "easily" implementing new kernel functions
 
 pre-0.3
 +++++++
