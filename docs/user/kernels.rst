@@ -189,6 +189,12 @@ specifies the following matrix
 
     C = \left(\begin{array}{cc} 2 & 0 \\ 0 & 4 \end{array}\right) \quad.
 
+.. note:: Another way to define the isotropic metric is that it scales the
+    square of the distance between points such that the following equality
+    holds for a kernel evaluated at two points a distance :math:`r`: apart:
+    :math:`k(r^2;\,\textrm{metric}=\lambda) =
+    k(r^2 / \lambda;\,\mathrm{metric}=1)`.
+
 In the "general" case, the matrix is parameterized by the elements of the
 Cholesky decomposition :math:`C = L\,L^\mathrm{T}` with logarithms along the
 diagonal.
