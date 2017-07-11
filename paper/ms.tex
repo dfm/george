@@ -14,75 +14,8 @@
 \usepackage{multirow}
 \bibliographystyle{aasjournal}
 
-% ----------------------------------- %
-% start of AASTeX mods by DWH and DFM %
-% ----------------------------------- %
-
-% Matrix fix:
-% http://tex.stackexchange.com/questions/317824/letter-c-appearing-inside-pmatrix-environment-with-aastex
-%\makeatletter
-%\def\env@matrix{\hskip -\arraycolsep\let\@ifnextchar\new@ifnextchar\array{*{\c@MaxMatrixCols}c}}
-%\makeatother
-
-%% Column spacing in matrix
-%% http://tex.stackexchange.com/questions/275725/adjusting-separation-between-matrix-entries
-%\setlength\arraycolsep{25pt}
-
-%\setlength{\voffset}{0in}
-%\setlength{\hoffset}{0in}
-%\setlength{\textwidth}{6in}
-%\setlength{\textheight}{9in}
-%\setlength{\headheight}{0ex}
-%\setlength{\headsep}{\baselinestretch\baselineskip} % this is 2 lines in ``manuscript''
-%\setlength{\footnotesep}{0in}
-%\setlength{\topmargin}{-\headsep}
-%\setlength{\oddsidemargin}{0.25in}
-%\setlength{\evensidemargin}{0.25in}
-
-%\linespread{0.54} % close to 10/13 spacing in ``manuscript''
-%\setlength{\parindent}{0.54\baselineskip}
-%\hypersetup{colorlinks = false}
-%\makeatletter % you know you are living your life wrong when you need to do this
-%\long\def\frontmatter@title@above{
-%\vspace*{-\headsep}\vspace*{\headheight}
-%\noindent\footnotesize
-%{\noindent\footnotesize\textsc{\@journalinfo}}\par
-%{\noindent\scriptsize Preprint typeset using \LaTeX\ style AASTeX6 with modifications
-%}\par\vspace*{-\baselineskip}\vspace*{0.625in}
-%}%
-%\makeatother
-
-%% Section spacing:
-%\makeatletter
-%\let\origsection\section
-%\renewcommand\section{\@ifstar{\starsection}{\nostarsection}}
-%\newcommand\nostarsection[1]{\sectionprelude\origsection{#1}}
-%\newcommand\starsection[1]{\sectionprelude\origsection*{#1}}
-%\newcommand\sectionprelude{\vspace{1em}}
-%\let\origsubsection\subsection
-%\renewcommand\subsection{\@ifstar{\starsubsection}{\nostarsubsection}}
-%\newcommand\nostarsubsection[1]{\subsectionprelude\origsubsection{#1}}
-%\newcommand\starsubsection[1]{\subsectionprelude\origsubsection*{#1}}
-%\newcommand\subsectionprelude{\vspace{1em}}
-%\makeatother
-
-%\sloppy\sloppypar
-
-%%\widowpenalty=10000
-%\clubpenalty=1000000000
-
-% ------------------ %
-% end of AASTeX mods %
-% ------------------ %
-
 % Projects:
 \newcommand{\project}[1]{\textsf{#1}}
-\newcommand{\kepler}{\project{Kepler}}
-\newcommand{\lsst}{\project{LSST}}
-\newcommand{\tess}{\project{TESS}}
-\newcommand{\celerite}{\project{celerite}}
-\newcommand{\celeriteterm}{\emph{celerite}}
-\newcommand{\emcee}{\project{emcee}}
 
 \newcommand{\foreign}[1]{\emph{#1}}
 \newcommand{\etal}{\foreign{et\,al.}}
@@ -119,15 +52,8 @@
 % TO DOS
 \newcommand{\todo}[3]{{\color{#2}\emph{#1}: #3}}
 \newcommand{\dfmtodo}[1]{\todo{DFM}{red}{#1}}
-\newcommand{\agoltodo}[1]{\todo{Agol}{blue}{#1}}
-\newcommand{\racomment}[1]{{\color{magenta}#1}}
 
 \newcommand{\response}[1]{{\color{blue}#1}}
-
-
-% \shorttitle{}
-% \shortauthors{}
-% \submitted{Submitted to \textit{The Astrophysical Journal}}
 
 \begin{document}
 \sloppy\sloppypar\raggedbottom\frenchspacing
@@ -163,6 +89,76 @@
 \section{Introduction}
 
 Face.
+
+\section{Notation}
+
+\section{The Gaussian likelihood}
+
+It is commonly assumed that a set of data points with error bars represent
+independent measurements with Gaussian uncertainties of known variance.
+Under this assumption, for a model $f(\bvec{x};\,\bvec{\theta})$, the
+likelihood for a single data point $y_n$ measured at coordinates $\bvec{x}_n$
+with error bar $\sigma_n$ is
+\begin{eqnarray}
+p(y_n\,|\,\bvec{x}_n,\,\sigma_n,\,\bvec{\theta}) &=&
+    \frac{1}{\sqrt{2\,\pi\,{\sigma_n}^2}}\,\exp\left(
+    -\frac{1}{2}\,\frac{{[y_n-f(\bvec{x};\,\bvec{\theta})]}^2}{{\sigma_n}^2}
+    \right) \quad.
+\end{eqnarray}
+Therefore, the joint likelihood for a set of $N$ data points ${\{\bvec{x}_n,\,
+y_n,\, \sigma_n\}}_{n=1}^N$ is
+\begin{eqnarray}\eqlabel{ind-like}
+p(\{y_n\}\,|\,\{\bvec{x}_n,\,\sigma_n\},\,\bvec{\theta}) &=&
+    \prod_{n=1}^N\frac{1}{\sqrt{2\,\pi\,{\sigma_n}^2}}\,\exp\left(
+    -\frac{1}{2}\,\frac{{[y_n-f(\bvec{x};\,\bvec{\theta})]}^2}{{\sigma_n}^2}
+    \right) \quad.
+\end{eqnarray}
+It is common practice to work with the natural logarithm of this quantity
+instead of the likelihood directly.
+Taking the logarithm of \eq{ind-like}, we find
+\begin{eqnarray}\eqlabel{ind-loglike}
+\log p(\{y_n\}\,|\,\{\bvec{x}_n,\,\sigma_n\},\,\bvec{\theta}) &=&
+    -\frac{1}{2}\,\sum_{n=1}^N\left[
+    \frac{{[y_n-f(\bvec{x};\,\bvec{\theta})]}^2}{{\sigma_n}^2}
+    +\log {(2\,\pi\,{\sigma_n}^2)}
+    \right]\quad.
+\end{eqnarray}
+It is worth qualitatively considering the roles of the two terms in
+\eq{ind-loglike} because this discussion will come up repeatedly throughout
+this paper.
+The first term within the square brackets is what is commonly referred to as
+``$\chi^2$'' in the astronomy literature and it quantifies the
+``goodness-of-fit'' of the model.
+The second term quantifies the specificity of the model and penalizes overly
+general models.
+For fixed uncertainties $\{\sigma_n\}$, this second term is a constant with
+respect to the parameters $\bvec{\theta}$ and maximizing the log-likelihood in
+\eq{ind-loglike} is equivalent to minimizing $\chi^2$.
+In other words, calculating $\chi^2$ requires assuming that the uncertainties
+are independent Gaussians with known variance.
+
+This more general formulation of the Gaussian likelihood function will come in
+handy for our derivation of GP modeling shortly, but let's start with a
+concrete example where minimizing $\chi^2$ is not sufficient.
+It is not uncommon for uncertainties on astronomical quantities to be
+underestimated or unknown.
+In this case, we must fit for a parametric representation of the uncertainties
+simultaneously with the model $f(\bvec{x};\,\bvec{\theta})$.
+To do this, we might include another parameter, we'll call it $s$, to quantify
+the amount by which the uncertainties are underestimated.
+In this case, the likelihood becomes
+\begin{eqnarray}\eqlabel{jitter-loglike}
+\log p(\{y_n\}\,|\,\{\bvec{x}_n,\,\sigma_n\},\,\bvec{\theta},\,s) &=&
+    -\frac{1}{2}\,\sum_{n=1}^N\left[
+    \frac{{[y_n-f(\bvec{x};\,\bvec{\theta})]}^2}{{\sigma_n}^2 + s^2}
+    +\log {(2\,\pi\,[{\sigma_n}^2+s^2])}
+    \right]
+\end{eqnarray}
+and we can now maximize this with respect to both $\bvec{\theta}$ and $s$.
+
+
+\section{A Gaussian process as a model of correlated noise}
+
 
 \subsection{Code availability}
 
