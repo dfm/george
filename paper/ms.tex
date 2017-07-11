@@ -14,6 +14,16 @@
 \usepackage{multirow}
 \bibliographystyle{aasjournal}
 
+% Matrix fix:
+% http://tex.stackexchange.com/questions/317824/letter-c-appearing-inside-pmatrix-environment-with-aastex
+%\makeatletter
+%\def\env@matrix{\hskip -\arraycolsep\let\@ifnextchar\new@ifnextchar\array{*{\c@MaxMatrixCols}c}}
+%\makeatother
+
+% Column spacing in matrix
+% http://tex.stackexchange.com/questions/275725/adjusting-separation-between-matrix-entries
+\setlength\arraycolsep{25pt}
+
 % Projects:
 \newcommand{\project}[1]{\textsf{#1}}
 
@@ -156,9 +166,106 @@ In this case, the likelihood becomes
 \end{eqnarray}
 and we can now maximize this with respect to both $\bvec{\theta}$ and $s$.
 
-
 \section{A Gaussian process as a model of correlated noise}
 
+One way to motivate the definition of a GP is to think of it as a model of
+correlated noise.
+The derive this, we start by re-writing \eq{ind-loglike} as a matrix equation
+\begin{eqnarray}\eqlabel{ind-loglike-matrix}
+\log p(\{y_n\}\,|\,\{\bvec{x}_n,\,\sigma_n\},\,\bvec{\theta}) &=&
+    -\frac{1}{2}\,{\bvec{r}_\bvec{\theta}}^\T\,K^{-1}\,{\bvec{r}_\bvec{\theta}}
+    -\frac{1}{2}\,\log\det K
+    -\frac{N}{2}\,\log(2\,\pi)
+\end{eqnarray}
+where $\bvec{r}_\bvec{\theta}$ is the residual vector
+\begin{eqnarray}
+{\bvec{r}_\bvec{\theta}}^\T = \left(\begin{array}{ccc}
+    y_1 - f(\bvec{x}_1;\,\bvec{\theta}) & \cdots &
+    y_N - f(\bvec{x}_N;\,\bvec{\theta})
+\end{array}\right)
+\end{eqnarray}
+and $K$ is the ``covariance matrix'' that is, in this case, diagonal
+\begin{eqnarray}\eqlabel{diag-cov}
+K = \left(\begin{array}{ccc}
+    {\sigma_1}^2 & 0 & 0 \\
+    0 & \ddots & 0 \\
+    0 & 0 & {\sigma_N}^2
+\end{array}\right) \quad.
+\end{eqnarray}
+Noting that, for a diagonal matrix like this $K$, the inverse is
+\begin{eqnarray}
+K^{-1} = \left(\begin{array}{ccc}
+    1/{\sigma_1}^2 & 0 & 0 \\
+    0 & \ddots & 0 \\
+    0 & 0 & 1/{\sigma_N}^2
+\end{array}\right) \quad.
+\end{eqnarray}
+and the log-determinant is
+\begin{eqnarray}
+    \log\det K &=& \log \prod_{n=1}^N {\sigma_n}^2 \\
+    &=& \sum_{n=1}^N \log{\sigma_n}^2 \quad,
+\end{eqnarray}
+we can see that \eq{ind-loglike} and \eq{ind-loglike-matrix} are equivalent.
+
+You might remember that, in the previous section, we assumed that the data
+points are independent.
+This assumption is expressed by the fact that the covariance matrix in
+\eq{diag-cov} is diagonal~--~all the off-diagonal elements are zero.
+In order to take correlated noise into account, we introduce non-zero
+off-diagonal elements in the covariance $K$.
+The $n,\,m$-th entry in the $N \times N$ matrix $K$ quantifies the covariance
+between data points $n$ and $m$.
+If we have some method of \emph{estimating} this covariance \foreign{a
+priori}~--~much like how we often assume that we can estimate the diagonal
+elements of this matrix~--~we can fill in this matrix $K$ and evaluate
+\eq{ind-loglike-matrix} with this new, dense $K$.
+However, it is often hard to estimate these covariances reliably and we will,
+instead, fit for them.
+In practice, we probably don't want to add the $N\,(N-3)/2 \sim N^2$
+parameters that would be needed to fit for each entry in this matrix directly.
+Instead, we parameterize this covariance using a functional form where the
+$n,\,m$-th element of the matrix is given by
+\begin{eqnarray}\eqlabel{kernel}
+K_{n,\,m} &=& {\sigma_n}^2\,\delta_{n,\,m} +
+    k(\bvec{x}_n,\,\bvec{x}_m;\,\bvec{\alpha})
+\end{eqnarray}
+where $\delta_{n,\,m}$ is the Kronecker delta, and $k(\bvec{x}_n,\,\bvec{x}_m;
+\,\bvec{\alpha})$ is a function~--~parameterized by $\bvec{\alpha}$~--~that
+captures the covariance between the data points $\bvec{x}_n$ and $\bvec{x}_m$.
+This function $k(\bvec{x}_n,\,\bvec{x}_m;\,\bvec{\alpha})$ goes by a few names
+in the literature, the most common of which are ``covariance function'' or
+``kernel function''.
+Throughout this paper, we will refer to this function as the covariance
+function.
+To indicate that the covariance matrix is now parameterized by
+$\bvec{\alpha}$, we will typeset it as $K_\bvec{\alpha}$ and the
+log-likelihood function becomes
+\begin{eqnarray}\eqlabel{gp-loglike}
+\log p(\{y_n\}\,|\,\{\bvec{x}_n,\,\sigma_n\},\,\bvec{\theta},\,\bvec{\alpha})
+    &=&
+    -\frac{1}{2}\,{\bvec{r}_\bvec{\theta}}^\T\,{K_\bvec{\alpha}}^{-1}\,
+        {\bvec{r}_\bvec{\theta}}
+    -\frac{1}{2}\,\log\det K_\bvec{\alpha}
+    -\frac{N}{2}\,\log(2\,\pi) \quad.
+\end{eqnarray}
+
+It is worth noting that the case of independent data points
+(\eqalt{ind-loglike-matrix}) is a special (restrictive) case of
+\eq{gp-loglike} where
+\begin{eqnarray}
+k(\bvec{x}_n,\,\bvec{x}_m;\,\bvec{\alpha}) &=& 0 \quad.
+\end{eqnarray}
+In the case of GPs, we relax this assumption and choose a more flexible
+covariance function that approximates the real covariance structure in the
+data generation process.
+If we fit this GP model to a dataset where the data are actually independent
+and the diagonal variances ${\sigma_n}^2$ are correctly estimated, the second
+term in \eq{gp-loglike} will drive the covariance function to zero and
+correctly capture the fact that the data are independent.
+
+One of the touchiest subjects in GP modeling is the choice of covariance
+function and we will return to a detailed discussion of this in \dfmtodo{SOME
+SECTION}, but first, let's consider a concrete example.
 
 \subsection{Code availability}
 
