@@ -135,16 +135,49 @@ private:
 
 
 PYBIND11_PLUGIN(hodlr) {
-  py::module m("hodlr", R"delim(
-Docs...
-)delim");
+  py::module m("hodlr");
 
-  py::class_<Solver> solver(m, "HODLRSolver");
+  py::class_<Solver> solver(m, "HODLRSolver", R"delim(
+A solver using `Sivaram Amambikasaran's HODLR algorithm
+<http://arxiv.org/abs/1403.6015>`_ to approximately solve the GP linear
+algebra in :math:`\mathcal{O}(N\,\log^2 N)`.
+
+Args:
+    kernel (george.kernels.Kernel): A subclass of :class:`Kernel` specifying
+        the kernel function.
+    min_size (Optional[int]): The block size where the solver switches to a
+        general direct factorization algorithm. This can be tuned for platform
+        and problem specific performance and accuracy. As a general rule,
+        larger values will be more accurate and slower, but there is some
+        overhead for very small values, so we recommend choosing values in the
+        hundreds. (default: ``100``)
+    tol (Optional[float]): The precision tolerance for the low-rank
+        approximation. This value is used as an approximate limit on the
+        Frobenius norm between the low-rank approximation and the true matrix
+        when reconstructing the off-diagonal blocks. Smaller values of ``tol``
+        will generally give more accurate results with higher computational
+        cost. (default: ``0.1``)
+    seed (Optional[int]): The low-rank approximation method within the HODLR
+        algorithm is not deterministic and, without a fixed seed, the method
+        can give different results for the same matrix. Therefore, we require
+        that the user provide a seed for the random number generator.
+        (default: ``42``, obviously)
+
+)delim");
   solver.def(py::init<py::object, int, double, int>(),
-      py::arg("kernel_spec"), py::arg("min_size") = 100, py::arg("tol") = 10, py::arg("seed") = 42);
+      py::arg("kernel_spec"), py::arg("min_size") = 100, py::arg("tol") = 0.1, py::arg("seed") = 42);
   solver.def_property_readonly("computed", &Solver::get_computed);
   solver.def_property_readonly("log_determinant", &Solver::log_determinant);
-  solver.def("compute", &Solver::compute);
+  solver.def("compute", &Solver::compute, R"delim(
+Compute and factorize the covariance matrix.
+
+Args:
+    x (ndarray[nsamples, ndim]): The independent coordinates of the data
+        points.
+    yerr (ndarray[nsamples]): The Gaussian uncertainties on the data points at
+        coordinates ``x``. These values will be added in quadrature to the
+        diagonal of the covariance matrix.
+)delim");
   solver.def("apply_inverse", [](Solver& self, Eigen::MatrixXd& x, bool in_place = false){
     if (in_place) {
       self.apply_inverse(x);
@@ -153,13 +186,35 @@ Docs...
     Eigen::MatrixXd alpha = x;
     self.apply_inverse(alpha);
     return alpha;
-  }, py::arg("x"), py::arg("in_place") = false);
+  }, py::arg("x"), py::arg("in_place") = false, R"delim(
+Apply the inverse of the covariance matrix to the input by solving
+
+.. math::
+
+    K\,x = y
+
+Args:
+    y (ndarray[nsamples] or ndadrray[nsamples, nrhs]): The vector or matrix
+        :math:`y`.
+    in_place (Optional[bool]): Should the data in ``y`` be overwritten with
+        the result :math:`x`? (default: ``False``)
+)delim");
 
   solver.def("dot_solve", [](Solver& self, const Eigen::VectorXd& x){
     Eigen::VectorXd alpha = x;
     self.apply_inverse(alpha);
     return double(x.transpose() * alpha);
-  });
+  }, R"delim(
+Compute the inner product of a vector with the inverse of the covariance
+matrix applied to itself:
+
+.. math::
+
+    y\,K^{-1}\,y
+
+Args:
+    y (ndarray[nsamples]): The vector :math:`y`.
+)delim");
 
   solver.def("get_inverse", [](Solver& self){
     int n = self.size();
@@ -167,7 +222,10 @@ Docs...
     eye.setIdentity();
     self.apply_inverse(eye);
     return eye;
-  });
+  }, R"delim(
+Get the dense inverse covariance matrix. This is used for computing gradients,
+but it is not recommended in general.
+)delim");
 
   solver.def("__getstate__", [](const Solver& self) {
     return self.serialize();

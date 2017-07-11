@@ -1,5 +1,5 @@
 vendor/* linguist-vendored
-document/* linguist-documentation
+paper/* linguist-documentation
 *.h linguist-language=C++
 *.ipynb filter=nbstripout
 *.ipynb diff=ipynb

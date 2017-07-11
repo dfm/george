@@ -23,10 +23,10 @@ The solvers also provide the properties ``computed`` and ``log_determinant``.
 The simplest solver provided by George (:class:`BasicSolver`) uses `scipy's
 Cholesky implementation
 <http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.cholesky.html>`_
-and the second implementation (:class:`HODLRSolver`) uses  Sivaram
-Amambikasaran's `HODLR library <https://github.com/sivaramambikasaran/HODLR>`_.
-The HODLR algorithm implements a :math:`\mathcal{O}(N\,\log^2 N)` direct
-solver for dense matrices as described `here <http://arxiv.org/abs/1403.6015>`_.
+and the second implementation (:class:`HODLRSolver`) uses  `Sivaram
+Amambikasaran's HODLR algorithm <http://arxiv.org/abs/1403.6015>`_ to do the
+linear algebra in :math:`\mathcal{O}(N\,\log^2 N)` instead of
+:math:`\mathcal{O}(N^3)`.
 
 By default, George uses the :class:`BasicSolver` but the :class:`HODLRSolver`
 can be used as follows:

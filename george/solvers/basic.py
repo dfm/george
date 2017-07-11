@@ -12,8 +12,8 @@ class BasicSolver(object):
     """
     This is the most basic solver built using :func:`scipy.linalg.cholesky`.
 
-    :param kernel:
-        A subclass of :class:`Kernel` implementing a kernel function.
+    kernel (george.kernels.Kernel): A subclass of :class:`Kernel` specifying
+        the kernel function.
 
     """
 
@@ -52,13 +52,12 @@ class BasicSolver(object):
         """
         Compute and factorize the covariance matrix.
 
-        :param x: ``(nsamples, ndim)``
-            The independent coordinates of the data points.
-
-        :param yerr: (optional) ``(nsamples,)`` or scalar
-            The Gaussian uncertainties on the data points at coordinates
-            ``x``. These values will be added in quadrature to the diagonal of
-            the covariance matrix.
+        Args:
+            x (ndarray[nsamples, ndim]): The independent coordinates of the
+                data points.
+            yerr (ndarray[nsamples] or float): The Gaussian uncertainties on
+                the data points at coordinates ``x``. These values will be
+                added in quadrature to the diagonal of the covariance matrix.
 
         """
         # Compute the kernel matrix.
@@ -76,20 +75,28 @@ class BasicSolver(object):
 
         .. math::
 
-            C\,x = b
+            K\,x = y
 
-        :param y: ``(nsamples,)`` or ``(nsamples, nrhs)``
-            The vector or matrix :math:`b`.
-
-        :param in_place: (optional)
-            Should the data in ``y`` be overwritten with the result :math:`x`?
+        Args:
+            y (ndarray[nsamples] or ndadrray[nsamples, nrhs]): The vector or
+                matrix :math:`y`.
+            in_place (Optional[bool]): Should the data in ``y`` be overwritten
+                with the result :math:`x`? (default: ``False``)
 
         """
         return cho_solve(self._factor, y, overwrite_b=in_place)
 
     def dot_solve(self, y):
         r"""
-        TODO
+        Compute the inner product of a vector with the inverse of the
+        covariance matrix applied to itself:
+
+        .. math::
+
+            y\,K^{-1}\,y
+
+        Args:
+            y (ndarray[nsamples]): The vector :math:`y`.
 
         """
         return np.dot(y.T, cho_solve(self._factor, y))
@@ -99,11 +106,16 @@ class BasicSolver(object):
         Apply the Cholesky square root of the covariance matrix to the input
         vector or matrix.
 
-        :param r: ``(nsamples,)`` or ``(nsamples, nrhs)``
-            The input vector or matrix.
+        Args:
+            r (ndarray[nsamples] or ndarray[nsamples, nrhs]: The input vector
+                or matrix.
 
         """
         return np.dot(r, self._factor[0])
 
     def get_inverse(self):
+        """
+        Get the dense inverse covariance matrix. This is used for computing
+        gradients, but it is not recommended in general.
+        """
         return self.apply_inverse(np.eye(len(self._factor[0])), in_place=True)
