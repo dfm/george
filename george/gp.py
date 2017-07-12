@@ -499,15 +499,14 @@ class GP(ModelSet):
         if not (return_var or return_cov):
             return mu
 
-        KxsT = np.ascontiguousarray(Kxs.T, dtype=np.float64)
+        KinvKxs = self.solver.apply_inverse(Kxs.T)
         if return_var:
             var = self.kernel.get_value(xs, diag=True)
-            var -= np.sum(Kxs.T*self.solver.apply_inverse(KxsT, in_place=True),
-                          axis=0)
+            var -= np.sum(Kxs.T*KinvKxs, axis=0)
             return mu, var
 
         cov = self.kernel.get_value(xs)
-        cov -= np.dot(Kxs, self.solver.apply_inverse(KxsT, in_place=True))
+        cov -= np.dot(Kxs, KinvKxs)
         return mu, cov
 
     def sample_conditional(self, y, t, size=1):

@@ -147,3 +147,25 @@ def test_apply_inverse(solver, seed=1234, N=201, yerr=0.1):
     b1 = np.linalg.solve(K, y)
     b2 = gp.apply_inverse(y)
     assert np.allclose(b1, b2)
+
+
+@pytest.mark.parametrize("solver", [BasicSolver, HODLRSolver])
+def test_predict_single(solver, seed=1234, N=201, yerr=0.1):
+    np.random.seed(seed)
+
+    # Set up the solver.
+    kernel = 1.0 * kernels.ExpSquaredKernel(0.5)
+    kwargs = dict()
+    if solver == HODLRSolver:
+        kwargs["tol"] = 1e-8
+    gp = GP(kernel, solver=solver, **kwargs)
+
+    x = np.sort(np.random.rand(N))
+    y = gp.sample(x)
+    gp.compute(x, yerr=yerr)
+    mu0, var0 = gp.predict(y, [0.0], return_var=True)
+    mu, var = gp.predict(y, [0.0, 1.0], return_var=True)
+    _, cov = gp.predict(y, [0.0, 1.0])
+    assert np.allclose(mu0, mu[0])
+    assert np.allclose(var0, var[0])
+    assert np.allclose(var0, cov[0, 0])
