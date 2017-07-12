@@ -22,7 +22,7 @@ This notebook was made with the following version of george:
 
 .. parsed-literal::
 
-    '0.3.0.dev0'
+    '0.3.0'
 
 
 
@@ -42,7 +42,7 @@ To demonstrate this method, in this tutorial, we'll benchmark the two
 Gaussian Process "solvers" included with george. For comparison, we'll
 also measure the computational cost of the same operations using the
 popular `GPy library <https://github.com/SheffieldML/GPy>`__ and the
-`proposed scikit-learn
+`new scikit-learn
 interface <https://github.com/scikit-learn/scikit-learn/pull/4270>`__.
 Note that GPy is designed a Gaussian Process toolkit and it comes with a
 huge number state-of-the-art algorithms for the application of Gaussian
@@ -94,10 +94,8 @@ could also use the approximate solver as follows:
     133.946394912
 
 
-The proposed scikit-learn interface is quite similar (you'll need to
-install `this pull request branch of
-sklearn <https://github.com/scikit-learn/scikit-learn/pull/4270>`__ to
-execute this cell):
+The new scikit-learn interface is quite similar (you'll need to install
+a recent version of scikit-learn to execute this cell):
 
 .. code:: python
 
@@ -128,6 +126,7 @@ never been able to get the heteroscedastic regression to work in GPy):
 
     import GPy
     
+    print("GPy version: {0}".format(GPy.__version__))
     kernel_gpy = GPy.kern.RBF(input_dim=1, variance=np.var(y), lengthscale=1.)
     gp_gpy = GPy.models.GPRegression(x[:100, None], y[:100, None], kernel_gpy)
     gp_gpy['.*Gaussian_noise'] = yerr[0]**2
@@ -136,6 +135,7 @@ never been able to get the heteroscedastic regression to work in GPy):
 
 .. parsed-literal::
 
+    GPy version: 1.7.7
     133.946345613
 
 
