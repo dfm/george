@@ -24,5 +24,5 @@ pip install coveralls
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   python setup.py develop
 else
-  CXX=g++-4.9 CC=gcc-4.9 python setup.py build_ext $BUILD_ARGS develop
+  CXX=g++-4.8 CC=gcc-4.8 python setup.py build_ext $BUILD_ARGS develop
 fi

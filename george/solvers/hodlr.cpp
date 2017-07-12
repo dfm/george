@@ -59,7 +59,7 @@ public:
     if (kernel_ != NULL) delete kernel_;
   };
 
-  auto serialize () const {
+  std::tuple<py::object, int, double, int> serialize () const {
     return std::make_tuple(kernel_spec_, min_size_, tol_, seed_);
   };
 
@@ -88,8 +88,8 @@ public:
     random.seed(seed_);
 
     // Extract the data from the numpy arrays
-    auto x_p = x.unchecked<2>();
-    auto yerr_p = yerr.unchecked<1>();
+    py::detail::unchecked_reference<double, 2L> x_p = x.unchecked<2>();
+    py::detail::unchecked_reference<double, 1L> yerr_p = yerr.unchecked<1>();
     size_t n = x_p.shape(0), ndim = x_p.shape(1);
     RowMatrixXd X(n, ndim);
     Eigen::VectorXd diag(n);
