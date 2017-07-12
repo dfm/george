@@ -1,7 +1,7 @@
 .. :changelog:
 
-0.3.0 (upcoming)
-++++++++++++++++
+0.3.0 (2017-07-12)
+++++++++++++++++++
 
 - New modeling protocol for parameter fitting
 - Rewritten HODLR algorithm - more stable and better performance
