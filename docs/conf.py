@@ -5,6 +5,7 @@ import glob
 import yaml
 import george
 
+# Inject the kernel docs
 d = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 with open(os.path.join(d, "docs", "user", "kernels.rst.template"), "r") as f:
     TEMPLATE = f.read()
@@ -33,15 +34,12 @@ with open(os.path.join(d, "docs", "user", "kernels.rst"), "w") as f:
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
+    "sphinx.ext.mathjax",
 ]
 templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
-
-# # FIXME
-# mathjax_path = "MathJax/MathJax.js"
 
 # General information about the project.
 project = u"George"
@@ -69,14 +67,6 @@ html_context = dict(
     github_repo="george",
     github_version="master",
     conf_py_path="/docs/",
-    script_files=[
-        "_static/jquery.js",
-        "_static/underscore.js",
-        "_static/doctools.js",
-        "//cdn.mathjax.org/mathjax/latest/MathJax.js"
-        "?config=TeX-AMS-MML_HTMLorMML",
-        "_static/js/analytics.js",
-    ],
 )
 html_static_path = ["_static"]
 html_show_sourcelink = False
