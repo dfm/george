@@ -21,8 +21,4 @@ conda install -c conda-forge pybind11
 pip install coveralls
 
 # Build the extension
-if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-  python setup.py develop
-else
-  CXX=g++-4.8 CC=gcc-4.8 python setup.py build_ext $BUILD_ARGS develop
-fi
+python setup.py develop

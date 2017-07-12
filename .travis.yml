@@ -1,5 +1,5 @@
 sudo: false
-language: c
+language: generic
 dist: trusty
 
 addons:
