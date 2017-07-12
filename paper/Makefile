@@ -9,7 +9,7 @@ vc.tex: ../.git/logs/HEAD
 	git log -1 --date=short --format="format:\\newcommand{\\githash}{%h}\\newcommand{\\gitdate}{%ad}\\newcommand{\\gitauthor}{%an}" >> vc.tex
 
 ${NAME}.pdf: ${NAME}.tex *.bib vc.tex
-	tectonic ${NAME}
+	tectonic ${NAME}.tex --print
 
 clean:
 	${RM} $(foreach suff, ${TMP_SUFFS}, ${NAME}.${suff})
