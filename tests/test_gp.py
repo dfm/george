@@ -128,7 +128,7 @@ def test_apply_inverse(solver, seed=1234, N=201, yerr=0.1):
     kernel = 1.0 * kernels.ExpSquaredKernel(0.5)
     kwargs = dict()
     if solver == HODLRSolver:
-        kwargs["tol"] = 1e-8
+        kwargs["tol"] = 1e-10
     gp = GP(kernel, solver=solver, **kwargs)
 
     # Sample some data.
