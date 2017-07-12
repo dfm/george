@@ -1,2 +1,3 @@
 _build
 !*.png
+user/kernels.rst

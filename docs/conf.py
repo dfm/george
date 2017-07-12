@@ -1,7 +1,35 @@
 # -*- coding: utf-8 -*-
 
 import os
+import glob
+import yaml
 import george
+
+d = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+with open(os.path.join(d, "docs", "user", "kernels.rst.template"), "r") as f:
+    TEMPLATE = f.read()
+
+fns = glob.glob(os.path.join(d, "kernels", "*.yml"))
+if len(fns):
+    specs = []
+    for i, fn in enumerate(fns):
+        with open(fn, "r") as f:
+            specs.append(yaml.load(f.read()))
+    tokens = []
+    for spec in specs:
+        if spec["stationary"]:
+            tokens += [".. autoclass:: george.kernels.{0}"
+                       .format(spec["name"])]
+    TEMPLATE = TEMPLATE.replace("STATIONARYKERNELS", "\n".join(tokens))
+    tokens = []
+    for spec in specs:
+        if not spec["stationary"]:
+            tokens += [".. autoclass:: george.kernels.{0}"
+                       .format(spec["name"])]
+    TEMPLATE = TEMPLATE.replace("OTHERKERNELS", "\n".join(tokens))
+
+with open(os.path.join(d, "docs", "user", "kernels.rst"), "w") as f:
+    f.write(TEMPLATE)
 
 extensions = [
     "sphinx.ext.autodoc",
