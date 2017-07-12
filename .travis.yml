@@ -54,7 +54,7 @@ script: |
       source .ci/build-paper.sh
     elif [[ $TEST_LANG == python ]]
     then
-      py.test -v --cov celerite
+      py.test -v --cov george
     fi
 
 after_success: |
