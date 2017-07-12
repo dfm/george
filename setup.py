@@ -208,7 +208,9 @@ if __name__ == "__main__":
         ext_modules=extensions,
         description="Blazingly fast Gaussian Processes for regression.",
         long_description=open("README.rst").read(),
-        package_data={"": ["README.rst", "LICENSE"]},
+        package_data={"": ["README.rst", "LICENSE", "AUTHORS.rst",
+                           "HISTORY.rst"]},
+        install_requires=["numpy", "scipy", "pybind11"],
         include_package_data=True,
         cmdclass=dict(build_ext=build_ext),
         classifiers=[
