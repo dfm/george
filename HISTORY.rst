@@ -1,5 +1,11 @@
 .. :changelog:
 
+0.3.1 (upcoming)
+++++++++++++++++
+
+- Fixed issue where george would not compile with GCC<4.9 because of a
+  compiler bug
+
 0.3.0 (2017-07-12)
 ++++++++++++++++++
 

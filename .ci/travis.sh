@@ -1,5 +1,19 @@
 #!/bin/bash -x
 
+# If building the paper, do that here
+if [[ $TEST_LANG == paper ]]
+then
+  if git diff --name-only $TRAVIS_COMMIT_RANGE | grep 'paper/'
+  then
+    echo "Building the paper..."
+    export GEORGE_BUILDING_PAPER=true
+    source "$( dirname "${BASH_SOURCE[0]}" )"/setup-tectonic.sh
+    return
+  fi
+  export GEORGE_BUILDING_PAPER=false
+  return
+fi
+
 # http://conda.pydata.org/docs/travis.html#the-travis-yml-file
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;

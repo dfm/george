@@ -10,8 +10,16 @@ addons:
             - gcc-4.8
             - g++-4.8
 
+env:
+    global:
+        - TEST_LANG='python'
+
 matrix:
     include:
+
+        # This build will compile the LaTeX source of the paper
+        - os: linux
+          env: TEST_LANG='paper'
 
         # Linux, Python 2.7
         - os: linux
@@ -40,7 +48,17 @@ matrix:
 install:
     - source .ci/travis.sh
 
-script: py.test -v --cov george
+script: |
+    if [[ $TEST_LANG == paper ]]
+    then
+      source .ci/build-paper.sh
+    elif [[ $TEST_LANG == python ]]
+    then
+      py.test -v --cov celerite
+    fi
 
-after_success:
-    - coveralls
+after_success: |
+    if [[ $TEST_LANG == python ]]
+    then
+      coveralls
+    fi
