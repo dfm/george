@@ -29,6 +29,7 @@ def test_gradient(solver, white_noise, seed=123, N=305, ndim=3, eps=1.32e-3):
 
     # Sample some data.
     x = np.random.rand(N, ndim)
+    x = x[np.argsort(x[:, 0])]
     y = gp.sample(x)
     gp.compute(x, yerr=0.1)
 
@@ -56,36 +57,30 @@ def test_gradient(solver, white_noise, seed=123, N=305, ndim=3, eps=1.32e-3):
 
 
 @pytest.mark.parametrize("solver", [BasicSolver, HODLRSolver])
-def test_prediction(solver):
+def test_prediction(solver, seed=42):
     """Basic sanity checks for GP regression."""
 
-    kernel = kernels.ExpSquaredKernel(1.0)
-    gp = GP(kernel, solver=solver)
+    np.random.seed(seed)
 
-    x = np.array((-1, 0, 1))
+    kernel = kernels.ExpSquaredKernel(1.0)
+    kwargs = dict()
+    if solver == HODLRSolver:
+        kwargs["tol"] = 1e-8
+    gp = GP(kernel, solver=solver, white_noise=0.0, **kwargs)
+
+    x0 = np.linspace(-10, 10, 500)
+    x = np.sort(np.random.uniform(-10, 10, 300))
     gp.compute(x)
 
-    y = x/x.std()
-    mu, cov = gp.predict(y, x)
+    y = np.sin(x)
+    mu, cov = gp.predict(y, x0)
 
-    assert np.allclose(y, mu), \
-        "GP must predict noise-free training data exactly ({0}).\n({1})" \
-        .format(solver.__name__, y - mu)
-
-    assert np.all(cov > -1e-15), \
-        "Covariance matrix must be nonnegative ({0}).\n{1}" \
-        .format(solver.__name__, cov)
-
-    var = np.diag(cov)
-    assert np.allclose(var, 0), \
-        "Variance must vanish at noise-free training points ({0}).\n{1}" \
-        .format(solver.__name__, var)
-
-    t = np.array((-.5, .3, 1.2))
-    var = np.diag(gp.predict(y, t)[1])
-    assert np.all(var > 0), \
-        "Variance must be positive away from training points ({0}).\n{1}" \
-        .format(solver.__name__, var)
+    Kstar = gp.get_matrix(x0, x)
+    K = gp.get_matrix(x)
+    K[np.diag_indices_from(K)] += 1.0
+    mu0 = np.dot(Kstar, np.linalg.solve(K, y))
+    print(np.abs(mu - mu0).max())
+    assert np.allclose(mu, mu0)
 
 
 def test_repeated_prediction_cache():
@@ -112,7 +107,7 @@ def test_repeated_prediction_cache():
     a0 = gp._alpha
     gp.kernel[0] += 0.1
     gp.recompute()
-    gp._compute_alpha(y2)
+    gp._compute_alpha(y2, True)
     a1 = gp._alpha
     assert not np.allclose(a0, a1), \
         "Different kernel parameters must give different alphas " \
@@ -126,28 +121,29 @@ def test_repeated_prediction_cache():
 
 
 @pytest.mark.parametrize("solver", [BasicSolver, HODLRSolver])
-def test_apply_inverse(solver, seed=1234, N=100, ndim=1, yerr=0.1):
+def test_apply_inverse(solver, seed=1234, N=201, yerr=0.1):
     np.random.seed(seed)
 
     # Set up the solver.
-    kernel = 1.0 * kernels.ExpSquaredKernel(0.5, ndim=ndim)
-    gp = GP(kernel, solver=solver)
+    kernel = 1.0 * kernels.ExpSquaredKernel(0.5)
+    kwargs = dict()
+    if solver == HODLRSolver:
+        kwargs["tol"] = 1e-8
+    gp = GP(kernel, solver=solver, **kwargs)
 
     # Sample some data.
-    x = np.random.rand(N, ndim)
+    x = np.sort(np.random.rand(N))
     y = gp.sample(x)
-    gp.compute(x, yerr=yerr, sort=True)
+    gp.compute(x, yerr=yerr)
 
     K = gp.get_matrix(x)
     K[np.diag_indices_from(K)] += yerr**2
 
     b1 = np.linalg.solve(K, y)
     b2 = gp.apply_inverse(y)
-    assert np.allclose(b1, b2), \
-        "Apply inverse with a sort isn't working"
+    assert np.allclose(b1, b2)
 
     y = gp.sample(x, size=5).T
     b1 = np.linalg.solve(K, y)
     b2 = gp.apply_inverse(y)
-    assert np.allclose(b1, b2), \
-        "Apply inverse with a sort isn't working"
+    assert np.allclose(b1, b2)

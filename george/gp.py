@@ -201,55 +201,32 @@ class GP(ModelSet):
         if v and self.kernel is not None:
             self.kernel.dirty = False
 
-    def parse_samples(self, t, sort=False):
+    def parse_samples(self, t):
         """
         Parse a list of samples to make sure that it has the correct
-        dimensions and optionally sort it. In one dimension, the samples will
-        be sorted in the logical order. In higher dimensions, a kd-tree is
-        built and the samples are sorted in increasing distance from the
-        *first* sample.
+        dimensions.
 
         :param t: ``(nsamples,)`` or ``(nsamples, ndim)``
             The list of samples. If 1-D, this is assumed to be a list of
             one-dimensional samples otherwise, the size of the second
             dimension is assumed to be the dimension of the input space.
 
-        :param sort: (optional)
-            A boolean flag indicating whether or not the samples should be
-            sorted. (default: ``False``)
-
-        Returns a tuple ``(samples, inds)`` where
-
-        * **samples** is an array with shape ``(nsamples, ndim)`` and if
-          ``sort`` was ``True``, it will also be sorted, and
-        * **inds** is an ``(nsamples,)`` list of integer permutations used to
-          sort the list of samples.
-
-        Raises a ``RuntimeError`` if the input dimension doesn't match the
-        dimension of the kernel.
+        Raises:
+            ValueError: If the input dimension doesn't match the dimension of
+                the kernel.
 
         """
         t = np.atleast_1d(t)
+        # Deal with one-dimensional data.
         if len(t.shape) == 1:
-            # Deal with one-dimensional data.
-            if sort:
-                inds = np.argsort(t)
-            else:
-                inds = np.arange(len(t), dtype=int)
             t = np.atleast_2d(t).T
-        elif sort:
-            # Sort the data using a KD-tree.
-            inds = nd_sort_samples(t)
-        else:
-            # Otherwise, assume that the samples are sorted.
-            inds = np.arange(t.shape[0], dtype=int)
 
         # Double check the dimensions against the kernel.
         if len(t.shape) != 2 or (self.kernel is not None and
                                  t.shape[1] != self.kernel.ndim):
             raise ValueError("Dimension mismatch")
 
-        return t[inds], inds
+        return t
 
     def _check_dimensions(self, y, check_dim=True):
         n, ndim = self._x.shape
@@ -260,14 +237,20 @@ class GP(ModelSet):
             raise ValueError("Dimension mismatch")
         return y
 
-    def _compute_alpha(self, y):
+    def _compute_alpha(self, y, cache):
         # Recalculate alpha only if y is not the same as the previous y.
+        if not cache:
+            r = np.ascontiguousarray(self._check_dimensions(y) -
+                                     self._call_mean(self._x),
+                                     dtype=np.float64)
+            return self.solver.apply_inverse(r, in_place=True).flatten()
         if self._alpha is None or not np.array_equiv(y, self._y):
             self._y = y
-            r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] -
+            r = np.ascontiguousarray(self._check_dimensions(y) -
                                      self._call_mean(self._x),
                                      dtype=np.float64)
             self._alpha = self.solver.apply_inverse(r, in_place=True).flatten()
+        return self._alpha
 
     def apply_inverse(self, y):
         """
@@ -281,7 +264,7 @@ class GP(ModelSet):
 
         """
         self.recompute(quiet=False)
-        r = self._check_dimensions(y, check_dim=False)[self.inds]
+        r = self._check_dimensions(y, check_dim=False)
 
         # Broadcast the mean function
         m = [slice(None)] + [np.newaxis for _ in range(len(r.shape) - 1)]
@@ -289,15 +272,13 @@ class GP(ModelSet):
 
         # Do the solve
         r = np.asfortranarray(r, dtype=np.float64)
-        b = np.empty_like(r)
         if len(r.shape) == 1:
-            b[self.inds] = self.solver.apply_inverse(r, in_place=True) \
-                .flatten()
+            b = self.solver.apply_inverse(r, in_place=True).flatten()
         else:
-            b[self.inds] = self.solver.apply_inverse(r, in_place=True)
+            b = self.solver.apply_inverse(r, in_place=True)
         return b
 
-    def compute(self, x, yerr=0.0, sort=True, **kwargs):
+    def compute(self, x, yerr=0.0, **kwargs):
         """
         Pre-compute the covariance matrix and factorize it for a set of times
         and uncertainties.
@@ -310,21 +291,14 @@ class GP(ModelSet):
             ``x``. These values will be added in quadrature to the diagonal of
             the covariance matrix.
 
-        :param sort: (optional)
-            Should the samples be sorted before computing the covariance
-            matrix? This can lead to more numerically stable results and with
-            some linear algebra libraries this can more computationally
-            efficient. Either way, this flag is passed directly to
-            :func:`parse_samples`. (default: ``True``)
-
         """
         # Parse the input coordinates and ensure the right memory layout.
-        self._x, self.inds = self.parse_samples(x, sort)
+        self._x = self.parse_samples(x)
         self._x = np.ascontiguousarray(self._x, dtype=np.float64)
         try:
             self._yerr2 = float(yerr)**2 * np.ones(len(x))
         except TypeError:
-            self._yerr2 = self._check_dimensions(yerr)[self.inds] ** 2
+            self._yerr2 = self._check_dimensions(yerr) ** 2
         self._yerr2 = np.ascontiguousarray(self._yerr2, dtype=np.float64)
 
         # Set up and pre-compute the solver.
@@ -355,10 +329,7 @@ class GP(ModelSet):
             try:
                 # Update the model making sure that we store the original
                 # ordering of the points.
-                initial_order = np.array(self.inds)
-                self.compute(self._x, np.sqrt(self._yerr2), sort=False,
-                             **kwargs)
-                self.inds = initial_order
+                self.compute(self._x, np.sqrt(self._yerr2), **kwargs)
             except (ValueError, LinAlgError):
                 if quiet:
                     return False
@@ -394,7 +365,7 @@ class GP(ModelSet):
             if quiet:
                 return -np.inf
             raise
-        r = np.ascontiguousarray(self._check_dimensions(y)[self.inds] - mu,
+        r = np.ascontiguousarray(self._check_dimensions(y) - mu,
                                  dtype=np.float64)
         ll = self._const - 0.5 * self.solver.dot_solve(r)
         return ll if np.isfinite(ll) else -np.inf
@@ -428,7 +399,7 @@ class GP(ModelSet):
 
         # Pre-compute some factors.
         try:
-            self._compute_alpha(y)
+            alpha = self._compute_alpha(y, False)
         except ValueError:
             if quiet:
                 return np.zeros(len(self), dtype=np.float64)
@@ -436,7 +407,7 @@ class GP(ModelSet):
 
         if len(self.white_noise) or len(self.kernel):
             K_inv = self.solver.get_inverse()
-            A = np.einsum("i,j", self._alpha, self._alpha) - K_inv
+            A = np.einsum("i,j", alpha, alpha) - K_inv
 
         # Compute each component of the gradient.
         grad = np.empty(len(self))
@@ -450,7 +421,7 @@ class GP(ModelSet):
                 if quiet:
                     return np.zeros(len(self), dtype=np.float64)
                 raise
-            grad[n:n+l] = np.dot(mu, self._alpha)
+            grad[n:n+l] = np.dot(mu, alpha)
             n += l
 
         l = len(self.white_noise)
@@ -482,7 +453,8 @@ class GP(ModelSet):
 
     def predict(self, y, t,
                 return_cov=True,
-                return_var=False):
+                return_var=False,
+                cache=True):
         """
         Compute the conditional predictive distribution of the model. You must
         call :func:`GP.compute` before this function.
@@ -505,6 +477,10 @@ class GP(ModelSet):
             This overrides ``return_cov`` so, if both are set to ``True``,
             only the diagonal is computed. (default: ``False``)
 
+        :param cache: (optional)
+            If ``True`` the value of alpha will be cached to speed up repeated
+            predictions.
+
         Returns ``mu``, ``(mu, cov)``, or ``(mu, var)`` depending on the values
         of ``return_cov`` and ``return_var``. These output values are:
 
@@ -514,12 +490,12 @@ class GP(ModelSet):
 
         """
         self.recompute()
-        self._compute_alpha(y)
-        xs, i = self.parse_samples(t, False)
+        alpha = self._compute_alpha(y, cache)
+        xs = self.parse_samples(t)
 
         # Compute the predictive mean.
         Kxs = self.kernel.get_value(xs, self._x)
-        mu = np.dot(Kxs, self._alpha) + self._call_mean(xs)
+        mu = np.dot(Kxs, alpha) + self._call_mean(xs)
         if not (return_var or return_cov):
             return mu
 
@@ -578,15 +554,11 @@ class GP(ModelSet):
             n, _ = self._x.shape
 
             # Generate samples using the precomputed factorization.
-            samples = self.solver.apply_sqrt(np.random.randn(size, n))
-            samples += self._call_mean(self._x)
-
-            # Reorder the samples correctly.
-            results = np.empty_like(samples)
-            results[:, self.inds] = samples
+            results = self.solver.apply_sqrt(np.random.randn(size, n))
+            results += self._call_mean(self._x)
             return results[0] if size == 1 else results
 
-        x, _ = self.parse_samples(t, False)
+        x = self.parse_samples(t)
         cov = self.get_matrix(x)
         cov[np.diag_indices_from(cov)] += TINY
         return multivariate_gaussian_samples(cov, size,
@@ -605,10 +577,10 @@ class GP(ModelSet):
             matrix is computed. Otherwise, the auto-covariance is evaluated.
 
         """
-        x1, _ = self.parse_samples(x1, False)
+        x1 = self.parse_samples(x1)
         if x2 is None:
             return self.kernel.get_value(x1)
-        x2, _ = self.parse_samples(x2, False)
+        x2 = self.parse_samples(x2)
         return self.kernel.get_value(x1, x2)
 
     def get_value(self, *args, **kwargs):

@@ -7,11 +7,12 @@ __all__ = ["test_trivial_solver", "test_basic_solver", "test_hodlr_solver"]
 import numpy as np
 
 import george
+from george.utils import nd_sort_samples
 from george import kernels
 from george import TrivialSolver, BasicSolver, HODLRSolver
 
 
-def test_trivial_solver(N=100, seed=1234):
+def test_trivial_solver(N=300, seed=1234):
     # Sample some data.
     np.random.seed(seed)
     x = np.random.randn(N, 3)
@@ -25,15 +26,15 @@ def test_trivial_solver(N=100, seed=1234):
     assert np.allclose(solver.apply_inverse(y), y / yerr**2)
 
 
-def _test_solver(Solver, N=100, seed=1234):
+def _test_solver(Solver, N=300, seed=1234, **kwargs):
     # Set up the solver.
-    kernel = 1e-4 * kernels.ExpSquaredKernel(1.0)
-    solver = Solver(kernel)
+    kernel = 1.0 * kernels.ExpSquaredKernel(1.0)
+    solver = Solver(kernel, **kwargs)
 
     # Sample some data.
     np.random.seed(seed)
-    x = np.random.randn(N, kernel.ndim)
-    yerr = 1e-3 * np.ones(N)
+    x = np.atleast_2d(np.sort(10*np.random.randn(N))).T
+    yerr = np.ones(N)
     solver.compute(x, yerr)
 
     # Build the matrix.
@@ -45,16 +46,20 @@ def _test_solver(Solver, N=100, seed=1234):
     assert sgn == 1.0, "Invalid determinant"
     assert np.allclose(solver.log_determinant, lndet), "Incorrect determinant"
 
+    y = np.sin(x[:, 0])
+    b0 = np.linalg.solve(K, y)
+    b = solver.apply_inverse(y).flatten()
+    assert np.allclose(b, b0)
+
     # Check the inverse.
     assert np.allclose(solver.apply_inverse(K), np.eye(N)), "Incorrect inverse"
-
 
 def test_basic_solver(**kwargs):
     _test_solver(BasicSolver, **kwargs)
 
 
 def test_hodlr_solver(**kwargs):
-    _test_solver(HODLRSolver, **kwargs)
+    _test_solver(HODLRSolver, tol=1e-10, **kwargs)
 
 def test_strange_hodlr_bug():
     np.random.seed(1234)
