@@ -58,6 +58,7 @@
 \newcommand{\dd}{\ensuremath{\,\mathrm{d}}}
 \newcommand{\unit}[1]{{\ensuremath{\,\mathrm{#1}}}}
 \newcommand{\bvec}[1]{{\ensuremath{\boldsymbol{#1}}}}
+\DeclareMathOperator*{\argmax}{argmax}
 
 % TO DOS
 \newcommand{\todo}[3]{{\color{#2}\emph{#1}: #3}}
@@ -98,11 +99,86 @@
 
 \section{Introduction}
 
-Face.
-
 \section{Notation}
 
+\section{Probabilistic inference}
+
+To start, let's consider the general problem of fitting a model to data.
+Whether you are a frequentist or a Bayesian, the key quantity of interest in
+any fitting procedure is the likelihood function
+\begin{eqnarray}
+\mathcal{L}(\bvec{\theta}) &=& p(D\,|\,\bvec{\theta})
+\end{eqnarray}
+where $D$ represents the data and $\bvec{\theta}$ are the parameters of the
+model.
+The right-hand side of this equation can be read as ``the probability of a
+dataset $D$ given a specific set of model parameters $\bvec{\theta}$.''
+More formally, this is the probability density function (pdf) for $D$
+\emph{conditioned} on $\bvec{\theta}$.
+It is important to remember that this is a pdf \emph{over datasets}.
+This means that
+\begin{eqnarray}
+\int p(D\,|\,\bvec{\theta}) \dd D &=& 1
+\end{eqnarray}
+but
+\begin{eqnarray}
+    \int p(D\,|\,\bvec{\theta}) \dd \bvec{\theta} &\ne& 1 \quad.
+\end{eqnarray}
+
+It is our job as scientists to specify the model~--~and, hence, the likelihood
+function~--~that we want to fit.
+Once we have specified this pdf, there are two main ways to make inferences
+about the model parameters $\bvec{\theta}$ based on a given dataset.
+The first method is to maximize the likelihood to find a point estimate of the
+``best-fit'' parameters.
+This can be written as
+\begin{eqnarray}
+\bvec{\theta}^* = \argmax_{\bvec{\theta}} \mathcal{L}(\bvec{\theta})
+\end{eqnarray}
+where $\bvec{\theta}^*$ are the ``maximum likelihood'' parameters and the
+$\argmax$ operator indicates that we are finding the value of $\bvec{\theta}$
+that maximizes $\mathcal{L}(\bvec{\theta})$.
+In practice, this maximization must usually be performed numerically using a
+non-linear optimization routine.
+
+To quantify the uncertainties on our constraints on the model parameters or
+marginalize over our uncertainty in some nuisance parameters, we can quantify
+the posterior pdf for $\bvec{\theta}$
+\begin{eqnarray}
+p(\bvec{\theta}\,|\,D) &=&
+    \frac{p(\bvec{\theta})\,p(D\,|\,\bvec{\theta})}{p(D)} \quad.
+\end{eqnarray}
+As above, we can read the left-hand side of this equation as ``the probability
+of the parameters conditioned on the data.''
+In practice, this pdf is usually obtained by drawing samples from
+$p(\bvec{\theta}\,|\,D)$ using a numerical method like Markov chain Monte
+Carlo (MCMC).
+In this case, we must specify the likelihood function and, additionally, the
+prior pdf $p(\bvec{\theta})$.
+
+The point here is that the likelihood function is the key ingredient in any
+model fitting context.
+In fact, some people (including this author) would argue that the likelihood
+function is as much part of the model as your code that computes the physics
+of your system.
+The following sections present some of the commonly made assumptions about the
+likelihood function for astronomical data analysis, and then derive the
+Gaussian process (GP) likelihood as a generalization of the standard
+equations.
+In \sect{corr-noise}, we derive the likelihood function for a GP model
+(\eqalt{gp-loglike}) and the key point is that this function is probably a
+\emph{drop-in replacement} for the likelihood that you're currently using.
+
 \section{The Gaussian likelihood}
+
+In this section, we derive the likelihood function that is most commonly used
+for astronomical data analysis and discuss this choice in the context of
+probabilistic data analysis.
+It is not uncommon for astronomers to compute and minimize something that we
+refer to as ``chi-squared'' $\chi^2$, the sum of normalized squared residuals.
+This section demonstrates that this is equivalent to maximizing a likelihood
+function derived under a restrictive set of assumptions.
+This will then allow us, in the next section, to generalize this procedure.
 
 It is commonly assumed that a set of data points with error bars represent
 independent measurements with Gaussian uncertainties of known variance.
@@ -164,9 +240,10 @@ In this case, the likelihood becomes
     +\log {(2\,\pi\,[{\sigma_n}^2+s^2])}
     \right]
 \end{eqnarray}
-and we can now maximize this with respect to both $\bvec{\theta}$ and $s$.
+and we can now use this to fit for both $\bvec{\theta}$ and $s$.
 
 \section{A Gaussian process as a model of correlated noise}
+\sectlabel{corr-noise}
 
 One way to motivate the definition of a GP is to think of it as a model of
 correlated noise.
@@ -266,6 +343,14 @@ correctly capture the fact that the data are independent.
 One of the touchiest subjects in GP modeling is the choice of covariance
 function and we will return to a detailed discussion of this in \dfmtodo{SOME
 SECTION}, but first, let's consider a concrete example.
+
+- an example: linear fit
+- prediction: interpolation and extrapolation
+- kernel choice
+- outliers
+- examples: exoplanet transit fitting, radial velocity fitting, emulation,
+- practical considerations: scaling,
+
 
 \subsection{Code availability}
 
