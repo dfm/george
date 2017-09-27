@@ -42,50 +42,30 @@ public:
     matrix_ = NULL;
     computed_ = 0;
   };
-  Solver (py::object kernel_spec, int min_size = 100, double tol = 0.1, int seed = 0)
-    : kernel_spec_(kernel_spec)
-    , tol_(tol)
-    , min_size_(min_size)
-    , seed_(seed)
-  {
-    solver_ = NULL;
-    kernel_ = george::parse_kernel_spec(kernel_spec);
-    matrix_ = new SolverMatrix(kernel_);
-    computed_ = 0;
-  };
   ~Solver () {
     if (solver_ != NULL) delete solver_;
     if (matrix_ != NULL) delete matrix_;
     if (kernel_ != NULL) delete kernel_;
   };
 
-  std::tuple<py::object, int, double, int> serialize () const {
-    return std::make_tuple(kernel_spec_, min_size_, tol_, seed_);
-  };
-
-  void deserialize (py::object kernel_spec, int min_size, double tol, int seed) {
-    kernel_spec_ = kernel_spec;
-    min_size_ = min_size;
-    tol_ = tol;
-    seed_ = seed;
-
-    solver_ = NULL;
-    kernel_ = george::parse_kernel_spec(kernel_spec);
-    matrix_ = new SolverMatrix(kernel_);
-    computed_ = 0;
-  };
-
   int get_status () const { return 0; };
   int get_computed () const { return computed_; };
   double log_determinant () const { return log_det_; };
 
-  int compute (const py::array_t<double>& x, const py::array_t<double>& yerr) {
+  int compute (
+      const py::object& kernel_spec,
+      const py::array_t<double>& x,
+      const py::array_t<double>& yerr,
+      int min_size = 100, double tol = 0.1, int seed = 0
+  ) {
     computed_ = 0;
+    kernel_ = george::parse_kernel_spec(kernel_spec);
+    matrix_ = new SolverMatrix(kernel_);
 
     // Random number generator for reproducibility
     std::random_device r;
     std::mt19937 random(r());
-    random.seed(seed_);
+    random.seed(seed);
 
     // Extract the data from the numpy arrays
     py::detail::unchecked_reference<double, 2L> x_p = x.unchecked<2>();
@@ -103,7 +83,7 @@ public:
     // Set up the solver object.
     if (solver_ != NULL) delete solver_;
     solver_ = new george::hodlr::Node<SolverMatrix> (
-        diag, matrix_, 0, n, min_size_, tol_, random);
+        diag, matrix_, 0, n, min_size, tol, random);
     solver_->compute();
     log_det_ = solver_->log_determinant();
 
@@ -122,9 +102,8 @@ public:
   int size () const { return size_; };
 
 private:
-  py::object kernel_spec_;
-  double log_det_, tol_;
-  int min_size_, seed_, size_;
+  double log_det_;
+  int size_;
   int computed_;
 
   george::kernels::Kernel* kernel_;
@@ -134,17 +113,29 @@ private:
 
 
 
-PYBIND11_PLUGIN(hodlr) {
-  py::module m("hodlr");
+PYBIND11_PLUGIN(_hodlr) {
+  py::module m("_hodlr");
 
   py::class_<Solver> solver(m, "HODLRSolver", R"delim(
 A solver using `Sivaram Amambikasaran's HODLR algorithm
 <http://arxiv.org/abs/1403.6015>`_ to approximately solve the GP linear
 algebra in :math:`\mathcal{O}(N\,\log^2 N)`.
 
+)delim");
+  solver.def(py::init());
+  solver.def_property_readonly("computed", &Solver::get_computed);
+  solver.def_property_readonly("log_determinant", &Solver::log_determinant);
+  solver.def("compute", &Solver::compute, R"delim(
+Compute and factorize the covariance matrix.
+
 Args:
     kernel (george.kernels.Kernel): A subclass of :class:`Kernel` specifying
         the kernel function.
+    x (ndarray[nsamples, ndim]): The independent coordinates of the data
+        points.
+    yerr (ndarray[nsamples]): The Gaussian uncertainties on the data points at
+        coordinates ``x``. These values will be added in quadrature to the
+        diagonal of the covariance matrix.
     min_size (Optional[int]): The block size where the solver switches to a
         general direct factorization algorithm. This can be tuned for platform
         and problem specific performance and accuracy. As a general rule,
@@ -162,22 +153,9 @@ Args:
         can give different results for the same matrix. Therefore, we require
         that the user provide a seed for the random number generator.
         (default: ``42``, obviously)
-
-)delim");
-  solver.def(py::init<py::object, int, double, int>(),
-      py::arg("kernel_spec"), py::arg("min_size") = 100, py::arg("tol") = 0.1, py::arg("seed") = 42);
-  solver.def_property_readonly("computed", &Solver::get_computed);
-  solver.def_property_readonly("log_determinant", &Solver::log_determinant);
-  solver.def("compute", &Solver::compute, R"delim(
-Compute and factorize the covariance matrix.
-
-Args:
-    x (ndarray[nsamples, ndim]): The independent coordinates of the data
-        points.
-    yerr (ndarray[nsamples]): The Gaussian uncertainties on the data points at
-        coordinates ``x``. These values will be added in quadrature to the
-        diagonal of the covariance matrix.
-)delim");
+)delim",
+    py::arg("kernel_spec"), py::arg("x"), py::arg("yerr"), py::arg("min_size") = 100, py::arg("tol") = 0.1, py::arg("seed") = 42
+  );
   solver.def("apply_inverse", [](Solver& self, Eigen::MatrixXd& x, bool in_place = false){
     if (in_place) {
       self.apply_inverse(x);
@@ -226,21 +204,6 @@ Args:
 Get the dense inverse covariance matrix. This is used for computing gradients,
 but it is not recommended in general.
 )delim");
-
-  solver.def("__getstate__", [](const Solver& self) {
-    return self.serialize();
-  });
-
-  solver.def("__setstate__", [](Solver& self, py::tuple t) {
-    if (t.size() != 4) throw std::runtime_error("Invalid state!");
-    new (&self) Solver();
-    self.deserialize(
-      t[0].cast<py::object>(),
-      t[1].cast<int>(),
-      t[2].cast<double>(),
-      t[3].cast<int>()
-    );
-  });
 
   return m.ptr();
 }
