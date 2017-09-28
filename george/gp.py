@@ -264,14 +264,14 @@ class GP(ModelSet):
 
         """
         self.recompute(quiet=False)
-        r = self._check_dimensions(y, check_dim=False)
+        r = np.array(y, dtype=np.float64, order="F")
+        r = self._check_dimensions(r, check_dim=False)
 
         # Broadcast the mean function
         m = [slice(None)] + [np.newaxis for _ in range(len(r.shape) - 1)]
         r -= self._call_mean(self._x)[m]
 
         # Do the solve
-        r = np.asfortranarray(r, dtype=np.float64)
         if len(r.shape) == 1:
             b = self.solver.apply_inverse(r, in_place=True).flatten()
         else:
