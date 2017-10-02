@@ -454,7 +454,8 @@ class GP(ModelSet):
     def predict(self, y, t,
                 return_cov=True,
                 return_var=False,
-                cache=True):
+                cache=True,
+                kernel=None):
         """
         Compute the conditional predictive distribution of the model. You must
         call :func:`GP.compute` before this function.
@@ -481,6 +482,11 @@ class GP(ModelSet):
             If ``True`` the value of alpha will be cached to speed up repeated
             predictions.
 
+        :param kernel: (optional)
+            If provided, this kernel will be used to calculate the cross terms.
+            This can be used to separate the predictions from different
+            kernels.
+
         Returns ``mu``, ``(mu, cov)``, or ``(mu, var)`` depending on the values
         of ``return_cov`` and ``return_var``. These output values are:
 
@@ -493,19 +499,22 @@ class GP(ModelSet):
         alpha = self._compute_alpha(y, cache)
         xs = self.parse_samples(t)
 
+        if kernel is None:
+            kernel = self.kernel
+
         # Compute the predictive mean.
-        Kxs = self.kernel.get_value(xs, self._x)
+        Kxs = kernel.get_value(xs, self._x)
         mu = np.dot(Kxs, alpha) + self._call_mean(xs)
         if not (return_var or return_cov):
             return mu
 
         KinvKxs = self.solver.apply_inverse(Kxs.T)
         if return_var:
-            var = self.kernel.get_value(xs, diag=True)
+            var = kernel.get_value(xs, diag=True)
             var -= np.sum(Kxs.T*KinvKxs, axis=0)
             return mu, var
 
-        cov = self.kernel.get_value(xs)
+        cov = kernel.get_value(xs)
         cov -= np.dot(Kxs, KinvKxs)
         return mu, cov
 

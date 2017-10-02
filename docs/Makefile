@@ -16,7 +16,7 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 default: dirhtml
 TUTORIALS = tutorials/hyper.rst tutorials/model.rst tutorials/new-kernel.rst \
-			tutorials/first.rst tutorials/scaling.rst
+			tutorials/first.rst tutorials/scaling.rst tutorials/mixture.rst
 
 tutorials/%.rst: _static/notebooks/%.ipynb tutorials/tutorial_rst.tpl
 	jupyter nbconvert --template tutorials/tutorial_rst --to rst $< --output-dir tutorials

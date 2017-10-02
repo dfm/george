@@ -22,7 +22,7 @@ This notebook was made with the following version of george:
 
 .. parsed-literal::
 
-    '0.3.0'
+    '0.3.1.dev0'
 
 
 
@@ -431,4 +431,3 @@ of the data:
 It is clear from this figure that the constraints obtained when modeling
 the noise are less precise (the error bars are larger) but more accurate
 (and honest).
-
