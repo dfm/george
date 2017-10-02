@@ -431,3 +431,4 @@ of the data:
 It is clear from this figure that the constraints obtained when modeling
 the noise are less precise (the error bars are larger) but more accurate
 (and honest).
+

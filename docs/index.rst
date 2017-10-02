@@ -50,6 +50,8 @@ George is being actively developed in `a public repository on GitHub
    tutorials/hyper
    tutorials/scaling
    tutorials/new-kernel
+   tutorials/mixture
+   tutorials/bayesopt
 
 
 Contributors

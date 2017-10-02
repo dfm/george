@@ -56,7 +56,7 @@ the predictive mean for component 1 is simply
 
 and the equivalent expression can be written for component 2.
 
-This can be implemented in geroge using the new ``kernel`` keyword
+This can be implemented in george using the new ``kernel`` keyword
 argument in the ``predict`` method. To demonstrate this, let's start by
 generating a synthetic dataset. Component 1 is a systematic signal that
 depends on two input parameters (:math:`t` and :math:`\theta` following
