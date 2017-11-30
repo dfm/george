@@ -11,7 +11,7 @@ namespace george {
 
 namespace py = pybind11;
 
-kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
+kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
   if (!py::hasattr(kernel_spec, "is_kernel")) throw std::invalid_argument("invalid kernel");
 
@@ -100,7 +100,7 @@ kernels::Kernel* parse_kernel_spec (py::object& kernel_spec) {
       py::function f = py::function(metric.attr("get_parameter_vector"));
       py::array_t<double> vector = py::array_t<double>(f(true));
       auto data = vector.unchecked<1>();
-      for (size_t i = 0; i < data.shape(0); ++i) {
+      for (ssize_t i = 0; i < data.shape(0); ++i) {
         kernel->set_metric_parameter(i, data(i));
       }
 

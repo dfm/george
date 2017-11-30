@@ -56,13 +56,7 @@ class Kernel(ModelSet):
 
     @property
     def kernel(self):
-        if self.dirty or self._kernel is None:
-            try:
-                self._kernel = KernelInterface(self)
-            except AttributeError as e:
-                raise RuntimeError()
-            self.dirty = False
-        return self._kernel
+        return KernelInterface(self)
 
     def __repr__(self):
         kernel = self.models[None]
@@ -154,7 +148,6 @@ class _operator(Kernel):
             raise ValueError("Dimension mismatch")
         self.ndim = k1.ndim
         self._dirty = True
-        self._kernel = None
         super(_operator, self).__init__([("k1", k1), ("k2", k2)])
 
     @property
@@ -248,7 +241,6 @@ class {{ spec.name }} (Kernel):
 
         # Common setup.
         self.dirty = True
-        self._kernel = None
     {% if spec.stationary %}
     @property
     def block(self):

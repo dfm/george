@@ -183,8 +183,8 @@ if __name__ == "__main__":
         Extension("george.kernel_interface",
                   sources=[os.path.join("george", "kernel_interface.cpp")],
                   language="c++"),
-        Extension("george.solvers.hodlr",
-                  sources=[os.path.join("george", "solvers", "hodlr.cpp")],
+        Extension("george.solvers._hodlr",
+                  sources=[os.path.join("george", "solvers", "_hodlr.cpp")],
                   language="c++"),
     ]
 
