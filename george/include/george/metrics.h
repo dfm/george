@@ -32,6 +32,14 @@ namespace george {
           return 0.0;
         };
 
+        virtual void x1_gradient (const double* x1, const double* x2, double* grad) {};
+
+        virtual void x2_gradient (const double* x1, const double* x2, double* grad) {
+          for (size_t i = 0; i < this->subspace_.get_ndim(); ++i) {
+            grad[i] *= -1.0;
+          }
+        };
+
         // Parameter vector specification.
         size_t size () const { return this->vector_.size(); };
         virtual void set_parameter (size_t i, double value) {
@@ -80,6 +88,14 @@ namespace george {
           grad[0] = -r2;
           return r2;
         };
+
+        void x1_gradient (const double* x1, const double* x2, double* grad) {
+          size_t i, j;
+          for (i = 0; i < this->subspace_.get_naxes(); ++i) {
+            j = this->subspace_.get_axis(i);
+            grad[j] = this->vector_[0] * (x1[j] - x2[j]);
+          }
+        };
     };
 
     class AxisAlignedMetric : public Metric {
@@ -110,6 +126,14 @@ namespace george {
             grad[i] = -d;
           }
           return r2;
+        };
+
+        void x1_gradient (const double* x1, const double* x2, double* grad) {
+          size_t i, j;
+          for (i = 0; i < this->subspace_.get_naxes(); ++i) {
+            j = this->subspace_.get_axis(i);
+            grad[j] = this->vector_[i] * (x1[j] - x2[j]);
+          }
         };
     };
 
@@ -208,6 +232,22 @@ namespace george {
           r2 = 0.0;
           for (i = 0; i < n; ++i) r2 += Lir[i] * Lir[i];
           return r2;
+        };
+
+        void x1_gradient (const double* x1, const double* x2, double* grad) {
+          size_t i, j, n = this->subspace_.get_naxes();
+          std::vector<double> r(n);
+          for (i = 0; i < n; ++i) {
+            j = this->subspace_.get_axis(i);
+            r[i] = x1[j] - x2[j];
+          }
+
+          _custom_forward_sub(n, &(this->vector_[0]), &(r[0]));
+
+          for (i = 0; i < n; ++i) {
+            j = this->subspace_.get_axis(i);
+            grad[j] = r[i];
+          }
         };
     };
 

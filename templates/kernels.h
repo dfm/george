@@ -29,6 +29,10 @@ public:
     virtual double value (const double* x1, const double* x2) { return 0.0; };
     virtual void gradient (const double* x1, const double* x2,
                            const unsigned* which, double* grad) {};
+    virtual void x1_gradient (const double* x1, const double* x2,
+                              double* grad) {};
+    virtual void x2_gradient (const double* x1, const double* x2,
+                              double* grad) {};
 
     // Parameter vector spec.
     virtual size_t size () const { return 0; }
@@ -90,6 +94,22 @@ public:
         for (i = n1; i < n2; ++i) if (which[i]) { any = true; break; }
         if (any) this->kernel2_->gradient(x1, x2, &(which[n1]), &(grad[n1]));
     };
+
+    void x1_gradient (const double* x1, const double* x2, double* grad) {
+        size_t ndim = this->get_ndim();
+        std::vector<double> g1(ndim), g2(ndim);
+        this->kernel1_->x1_gradient(x1, x2, &(g1[0]));
+        this->kernel2_->x1_gradient(x1, x2, &(g2[0]));
+        for (size_t i = 0; i < ndim; ++i) grad[i] = g1[i] + g2[i];
+    };
+
+    void x2_gradient (const double* x1, const double* x2, double* grad) {
+        size_t ndim = this->get_ndim();
+        std::vector<double> g1(ndim), g2(ndim);
+        this->kernel1_->x2_gradient(x1, x2, &(g1[0]));
+        this->kernel2_->x2_gradient(x1, x2, &(g2[0]));
+        for (size_t i = 0; i < ndim; ++i) grad[i] = g1[i] + g2[i];
+    };
 };
 
 class Product : public Operator {
@@ -118,6 +138,30 @@ public:
             k = this->kernel1_->value(x1, x2);
             this->kernel2_->gradient(x1, x2, &(which[n1]), &(grad[n1]));
             for (i = n1; i < n2; ++i) grad[i] *= k;
+        }
+    };
+
+    void x1_gradient (const double* x1, const double* x2, double* grad) {
+        size_t ndim = this->get_ndim();
+        std::vector<double> g1(ndim), g2(ndim);
+        double k1 = this->kernel1_->value(x1, x2);
+        double k2 = this->kernel2_->value(x1, x2);
+        this->kernel1_->x1_gradient(x1, x2, &(g1[0]));
+        this->kernel2_->x1_gradient(x1, x2, &(g2[0]));
+        for (size_t i = 0; i < ndim; ++i) {
+            grad[i] = k2 * g1[i] + k1 * g2[i];
+        }
+    };
+
+    void x2_gradient (const double* x1, const double* x2, double* grad) {
+        size_t ndim = this->get_ndim();
+        std::vector<double> g1(ndim), g2(ndim);
+        double k1 = this->kernel1_->value(x1, x2);
+        double k2 = this->kernel2_->value(x1, x2);
+        this->kernel1_->x2_gradient(x1, x2, &(g1[0]));
+        this->kernel2_->x2_gradient(x1, x2, &(g2[0]));
+        for (size_t i = 0; i < ndim; ++i) {
+            grad[i] = k2 * g1[i] + k1 * g2[i];
         }
     };
 };
