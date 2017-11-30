@@ -344,6 +344,39 @@ One of the touchiest subjects in GP modeling is the choice of covariance
 function and we will return to a detailed discussion of this in \dfmtodo{SOME
 SECTION}, but first, let's consider a concrete example.
 
+\section{Kernel functions}
+
+Any kernel function used for GP modeling must be positive semi-definite.
+If this is not satisfied, the covariance matrix will not be invertible and the
+determinant will be zero or negative, giving a likelihood of zero.
+This requirement can also be written informally as
+\begin{eqnarray}
+    \int k(\bvec{x},\,\bvec{x}^\prime)\,f(\bvec{x})\,f(\bvec{x}^\prime)\,
+    p(\bvec{x})\dd \bvec{x} \, p(\bvec{x}^\prime)\dd \bvec{x}^\prime
+    \ge 0
+\end{eqnarray}
+for all finite functions $f(\bvec{x})$.
+This property is generally hard to prove for a new kernel function so the
+standard practice is to use sums and products of common functions that have
+been proved to be valid.
+Most common functions are discussed in Chapter~4 of \citet{Rasmussen:2006}.
+Just like any model selection problem, there are few different methods of
+choosing the kernel and some of these might be better than others depending on
+the goals of the user.
+Sometimes, the choice can be motivated using physics and the parameters of the
+model can then be interpreted in this same framework.
+In other cases, the GP model might just be acting as an effective model.
+For these situations, it is generally useful to demonstrate quantitatively
+that the results of your inference are not sensitive to your choice of kernel.
+It is also possible to compare different kernel functions using standard model
+comparison techniques like Bayes factors, cross validation, or information
+criteria.
+
+
+
+
+
+
 - an example: linear fit
 - prediction: interpolation and extrapolation
 - kernel choice
