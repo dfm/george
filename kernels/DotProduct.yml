@@ -12,4 +12,5 @@ doc: |
 
 value: return x1 * x2;
 
-grad: return 0.0;
+grad:
+    x1: return x2;

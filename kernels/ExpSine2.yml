@@ -37,3 +37,8 @@ grad:
                s = sin(arg), c = cos(arg),
                A = exp(-gamma * s * s);
         return 2 * gamma * arg * c * s * A;
+    x1: |
+        double d = x1 - x2;
+        double s = sin(d * factor);
+        return -exp(-gamma * s * s) * factor * gamma * sin(2.0 * factor * d);
+

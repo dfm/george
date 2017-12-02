@@ -30,3 +30,6 @@ grad:
     log_sigma2: |
         if (order == 0.0) return 0.0;
         return sigma2 * pow(x1 * x2 + sigma2, order-1.0) * order;
+    x1: |
+        if (order == 0.0) return 0.0;
+        return x2 * order * pow(x1 * x2 + sigma2, order-1.0);

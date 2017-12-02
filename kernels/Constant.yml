@@ -24,3 +24,6 @@ value: |
 grad:
     log_constant: |
         return constant;
+
+    x1: |
+        return 0.0;

@@ -30,3 +30,7 @@ grad:
     log_gamma2: |
         if (order == 0.0) return -inv_gamma2;
         return -pow(x1 * x2, order) * inv_gamma2;
+
+    x1: |
+        if (order == 0.0) return 0.0;
+        return x2 * order * pow(x1 * x2, order - 1.0) * inv_gamma2;

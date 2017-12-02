@@ -27,3 +27,7 @@ grad:
     log_period: |
         double r = factor * (x1 - x2);
         return r * sin(r);
+
+    x1: |
+        return -factor*sin(factor * (x1-x2));
+

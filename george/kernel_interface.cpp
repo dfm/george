@@ -21,6 +21,12 @@ class KernelInterface {
     void gradient (const double* x1, const double* x2, const unsigned* which, double* grad) const {
       return kernel_->gradient(x1, x2, which, grad);
     };
+    void x1_gradient (const double* x1, const double* x2, double* grad) const {
+      return kernel_->x1_gradient(x1, x2, grad);
+    };
+    void x2_gradient (const double* x1, const double* x2, double* grad) const {
+      return kernel_->x2_gradient(x2, x2, grad);
+    };
     py::object kernel_spec () const { return kernel_spec_; };
 
   private:
@@ -42,7 +48,7 @@ Docs...
     auto x1p = x1.unchecked<2>();
     auto x2p = x2.unchecked<2>();
     size_t n1 = x1p.shape(0), n2 = x2p.shape(0);
-    if (x1p.shape(1) != self.ndim() || x2p.shape(1) != self.ndim()) throw george::dimension_mismatch();
+    if (x1p.shape(1) != ssize_t(self.ndim()) || x2p.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result({n1, n2});
     auto resultp = result.mutable_unchecked<2>();
     for (size_t i = 0; i < n1; ++i) {
@@ -56,7 +62,7 @@ Docs...
   interface.def("value_symmetric", [](KernelInterface& self, py::array_t<double> x) {
     auto xp = x.unchecked<2>();
     size_t n = xp.shape(0);
-    if (xp.shape(1) != self.ndim()) throw george::dimension_mismatch();
+    if (xp.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result({n, n});
     auto resultp = result.mutable_unchecked<2>();
     for (size_t i = 0; i < n; ++i) {
@@ -74,7 +80,7 @@ Docs...
     auto x1p = x1.unchecked<2>();
     auto x2p = x2.unchecked<2>();
     size_t n = x1p.shape(0);
-    if (n != x2p.shape(0) || x1p.shape(1) != self.ndim() || x2p.shape(1) != self.ndim()) throw george::dimension_mismatch();
+    if (ssize_t(n) != x2p.shape(0) || x1p.shape(1) != ssize_t(self.ndim()) || x2p.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result(n);
     auto resultp = result.mutable_unchecked<1>();
     for (size_t i = 0; i < n; ++i) {
@@ -87,7 +93,7 @@ Docs...
     auto x1p = x1.unchecked<2>();
     auto x2p = x2.unchecked<2>();
     size_t n1 = x1p.shape(0), n2 = x2p.shape(0), size = self.size();
-    if (x1p.shape(1) != self.ndim() || x2p.shape(1) != self.ndim()) throw george::dimension_mismatch();
+    if (x1p.shape(1) != ssize_t(self.ndim()) || x2p.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result({n1, n2, size});
     auto resultp = result.mutable_unchecked<3>();
     auto w = which.unchecked<1>();
@@ -103,7 +109,7 @@ Docs...
   interface.def("gradient_symmetric", [](KernelInterface& self, py::array_t<unsigned> which, py::array_t<double> x) {
     auto xp = x.unchecked<2>();
     size_t n = xp.shape(0), size = self.size();
-    if (xp.shape(1) != self.ndim()) throw george::dimension_mismatch();
+    if (xp.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result({n, n, size});
     auto resultp = result.mutable_unchecked<3>();
     auto w = which.unchecked<1>();
@@ -113,6 +119,74 @@ Docs...
       for (size_t j = i+1; j < n; ++j) {
         self.gradient(&(xp(i, 0)), &(xp(j, 0)), wp, &(resultp(i, j, 0)));
         for (size_t k = 0; k < size; ++k) resultp(j, i, k) = resultp(i, j, k);
+      }
+    }
+    return result;
+  });
+
+  interface.def("x1_gradient_general", [](KernelInterface& self, py::array_t<double> x1, py::array_t<double> x2) {
+    auto x1p = x1.unchecked<2>();
+    auto x2p = x2.unchecked<2>();
+    size_t n1 = x1p.shape(0), n2 = x2p.shape(0), ndim = self.ndim();
+    if (x1p.shape(1) != ssize_t(ndim) || x2p.shape(1) != ssize_t(ndim)) throw george::dimension_mismatch();
+    py::array_t<double> result({n1, n2, ndim});
+    auto resultp = result.mutable_unchecked<3>();
+    for (size_t i = 0; i < n1; ++i) {
+      for (size_t j = 0; j < n2; ++j) {
+        for (size_t k = 0; k < ndim; ++k) resultp(i, j, k) = 0.0;
+        self.x1_gradient(&(x1p(i, 0)), &(x2p(j, 0)), &(resultp(i, j, 0)));
+      }
+    }
+    return result;
+  });
+
+  interface.def("x1_gradient_symmetric", [](KernelInterface& self, py::array_t<double> x) {
+    auto xp = x.unchecked<2>();
+    size_t n = xp.shape(0), ndim = self.ndim();
+    if (xp.shape(1) != ssize_t(ndim)) throw george::dimension_mismatch();
+    py::array_t<double> result({n, n, ndim});
+    auto resultp = result.mutable_unchecked<3>();
+    for (size_t i = 0; i < n; ++i) {
+      for (size_t k = 0; k < ndim; ++k) resultp(i, i, k) = 0.0;
+      self.x1_gradient(&(xp(i, 0)), &(xp(i, 0)), &(resultp(i, i, 0)));
+      for (size_t j = i+1; j < n; ++j) {
+        for (size_t k = 0; k < ndim; ++k) resultp(i, j, k) = 0.0;
+        self.x1_gradient(&(xp(i, 0)), &(xp(j, 0)), &(resultp(i, j, 0)));
+        for (size_t k = 0; k < ndim; ++k) resultp(j, i, k) = resultp(i, j, k);
+      }
+    }
+    return result;
+  });
+
+  interface.def("x2_gradient_general", [](KernelInterface& self, py::array_t<double> x1, py::array_t<double> x2) {
+    auto x1p = x1.unchecked<2>();
+    auto x2p = x2.unchecked<2>();
+    size_t n1 = x1p.shape(0), n2 = x2p.shape(0), ndim = self.ndim();
+    if (x1p.shape(1) != ssize_t(ndim) || x2p.shape(1) != ssize_t(ndim)) throw george::dimension_mismatch();
+    py::array_t<double> result({n1, n2, ndim});
+    auto resultp = result.mutable_unchecked<3>();
+    for (size_t i = 0; i < n1; ++i) {
+      for (size_t j = 0; j < n2; ++j) {
+        for (size_t k = 0; k < ndim; ++k) resultp(i, j, k) = 0.0;
+        self.x2_gradient(&(x1p(i, 0)), &(x2p(j, 0)), &(resultp(i, j, 0)));
+      }
+    }
+    return result;
+  });
+
+  interface.def("x2_gradient_symmetric", [](KernelInterface& self, py::array_t<double> x) {
+    auto xp = x.unchecked<2>();
+    size_t n = xp.shape(0), ndim = self.ndim();
+    if (xp.shape(1) != ssize_t(ndim)) throw george::dimension_mismatch();
+    py::array_t<double> result({n, n, ndim});
+    auto resultp = result.mutable_unchecked<3>();
+    for (size_t i = 0; i < n; ++i) {
+      for (size_t k = 0; k < ndim; ++k) resultp(i, i, k) = 0.0;
+      self.x2_gradient(&(xp(i, 0)), &(xp(i, 0)), &(resultp(i, i, 0)));
+      for (size_t j = i+1; j < n; ++j) {
+        for (size_t k = 0; k < ndim; ++k) resultp(i, j, k) = 0.0;
+        self.x2_gradient(&(xp(i, 0)), &(xp(j, 0)), &(resultp(i, j, 0)));
+        for (size_t k = 0; k < ndim; ++k) resultp(j, i, k) = resultp(i, j, k);
       }
     }
     return result;

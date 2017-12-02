@@ -69,6 +69,14 @@ def test_kernel(kernel, N=20, seed=123, eps=1.32e-6):
     kernel.test_gradient(t1, eps=eps)
 
 
+@pytest.mark.parametrize("kernel", kernels_to_test)
+def test_x_gradient_kernel(kernel, N=20, seed=123, eps=1.32e-6):
+    np.random.seed(seed)
+    t1 = np.random.randn(N, kernel.ndim)
+    kernel.test_x1_gradient(t1, eps=eps)
+    # kernel.test_x2_gradient(t1, eps=eps)
+
+
 stationary_kernels = [
     (kernels.ExpKernel, {}),
     (kernels.ExpSquaredKernel, {}),
@@ -87,24 +95,31 @@ def test_stationary(kernel_type, kwargs):
 
     kernel = build_kernel(0.1)
     test_kernel(kernel)
+    test_x_gradient_kernel(kernel)
 
     kernel = build_kernel(1.0)
     test_kernel(kernel)
+    test_x_gradient_kernel(kernel)
 
     kernel = build_kernel(10.0)
     test_kernel(kernel)
+    test_x_gradient_kernel(kernel)
 
     kernel = build_kernel([1.0, 0.1, 10.0], ndim=3)
     test_kernel(kernel)
+    test_x_gradient_kernel(kernel)
 
     kernel = build_kernel(1.0, ndim=3)
     test_kernel(kernel)
+    test_x_gradient_kernel(kernel)
 
     with pytest.raises(ValueError):
         kernel = build_kernel([1.0, 0.1, 10.0, 500], ndim=3)
 
     kernel = build_kernel(1.0, ndim=3, axes=2)
     test_kernel(kernel)
+    test_x_gradient_kernel(kernel)
 
     kernel = build_kernel(1.0, ndim=3, axes=2, block=(-0.1, 0.1))
     test_kernel(kernel)
+    test_x_gradient_kernel(kernel)

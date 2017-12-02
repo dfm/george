@@ -364,6 +364,74 @@ public:
         }
     };
 
+    void x1_gradient (const double* x1, const double* x2, double* grad) {
+        bool out = false;
+        size_t i, j, n = this->get_ndim();
+        if (blocked_) {
+            for (i = 0; i < min_block_.size(); ++i) {
+                j = metric_.get_axis(i);
+                if (x1[j] < min_block_[i] || x1[j] > max_block_[i] ||
+                        x2[j] < min_block_[i] || x2[j] > max_block_[i]) {
+                    out = true;
+                    break;
+                }
+            }
+            if (out) {
+                for (i = 0; i < n; ++i) grad[i] = 0.0;
+                return;
+            }
+        }
+
+        double r2 = metric_.value(x1, x2);
+        double r2grad = 2.0 * radial_gradient(
+                {% for param in spec.params -%}
+                param_{{ param }}_,
+                {% endfor %}
+                {% for param in spec.reparams -%}
+                reparam_{{ param }}_,
+                {% endfor -%}
+                {%- for con in spec.constants %}
+                constant_{{ con.name }}_,
+                {%- endfor %}
+                r2);
+        metric_.x1_gradient(x1, x2, grad);
+        for (i = 0; i < n; ++i) grad[i] *= r2grad;
+    };
+
+    void x2_gradient (const double* x1, const double* x2, double* grad) {
+        bool out = false;
+        size_t i, j, n = this->get_ndim();
+        if (blocked_) {
+            for (i = 0; i < min_block_.size(); ++i) {
+                j = metric_.get_axis(i);
+                if (x1[j] < min_block_[i] || x1[j] > max_block_[i] ||
+                        x2[j] < min_block_[i] || x2[j] > max_block_[i]) {
+                    out = true;
+                    break;
+                }
+            }
+            if (out) {
+                for (i = 0; i < n; ++i) grad[i] = 0.0;
+                return;
+            }
+        }
+
+        double r2 = metric_.value(x1, x2);
+        double r2grad = 2.0 * radial_gradient(
+                {% for param in spec.params -%}
+                param_{{ param }}_,
+                {% endfor %}
+                {% for param in spec.reparams -%}
+                reparam_{{ param }}_,
+                {% endfor -%}
+                {%- for con in spec.constants %}
+                constant_{{ con.name }}_,
+                {%- endfor %}
+                r2);
+        metric_.x1_gradient(x1, x2, grad);
+        for (i = 0; i < n; ++i) grad[i] *= -r2grad;
+    };
+
     size_t size () const { return metric_.size() + size_; };
 
     void update_reparams () {
@@ -503,6 +571,20 @@ public:
     };
     {% endfor -%}
 
+    double _x1_gradient (
+            {% for param in spec.params -%}
+            double {{ param }},
+            {% endfor -%}
+            {% for param in spec.reparams -%}
+            double {{ param }},
+            {% endfor -%}
+            {%- for con in spec.constants %}
+            {{ con.type }} {{ con.name }},
+            {%- endfor %}
+            double x1, double x2) {
+        {{ spec.grad["x1"] | indent(8) }}
+    };
+
     void gradient (const double* x1, const double* x2, const unsigned* which,
                    double* grad) {
         {% for param in spec.params -%}
@@ -529,6 +611,44 @@ public:
             {% endfor %}
         }
         {% endif %}
+    };
+
+    void x1_gradient (const double* x1, const double* x2, double* grad) {
+        size_t i, j, ndim = this->get_ndim(), n = subspace_.get_naxes();
+        for (i = 0; i < ndim; ++i) grad[i] = 0.0;
+        for (i = 0; i < n; ++i) {
+            j = subspace_.get_axis(i);
+            grad[j] = _x1_gradient(
+                {% for param in spec.params -%}
+                param_{{ param }}_,
+                {% endfor -%}
+                {% for param in spec.reparams -%}
+                reparam_{{ param }}_,
+                {% endfor -%}
+                {%- for con in spec.constants %}
+                constant_{{ con.name }}_,
+                {%- endfor %}
+                x1[j], x2[j]);
+        }
+    };
+
+    void x2_gradient (const double* x1, const double* x2, double* grad) {
+        size_t i, j, ndim = this->get_ndim(), n = subspace_.get_naxes();
+        for (i = 0; i < ndim; ++i) grad[i] = 0.0;
+        for (i = 0; i < n; ++i) {
+            j = subspace_.get_axis(i);
+            grad[j] = _x1_gradient(
+                {% for param in spec.params -%}
+                param_{{ param }}_,
+                {% endfor -%}
+                {% for param in spec.reparams -%}
+                reparam_{{ param }}_,
+                {% endfor -%}
+                {%- for con in spec.constants %}
+                constant_{{ con.name }}_,
+                {%- endfor %}
+                x2[j], x1[j]);
+        }
     };
 
     void update_reparams () {
