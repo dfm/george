@@ -112,10 +112,7 @@ private:
 };
 
 
-
-PYBIND11_PLUGIN(_hodlr) {
-  py::module m("_hodlr");
-
+PYBIND11_MODULE(_hodlr, m) {
   py::class_<Solver> solver(m, "HODLRSolver", R"delim(
 A solver using `Sivaram Amambikasaran's HODLR algorithm
 <http://arxiv.org/abs/1403.6015>`_ to approximately solve the GP linear
@@ -204,6 +201,4 @@ Args:
 Get the dense inverse covariance matrix. This is used for computing gradients,
 but it is not recommended in general.
 )delim");
-
-  return m.ptr();
 }

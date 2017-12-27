@@ -35,11 +35,11 @@ class KernelInterface {
 };
 
 
-PYBIND11_PLUGIN(kernel_interface) {
+PYBIND11_MODULE(kernel_interface, m) {
 
-  py::module m("kernel_interface", R"delim(
+  m.doc() = R"delim(
 Docs...
-)delim");
+)delim";
 
   py::class_<KernelInterface> interface(m, "KernelInterface");
   interface.def(py::init<py::object>());
@@ -156,14 +156,23 @@ Docs...
     return result;
   });
 
-  interface.def("__getstate__", [](const KernelInterface& self) {
-    return std::make_tuple(self.kernel_spec());
-  });
+  interface.def(py::pickle(
+      [](const KernelInterface& self) {
+        return py::make_tuple(self.kernel_spec());
+      },
+      [](py::tuple t) {
+        if (t.size() != 1) throw std::runtime_error("Invalid state!");
+        return new KernelInterface(t[0]);
+      }
+  ));
 
-  interface.def("__setstate__", [](KernelInterface& self, py::tuple t) {
-    if (t.size() != 1) throw std::runtime_error("Invalid state!");
-    new (&self) KernelInterface(t[0]);
-  });
 
-  return m.ptr();
+  //interface.def("__getstate__", [](const KernelInterface& self) {
+  //  return std::make_tuple(self.kernel_spec());
+  //});
+
+  //interface.def("__setstate__", [](KernelInterface& self, py::tuple t) {
+  //  if (t.size() != 1) throw std::runtime_error("Invalid state!");
+  //  new (&self) KernelInterface(t[0]);
+  //});
 }
