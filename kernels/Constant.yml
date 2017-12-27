@@ -27,3 +27,6 @@ grad:
 
     x1: |
         return 0.0;
+
+    x2: |
+        return 0.0;

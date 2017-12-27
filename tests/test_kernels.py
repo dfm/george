@@ -67,6 +67,7 @@ def test_kernel(kernel, N=20, seed=123, eps=1.32e-6):
     np.random.seed(seed)
     t1 = np.random.randn(N, kernel.ndim)
     kernel.test_gradient(t1, eps=eps)
+    kernel.test_gradient(t1, t1[:1], eps=eps)
 
 
 @pytest.mark.parametrize("kernel", kernels_to_test)
@@ -74,7 +75,9 @@ def test_x_gradient_kernel(kernel, N=20, seed=123, eps=1.32e-6):
     np.random.seed(seed)
     t1 = np.random.randn(N, kernel.ndim)
     kernel.test_x1_gradient(t1, eps=eps)
-    # kernel.test_x2_gradient(t1, eps=eps)
+    kernel.test_x1_gradient(t1, np.array(t1[:1]), eps=eps)
+    kernel.test_x2_gradient(t1, eps=eps)
+    kernel.test_x2_gradient(np.array(t1[:1]), t1, eps=eps)
 
 
 stationary_kernels = [

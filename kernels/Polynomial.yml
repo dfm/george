@@ -33,3 +33,6 @@ grad:
     x1: |
         if (order == 0.0) return 0.0;
         return x2 * order * pow(x1 * x2 + sigma2, order-1.0);
+    x2: |
+        if (order == 0.0) return 0.0;
+        return x1 * order * pow(x1 * x2 + sigma2, order-1.0);

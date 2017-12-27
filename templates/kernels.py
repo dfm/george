@@ -119,15 +119,17 @@ class Kernel(ModelSet):
     def get_x1_gradient(self, x1, x2=None):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
-            return self.kernel.x1_gradient_symmetric(x1)
-        x2 = np.ascontiguousarray(x2, dtype=np.float64)
+            x2 = x1
+        else:
+            x2 = np.ascontiguousarray(x2, dtype=np.float64)
         return self.kernel.x1_gradient_general(x1, x2)
 
     def get_x2_gradient(self, x1, x2=None):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
-            return self.kernel.x2_gradient_symmetric(x1)
-        x2 = np.ascontiguousarray(x2, dtype=np.float64)
+            x2 = x1
+        else:
+            x2 = np.ascontiguousarray(x2, dtype=np.float64)
         return self.kernel.x2_gradient_general(x1, x2)
 
     def test_gradient(self, x1, x2=None, eps=1.32e-6, **kwargs):
@@ -152,10 +154,10 @@ class Kernel(ModelSet):
                 .format(self.get_parameter_names()[i], i)
 
     def test_x1_gradient(self, x1, x2=None, eps=1.32e-6, **kwargs):
-        if x2 is None:
-            x2 = np.array(x1)
         kwargs["atol"] = kwargs.get("atol", 0.5 * eps)
         g0 = self.get_x1_gradient(x1, x2=x2)
+        if x2 is None:
+            x2 = np.array(x1)
         for i in range(len(x1)):
             for k in range(self.ndim):
                 x1[i, k] += eps
@@ -170,14 +172,10 @@ class Kernel(ModelSet):
                 assert np.allclose(g0[i, :, k], grad[i], **kwargs)
 
     def test_x2_gradient(self, x1, x2=None, eps=1.32e-6, **kwargs):
-        return
-        if x2 is None:
-            x2 = np.array(x1)
         kwargs["atol"] = kwargs.get("atol", 0.5 * eps)
         g0 = self.get_x2_gradient(x1, x2=x2)
-        print(g0 - self.get_x1_gradient(x1, x2=x2))
-        print(g0)
-        assert 0
+        if x2 is None:
+            x2 = np.array(x1)
         for i in range(len(x2)):
             for k in range(self.ndim):
                 x2[i, k] += eps
@@ -189,8 +187,7 @@ class Kernel(ModelSet):
                 x2[i, k] += eps
 
                 grad = 0.5 * (kp - km) / eps
-                print(grad[:, i])
-                assert np.allclose(g0[i, :, k], grad[:, i], **kwargs)
+                assert np.allclose(g0[:, i, k], grad[:, i], **kwargs)
 
 
 class _operator(Kernel):

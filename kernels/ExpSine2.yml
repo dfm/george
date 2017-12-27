@@ -41,4 +41,8 @@ grad:
         double d = x1 - x2;
         double s = sin(d * factor);
         return -exp(-gamma * s * s) * factor * gamma * sin(2.0 * factor * d);
+    x2: |
+        double d = x1 - x2;
+        double s = sin(d * factor);
+        return exp(-gamma * s * s) * factor * gamma * sin(2.0 * factor * d);
 

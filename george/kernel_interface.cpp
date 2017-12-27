@@ -25,7 +25,7 @@ class KernelInterface {
       return kernel_->x1_gradient(x1, x2, grad);
     };
     void x2_gradient (const double* x1, const double* x2, double* grad) const {
-      return kernel_->x2_gradient(x2, x2, grad);
+      return kernel_->x2_gradient(x1, x2, grad);
     };
     py::object kernel_spec () const { return kernel_spec_; };
 
@@ -140,24 +140,6 @@ Docs...
     return result;
   });
 
-  interface.def("x1_gradient_symmetric", [](KernelInterface& self, py::array_t<double> x) {
-    auto xp = x.unchecked<2>();
-    size_t n = xp.shape(0), ndim = self.ndim();
-    if (xp.shape(1) != ssize_t(ndim)) throw george::dimension_mismatch();
-    py::array_t<double> result({n, n, ndim});
-    auto resultp = result.mutable_unchecked<3>();
-    for (size_t i = 0; i < n; ++i) {
-      for (size_t k = 0; k < ndim; ++k) resultp(i, i, k) = 0.0;
-      self.x1_gradient(&(xp(i, 0)), &(xp(i, 0)), &(resultp(i, i, 0)));
-      for (size_t j = i+1; j < n; ++j) {
-        for (size_t k = 0; k < ndim; ++k) resultp(i, j, k) = 0.0;
-        self.x1_gradient(&(xp(i, 0)), &(xp(j, 0)), &(resultp(i, j, 0)));
-        for (size_t k = 0; k < ndim; ++k) resultp(j, i, k) = resultp(i, j, k);
-      }
-    }
-    return result;
-  });
-
   interface.def("x2_gradient_general", [](KernelInterface& self, py::array_t<double> x1, py::array_t<double> x2) {
     auto x1p = x1.unchecked<2>();
     auto x2p = x2.unchecked<2>();
@@ -169,24 +151,6 @@ Docs...
       for (size_t j = 0; j < n2; ++j) {
         for (size_t k = 0; k < ndim; ++k) resultp(i, j, k) = 0.0;
         self.x2_gradient(&(x1p(i, 0)), &(x2p(j, 0)), &(resultp(i, j, 0)));
-      }
-    }
-    return result;
-  });
-
-  interface.def("x2_gradient_symmetric", [](KernelInterface& self, py::array_t<double> x) {
-    auto xp = x.unchecked<2>();
-    size_t n = xp.shape(0), ndim = self.ndim();
-    if (xp.shape(1) != ssize_t(ndim)) throw george::dimension_mismatch();
-    py::array_t<double> result({n, n, ndim});
-    auto resultp = result.mutable_unchecked<3>();
-    for (size_t i = 0; i < n; ++i) {
-      for (size_t k = 0; k < ndim; ++k) resultp(i, i, k) = 0.0;
-      self.x2_gradient(&(xp(i, 0)), &(xp(i, 0)), &(resultp(i, i, 0)));
-      for (size_t j = i+1; j < n; ++j) {
-        for (size_t k = 0; k < ndim; ++k) resultp(i, j, k) = 0.0;
-        self.x2_gradient(&(xp(i, 0)), &(xp(j, 0)), &(resultp(i, j, 0)));
-        for (size_t k = 0; k < ndim; ++k) resultp(j, i, k) = resultp(i, j, k);
       }
     }
     return result;

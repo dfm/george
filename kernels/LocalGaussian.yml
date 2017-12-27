@@ -33,3 +33,6 @@ grad:
     x1: |
         double d1 = x1 - location, d2 = x2 - location;
         return -2.0 * exp(-(d1*d1 + d2*d2) * inv_2w) * d1 * inv_2w;
+    x2: |
+        double d1 = x1 - location, d2 = x2 - location;
+        return -2.0 * exp(-(d1*d1 + d2*d2) * inv_2w) * d2 * inv_2w;

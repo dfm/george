@@ -585,6 +585,20 @@ public:
         {{ spec.grad["x1"] | indent(8) }}
     };
 
+    double _x2_gradient (
+            {% for param in spec.params -%}
+            double {{ param }},
+            {% endfor -%}
+            {% for param in spec.reparams -%}
+            double {{ param }},
+            {% endfor -%}
+            {%- for con in spec.constants %}
+            {{ con.type }} {{ con.name }},
+            {%- endfor %}
+            double x1, double x2) {
+        {{ spec.grad["x2"] | indent(8) }}
+    };
+
     void gradient (const double* x1, const double* x2, const unsigned* which,
                    double* grad) {
         {% for param in spec.params -%}
@@ -637,7 +651,7 @@ public:
         for (i = 0; i < ndim; ++i) grad[i] = 0.0;
         for (i = 0; i < n; ++i) {
             j = subspace_.get_axis(i);
-            grad[j] = _x1_gradient(
+            grad[j] = _x2_gradient(
                 {% for param in spec.params -%}
                 param_{{ param }}_,
                 {% endfor -%}
@@ -647,7 +661,7 @@ public:
                 {%- for con in spec.constants %}
                 constant_{{ con.name }}_,
                 {%- endfor %}
-                x2[j], x1[j]);
+                x1[j], x2[j]);
         }
     };
 

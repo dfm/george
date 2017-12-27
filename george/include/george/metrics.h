@@ -36,9 +36,9 @@ namespace george {
 
         virtual void x2_gradient (const double* x1, const double* x2, double* grad) {
           this->x1_gradient(x1, x2, grad);
-          for (size_t i = 0; i < this->subspace_.get_ndim(); ++i) {
-            grad[i] *= -1.0;
-          }
+          //for (size_t i = 0; i < this->subspace_.get_ndim(); ++i) {
+          //  grad[i] *= -1.0;
+          //}
         };
 
         // Parameter vector specification.

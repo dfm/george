@@ -31,3 +31,6 @@ grad:
     x1: |
         return -factor*sin(factor * (x1-x2));
 
+    x2: |
+        return factor*sin(factor * (x1-x2));
+
