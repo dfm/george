@@ -59,7 +59,7 @@ class Node(object):
         if half >= min_size:
             self.is_leaf = False
 
-            U, V = low_rank_approx(kernel, x, x, start+half, size-half, start,
+            U, V = low_rank_approx(kernel, x, start+half, size-half, start,
                                    half, tol, random)
             self.U = [V, U]
             self.V = [np.array(V), np.array(U)]
@@ -112,7 +112,7 @@ class Node(object):
             S = -np.dot(VU0, VU1)
             S[np.diag_indices_from(S)] += 1.0
             self.factor = lu_factor(S, overwrite_a=True)
-            self.SVU0 = -lu_solve(self.factor, VU0)
+            self.SVU0 = -lu_solve(self.factor, VU0, overwrite_b=True)
             self.VU1 = VU1
             self.A = -np.dot(VU1, self.SVU0)
             self.A[np.diag_indices_from(self.A)] += 1.0
@@ -158,7 +158,7 @@ class Node(object):
         return np.dot(x.T, b)
 
 
-def low_rank_approx(kernel, x1, x2, start_row, n_rows, start_col, n_cols, tol,
+def low_rank_approx(kernel, x, start_row, n_rows, start_col, n_cols, tol,
                     random=None):
     max_rank = max(n_cols, n_rows)
     U = np.empty((n_rows, max_rank))
@@ -166,22 +166,22 @@ def low_rank_approx(kernel, x1, x2, start_row, n_rows, start_col, n_cols, tol,
 
     rank = 0
     index = np.arange(n_rows)
+    random.shuffle(index)
     norm = 0.0
+    tol2 = tol*tol
     finished = False
-    rows = slice(start_row, start_row+n_rows)
-    cols = slice(start_col, start_col+n_cols)
+    x1 = x[start_row:start_row+n_rows]
+    x2 = x[start_col:start_col+n_cols]
 
     while True:
         while True:
             if not len(index):
                 finished = True
                 break
-            k = random.randint(len(index))
-            i = index[k]
-            index[k] = index[-1]
+            i = index[-1]
             index = index[:-1]
 
-            row = kernel(x1[start_row+i:start_row+i+1], x2[cols])[0]
+            row = kernel(x1[i:i+1], x2)[0]
             row -= np.dot(U[i, :rank], V[:, :rank].T)
             j = np.argmax(np.abs(row))
             if np.abs(row[j]) > 1e-14:
@@ -189,7 +189,7 @@ def low_rank_approx(kernel, x1, x2, start_row, n_rows, start_col, n_cols, tol,
 
         if finished:
             if not rank:
-                K = kernel(x1[rows], x2[cols])
+                K = kernel(x1, x2)
                 if n_cols <= n_rows:
                     return K, np.eye(n_cols)
                 return np.eye(n_rows), K
@@ -198,7 +198,7 @@ def low_rank_approx(kernel, x1, x2, start_row, n_rows, start_col, n_cols, tol,
         row /= row[j]
         V[:, rank] = row
 
-        col = kernel(x1[rows], x2[start_col+j:start_col+j+1])[:, 0]
+        col = kernel(x1, x2[j:j+1])[:, 0]
         col -= np.dot(U[:, :rank], V[j, :rank])
         U[:, rank] = col
 
@@ -207,7 +207,7 @@ def low_rank_approx(kernel, x1, x2, start_row, n_rows, start_col, n_cols, tol,
             break
 
         rowcol_norm = np.dot(row, row) * np.dot(col, col)
-        if rowcol_norm < tol**2 * norm:
+        if rowcol_norm < tol2 * norm:
             break
 
         norm += rowcol_norm
