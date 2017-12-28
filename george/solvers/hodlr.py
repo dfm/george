@@ -107,11 +107,15 @@ class Node(object):
         if self.is_leaf:
             self.factor = cho_factor(self.to_dense(), overwrite_a=True)
         else:
-            rank = self.rank
-            S = np.eye(2*rank)
-            S[:rank, rank:] = np.dot(self.V[1].T, self.U[1])
-            S[rank:, :rank] = np.dot(self.V[0].T, self.U[0])
+            VU0 = np.dot(self.V[0].T, self.U[0])
+            VU1 = np.dot(self.V[1].T, self.U[1])
+            S = -np.dot(VU0, VU1)
+            S[np.diag_indices_from(S)] += 1.0
             self.factor = lu_factor(S, overwrite_a=True)
+            self.SVU0 = -lu_solve(self.factor, VU0)
+            self.VU1 = VU1
+            self.A = -np.dot(VU1, self.SVU0)
+            self.A[np.diag_indices_from(self.A)] += 1.0
 
     def apply_inverse(self, x, start):
         start = self.start - start
@@ -120,24 +124,25 @@ class Node(object):
             x[s] = cho_solve(self.factor, x[s], overwrite_b=True)
             return x
 
-        rank = self.rank
+        # rank = self.rank
         s1 = self.size // 2
         s2 = self.size - s1
-        shape = list(x.shape)
-        shape[0] = 2*rank
-        tmp = np.empty(shape)
-        tmp[:rank] = np.dot(self.V[1].T, x[start+s1:start+s1+s2])
-        tmp[rank:] = np.dot(self.V[0].T, x[start:start+s1])
-        tmp = lu_solve(self.factor, tmp, overwrite_b=True)
 
-        x[start:start+s1] -= np.dot(self.U[0], tmp[:rank])
-        x[start+s1:start+s1+s2] -= np.dot(self.U[1], tmp[rank:])
+        slice1 = slice(start, start+s1)
+        slice2 = slice(start+s1, start+s1+s2)
+
+        tmp1 = np.dot(self.V[1].T, x[slice2])
+        tmp2 = np.dot(self.V[0].T, x[slice1])
+        alpha = lu_solve(self.factor, tmp2, overwrite_b=True)
+
+        x[slice1] -= np.dot(self.U[0], np.dot(self.A, tmp1))
+        x[slice1] += np.dot(self.U[0], np.dot(self.VU1, alpha))
+        x[slice2] -= np.dot(self.U[1], np.dot(self.SVU0, tmp1))
+        x[slice2] -= np.dot(self.U[1], alpha)
+
         return x
 
     def solve(self, x_in, in_place=False):
-        # if len(x_in.shape) == 1:
-        #     x_in = x_in[:, None]
-
         if in_place:
             x = x_in
         else:
