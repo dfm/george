@@ -72,16 +72,20 @@
 \title{Gaussian processes in astronomy}
 
 \correspondingauthor{Daniel Foreman-Mackey}
-\email{formeman.mackey@gmail.com}
+\email{foreman.mackey@gmail.com}
 
 \author[0000-0002-9328-5652]{Daniel Foreman-Mackey}
-\affiliation{NASA Sagan Fellow}
-\affiliation{Astronomy Department, University of Washington, Seattle, WA}
 \affiliation{Center for Computational Astrophysics, Flatiron Institute, New York, NY}
+\affiliation{NASA Sagan Fellow; Astronomy Department, University of Washington, Seattle, WA}
 
 \begin{abstract}\noindent
 
-    This is an abstract.
+Gaussian Processes are a class of statistical models that are broadly applied
+in the astronomical literature.
+This paper provides a pedagogical introduction to the mathematical foundation
+for these models and motivates the use in astrophysics.
+We also provide some examples, a discussion of the limitations of GP models,
+and present some methods for scaling GPs to large datasets.
 
 \end{abstract}
 
@@ -98,6 +102,73 @@
 }
 
 \section{Introduction}
+
+Outline:
+
+\begin{enumerate}
+
+\item Intro: history, motivation, some examples, etc.
+
+\item Example: fitting a line to data, the effects of correlated noise
+
+\item Formalism: prior over function space, prediction, etc.
+
+\item Examples: list some examples from the literature (linear models, noise,
+    model, etc.)
+
+\item Issues: outliers, computational cost
+
+\item Scaling: approximate and exact methods
+
+\end{enumerate}
+
+Gaussian Processes (GPs) are a class of stochastic models that have been used
+in the astronomical literature for more than a century\footnote{The Dutch
+astronomer T.~N.~Thiele has been credited as one of the earliest users of
+GPs in 1880 \citep{Lauritzen:1981}.}, but as probabilistic methods for data
+analysis become more popular, these methods have seen a resurgence over the
+past decade.
+Outside of the astronomy, there is a rich literature in statistics, computer
+science, and other fields discussing the implementation and use of GPs as a
+computational tool.
+The quintessential reference is the textbook \emph{Gaussian Processes for
+Machine Learning} \citep{Rasmussen:2006} and much of the discussion in this
+paper draws from this reference, but a clear pedagogical introduction---with
+astronomers in mind---is lacking in the literature.
+The goal of this paper is to fill this gap and enable more astronomers to
+confidently use GPs in their work, or confidently justify not using them.
+We also summarize some of the important developments from other fields and
+discuss their implications for GPs in astronomy.
+
+A useful way of thinking about GP models is that they are an extension of more
+traditional regression methods where we fit for the parameters of a
+deterministic function by minimizing the (scaled) residuals between the model
+predictions and the observations.
+When using GPs, we model both the \emph{mean function} (as before) and the
+\emph{covariance function}.
+This intuitive generalization allows us to take into account stochastic
+effects like correlated noise or model misspecification.
+If this isn't clear, don't worry because we will return to more specific
+examples in the following pages.
+
+\section{Motivating example: Fitting a line to data}
+
+To motivate our discussion, let's start with the classic data analysis
+problem: fitting a line to data.\footnote{A detailed discussion of this
+problem can be found elsewhere \citep{Hogg:2010}.}
+In this example, we have simulated a dataset using a linear model, but we have
+also introduced some correlated noise (more on this shortly).
+The data are shown in SOMEFIGURE with the ``true'' linear model superimposed.
+In this case, we are interested in placing constraints on the parameters of
+this linear model (slope $m$ and intercept $b$) conditioned on the observed
+set of $N$ data points ${\{x_n,\,y_n,\,\sigma_n\}}_{n=1}^N$.
+A typical way of doing this inference would be to compute the weighted linear
+least squares solution \citep[see][for example]{Hogg:2010,Ivezic:2014}.
+This solution is plotted as the SOMECOLOR contour in SOMEFIGURE.\footnote{It
+is worth noting that for this example, we have assumed improper uniform priors
+on $m$ and $b$, and the contours are the ``one-sigma'' credible intervals on
+the resulting posterior.}
+
 
 \section{Notation}
 
