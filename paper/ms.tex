@@ -45,6 +45,7 @@
 \newcommand{\eqalt}[1]{Equation~\eqref{#1}}
 \newcommand{\eqlabel}[1]{\label{eq:#1}}
 
+\newcommand{\documentname}{\textsl{Article}}
 \newcommand{\sectionname}{Section}
 \newcommand{\sectref}[1]{\ref{sect:#1}}
 \newcommand{\Sect}[1]{\sectionname~\sectref{#1}}
@@ -66,6 +67,9 @@
 
 \newcommand{\response}[1]{{\color{blue}#1}}
 
+\shorttitle{gaussian processes in astronomy}
+\shortauthors{foreman-mackey}
+
 \begin{document}
 \sloppy\sloppypar\raggedbottom\frenchspacing
 
@@ -80,21 +84,42 @@
 \affiliation{Center for Computational Astrophysics, Flatiron Institute, New York, NY}
 
 \begin{abstract}\noindent
-
-    This is an abstract.
-
+Gaussian processes provide a flexible framework
+for modeling nuisances or systematics that are unknown, non-linear functions of known
+control parameters.
+Examples include stochastic variability (as a function of time) of stars, wavelength-trace
+or continuum calibration (as a function of wavelength) in spectrographs,
+or dust (as a function of spatial position) in the Milky Way.
+In this purely pedagogical \documentname, I explain what Gaussian processes are,
+show examples of their use, provide specific advice for implementation, and discuss their
+limitations and scope of applicability.
+A Gaussian process can be thought of as a prior over a space of functions,
+or a function with a formally infinite number of free parameters (a non-parametric model),
+or a model for correlated Gaussian noise;
+I introduce the processes through the latter point of view, but show how the multiple
+views are related by showing that they can be used to deliver posterior beliefs
+over continuous functions that explain noisy data.
+I connect the idea of the Gaussian process to ideas (common in
+data analysis) of simultaneously fitting and marginalizing out additive nuisances.
+Most uses of Gaussian process in astronomy have been in the context of functions of one
+or a few variables (time, or space, or wavelength); I emphasize that there might be
+valuable applications in which the ambient dimension is far larger (for example, to model
+nonlinear functions of thousands of elements of housekeeping data), and show some examples.
+In certain limits, Gaussian processes can be physically motivated as the response
+of a linear system to Gaussian white-noise forcing, which makes them interesting for
+modeling finite-Q oscillations in, for example, asteroseismology; I give some examples.
+Finally, I discuss ways to make Gaussian processes fast, by exploiting problem structure,
+and point to relevant literature and software.
 \end{abstract}
 
 \keywords{%
- %methods: data analysis
- %---
- %methods: statistical
- %---
- %asteroseismology
- %---
- %stars: rotation
- %---
- %planetary systems
+ asteroseismology
+ ---
+ methods: data analysis
+ ---
+ methods: statistical
+ ---
+ methods: numerical
 }
 
 \section{Introduction}
