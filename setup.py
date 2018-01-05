@@ -114,6 +114,13 @@ class build_ext(_build_ext):
         for ext in self.extensions:
             ext.include_dirs = include_dirs + ext.include_dirs
 
+        # Building on RTDs takes a bit of special care
+        if os.environ.get("READTHEDOCS", None) == "True":
+            for ext in self.extensions:
+                ext.extra_compile_args = ["-std=c++14", "-O0"]
+            _build_ext.build_extensions(self)
+            return
+
         # Compiler flags
         ct = self.compiler.compiler_type
         opts = self.c_opts.get(ct, [])

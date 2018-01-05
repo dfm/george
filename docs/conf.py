@@ -43,7 +43,7 @@ master_doc = "index"
 
 # General information about the project.
 project = u"George"
-copyright = u"2012-2017 Dan Foreman-Mackey"
+copyright = u"2012-2018 Dan Foreman-Mackey"
 
 version = george.__version__
 release = george.__version__
