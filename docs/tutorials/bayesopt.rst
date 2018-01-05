@@ -22,7 +22,7 @@ This notebook was made with the following version of george:
 
 .. parsed-literal::
 
-    '0.3.1.dev0'
+    '0.3.1'
 
 
 

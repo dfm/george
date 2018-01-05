@@ -22,7 +22,7 @@ This notebook was made with the following version of george:
 
 .. parsed-literal::
 
-    '0.3.0'
+    '0.3.1'
 
 
 
@@ -119,8 +119,8 @@ hyperparameters in the ``GP.grad_lnlikelihood`` function:
 
 .. parsed-literal::
 
-    -608.938634448
-    [  1.20325990e-02   5.65011826e+02   4.94824766e-02  -1.20640197e+00
+    -608.938634447
+    [  1.20325990e-02   5.65011826e+02   4.94824823e-02  -1.20640197e+00
        3.33835864e+00   2.43343814e-01   7.10415081e+00  -5.38311429e+03
        1.96801995e+01  -2.05383850e+01  -5.36816015e+01  -1.32619973e-02
       -6.14334711e-03]
@@ -161,8 +161,8 @@ model as follows:
 
 .. parsed-literal::
 
-    -608.938634448
-    -297.39949848
+    -608.938634447
+    -299.16486543
 
 
 **Warning:** *An optimization code something like this should work on
@@ -277,8 +277,14 @@ probability distribution:
     pl.ylabel("CO$_2$ in ppm");
 
 
+.. parsed-literal::
 
-.. image:: hyper_files/hyper_18_0.png
+    /Users/dforeman/research/projects/george/george/utils.py:30: RuntimeWarning: covariance is not positive-semidefinite.
+      samples = np.random.multivariate_normal(mean, matrix, N)
+
+
+
+.. image:: hyper_files/hyper_18_1.png
 
 
 Comparing this to the same figure in the previous section, you’ll notice

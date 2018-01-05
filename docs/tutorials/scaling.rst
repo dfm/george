@@ -22,7 +22,7 @@ This notebook was made with the following version of george:
 
 .. parsed-literal::
 
-    '0.3.0'
+    '0.3.1'
 
 
 
@@ -115,7 +115,7 @@ a recent version of scikit-learn to execute this cell):
 
 .. parsed-literal::
 
-    sklearn version: 0.18.1
+    sklearn version: 0.19.1
     133.946394918
 
 
@@ -135,7 +135,7 @@ never been able to get the heteroscedastic regression to work in GPy):
 
 .. parsed-literal::
 
-    GPy version: 1.7.7
+    GPy version: 1.8.4
     133.946345613
 
 

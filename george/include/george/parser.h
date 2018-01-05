@@ -421,6 +421,26 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
       
       size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
+      kernel = new kernels::MyLocalGaussianKernel (
+          
+          py::float_(kernel_spec.attr("x0")),
+          py::float_(kernel_spec.attr("log_w")),
+          
+          ndim,
+          py::len(axes)
+      );
+      
+
+      for (size_t i = 0; i < py::len(axes); ++i) {
+        kernel->set_axis(i, py::int_(axes[py::int_(i)]));
+      }
+
+      break; }
+    
+    case 12: {
+      
+      size_t ndim = py::int_(kernel_spec.attr("ndim"));
+      py::list axes = py::list(kernel_spec.attr("axes"));
       kernel = new kernels::PolynomialKernel (
           
           py::float_(kernel_spec.attr("log_sigma2")),
@@ -437,7 +457,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 12: {
+    case 13: {
       
       py::object metric = kernel_spec.attr("metric");
       size_t metric_type = py::int_(metric.attr("metric_type"));

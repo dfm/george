@@ -22,7 +22,7 @@ This notebook was made with the following version of george:
 
 .. parsed-literal::
 
-    '0.3.0'
+    '0.3.1'
 
 
 
@@ -107,6 +107,12 @@ following contents:
             double d1 = x1 - x0, d2 = x2 - x0,
                    arg = (d1*d1 + d2*d2) * inv_2w;
             return exp(-arg) * arg;
+        x1: |
+            double d1 = x1 - x0, d2 = x2 - x0;
+            return -2.0 * exp(-(d1*d1 + d2*d2) * inv_2w) * d1 * inv_2w;
+        x2: |
+            double d1 = x1 - x0, d2 = x2 - x0;
+            return -2.0 * exp(-(d1*d1 + d2*d2) * inv_2w) * d2 * inv_2w;
 
 This file is written in a markup language called YAML and there are a
 lot of online resources for the details of the syntax but let's go

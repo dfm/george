@@ -22,7 +22,7 @@ This notebook was made with the following version of george:
 
 .. parsed-literal::
 
-    '0.3.1.dev0'
+    '0.3.1'
 
 
 
@@ -345,7 +345,10 @@ George, we can write the following ln-likelihood function in Python:
 
 .. code:: python
 
-    gp = george.GP(np.var(y) * kernels.Matern32Kernel(10.0), mean=Model(**truth))
+    kwargs = dict(**truth)
+    kwargs["bounds"] = dict(location=(-2, 2))
+    mean_model = Model(**kwargs)
+    gp = george.GP(np.var(y) * kernels.Matern32Kernel(10.0), mean=mean_model)
     gp.compute(t, yerr)
     
     def lnprob2(p):
@@ -367,11 +370,11 @@ As before, let’s run MCMC on this model:
     print("Running second burn-in...")
     p0 = p0[np.argmax(lp)] + 1e-8 * np.random.randn(nwalkers, ndim)
     sampler.reset()
-    p0, _, _ = sampler.run_mcmc(p0, 1000)
+    p0, _, _ = sampler.run_mcmc(p0, 2000)
     sampler.reset()
     
     print("Running production...")
-    sampler.run_mcmc(p0, 1000);
+    sampler.run_mcmc(p0, 2000);
 
 
 .. parsed-literal::

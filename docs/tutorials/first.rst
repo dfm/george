@@ -22,7 +22,7 @@ This notebook was made with the following version of george:
 
 .. parsed-literal::
 
-    '0.3.0'
+    '0.3.1'
 
 
 
@@ -119,10 +119,10 @@ function—to fit for the maximum likelihood parameters:
 
 .. parsed-literal::
 
-          fun: 9.225282556043892
+          fun: 9.225282556043894
      hess_inv: array([[ 0.52320809,  0.30041273],
            [ 0.30041273,  0.40708074]])
-          jac: array([ -5.07047667e-06,   2.56077807e-06])
+          jac: array([ -5.07047669e-06,   2.56077806e-06])
       message: 'Optimization terminated successfully.'
          nfev: 10
           nit: 8
