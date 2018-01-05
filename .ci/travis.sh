@@ -7,6 +7,8 @@ then
   then
     echo "Building the paper..."
     export GEORGE_BUILDING_PAPER=true
+    mkdir -p ~/.config/Tectonic
+    cp .ci/tectonic.config.toml ~/.config/Tectonic/config.toml
     source "$( dirname "${BASH_SOURCE[0]}" )"/setup-tectonic.sh
     return
   fi
