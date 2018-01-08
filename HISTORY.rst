@@ -1,10 +1,11 @@
 .. :changelog:
 
-0.3.1 (upcoming)
-++++++++++++++++
+0.3.1 (2018-01-08)
+++++++++++++++++++
 
 - Fixed issue where george would not compile with GCC<4.9 because of a
   compiler bug
+- Fixed bug when re-using HODLR factorizations
 
 0.3.0 (2017-07-12)
 ++++++++++++++++++
