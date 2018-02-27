@@ -217,7 +217,8 @@ if __name__ == "__main__":
         long_description=open("README.rst").read(),
         package_data={"": ["README.rst", "LICENSE", "AUTHORS.rst",
                            "HISTORY.rst"]},
-        install_requires=["numpy", "scipy", "pybind11"],
+        setup_requires["pybind11", "numpy"],
+        install_requires=["numpy", "scipy"],
         include_package_data=True,
         cmdclass=dict(build_ext=build_ext),
         classifiers=[
