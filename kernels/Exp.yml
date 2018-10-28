@@ -2,7 +2,7 @@ name: ExpKernel
 stationary: true
 
 doc: |
-    The exponential-squared kernel is a stationary kernel where the value
+    The exponential kernel is a stationary kernel where the value
     at a given radius :math:`r^2` is given by:
 
     .. math::
