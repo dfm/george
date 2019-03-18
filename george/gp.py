@@ -24,7 +24,8 @@ class GP(ModelSet):
     The basic Gaussian Process object.
 
     :param kernel:
-        An instance of a subclass of :class:`kernels.Kernel`.
+        An instance of a subclass of :class:`kernels.Kernel`. If no kernel 
+        is specified then an EmptyKernel shall be used as default.
 
     :param fit_kernel: (optional)
         If ``True``, the parameters of the kernel will be included in all
