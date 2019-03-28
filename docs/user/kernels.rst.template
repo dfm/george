@@ -102,6 +102,24 @@ follows:
     print(k.get_parameter_vector())
     # [ 0.69314718  1.60943791]
 
+However, if you decide to use higher dimension kernels, the constant value 
+will be divided by the number of dimensions and thus the  ``get_parameter_vector``
+function will return a scaled number:
+.. code-block:: python
+
+    k = 2.0 * kernels.ExpSquaredKernel(5.0, ndim = 4)
+
+   print(k.get_parameter_names())
+   # ['k1:log_constant', 'k2:metric:log_M_0_0']
+
+   print(k.get_parameter_vector())
+   # [-0.69314718  1.60943791]
+   # exp(0.69314718) * 4 = 2
+ 
+The same behaviour can be observed not only on multiplication, but also on
+summation, yielding the same results as the last example.
+
+   
 Finally, if you want to update the entire vector, you can use the
 :func:`set_vector` method:
 
