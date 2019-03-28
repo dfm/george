@@ -120,10 +120,10 @@ class Model(object):
         grad = np.empty([len(vector)] + list(value0.shape), dtype=np.float64)
         for i, v in enumerate(vector):
             vector[i] = v + _EPS
-            self.set_vector(vector)
+            self.set_parameter_vector(vector)
             value = self.get_value(*args, **kwargs)
             vector[i] = v
-            self.set_vector(vector)
+            self.set_parameter_vector(vector)
             grad[i] = (value - value0) / _EPS
         return grad
 
