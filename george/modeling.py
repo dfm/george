@@ -217,6 +217,46 @@ class Model(object):
                     for p, f in zip(self.parameter_bounds, self.unfrozen_mask)
                     if f)
 
+
+    def set_parameter_bounds(self, new_parameters):
+        """
+        Set the parameter bounds to the new values, if the parameter is not frozen
+
+        Args:
+            new_parameters (dict): The new bounds for the parameters.
+            Dictionary where the keys are the parameter names and the values
+            is a tuple with the minimum and maximum values.
+
+        """
+
+        params_to_change = new_parameters.keys()
+        new_bounds = new_parameters.values()
+
+        # sees if all values are valid
+        if not all(i in self.parameter_names for i in params_to_change):
+            raise ValueError("you have given parameter names that do not exist")         
+
+        # checks if all the bounds are either a tuple or a list 
+        if any(i for i in map(lambda v : not isinstance(v,(tuple,list)),new_bounds)):
+            raise ValueError("the bounds for each parameter must have the "
+                             "format: '(min, max)'") 
+
+        # checks if all the values have two elements
+        if any(len(i) != 2 for i in new_bounds):
+            raise ValueError("the bounds for each parameter must have the "
+                             "format: '(min, max)'") 
+
+
+        for key, element in zip(params_to_change,new_bounds):
+
+            # get the index of the parameter to be changed
+            index_parameter = self.parameter_names.index(key)
+
+            if not self.unfrozen_mask[index_parameter]:
+                self.parameter_bounds[index_parameter] = new_parameters[key]
+
+
+
     def get_parameter_vector(self, include_frozen=False):
         """
         Get an array of the parameter values in the correct order
