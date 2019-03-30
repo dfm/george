@@ -252,10 +252,12 @@ class Model(object):
             # get the index of the parameter to be changed
             index_parameter = self.parameter_names.index(key)
 
-            if not self.unfrozen_mask[index_parameter]:
-                self.parameter_bounds[index_parameter] = new_parameters[key]
+            if self.unfrozen_mask[index_parameter]:
+                print("Before : ", self.parameter_bounds)
 
+                self.parameter_bounds[index_parameter] = element
 
+                print("After: " ,self.parameter_bounds)
 
     def get_parameter_vector(self, include_frozen=False):
         """
