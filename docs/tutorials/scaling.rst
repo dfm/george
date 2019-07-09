@@ -65,7 +65,7 @@ The standard method for computing the marginalized likelihood of this
 dataset under a GP model is:
 
 .. code:: python
-
+    import george    
     from george import kernels
     kernel = np.var(y) * kernels.ExpSquaredKernel(1.0)
     
