@@ -1,3 +1,4 @@
 include README.rst LICENSE HISTORY.rst AUTHORS.rst
 graft george/include
 graft vendor
+include pyproject.toml
