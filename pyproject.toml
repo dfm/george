@@ -4,3 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 write_to = "src/george/george_version.py"
+
+[tool.coverage.run]
+relative_files = true
