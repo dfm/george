@@ -1,0 +1,6 @@
+[build-system]
+requires = ["setuptools>=40.6.0", "wheel", "setuptools_scm[toml]", "PyYAML", "jinja2", "pybind11"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "src/george/george_version.py"
