@@ -1,7 +1,7 @@
 name: Tests
 on:
   push:
-    branches: [main, github-actions]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -34,7 +34,6 @@ jobs:
           DISTUTILS_USE_SDK: 1
           MSSdk: 1
       - name: Run tests
-        shell: bash -l {0}
         run: python -m pytest --cov=george -v tests
       - name: Coveralls
         uses: AndreMiras/coveralls-python-action@develop
