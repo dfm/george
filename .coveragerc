@@ -2,7 +2,7 @@
 omit =
     docs/*
     *__init__*
-relative_files = true
+relative_files = True
 
 [report]
 exclude_lines =

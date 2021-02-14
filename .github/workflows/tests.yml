@@ -41,6 +41,7 @@ jobs:
         with:
           parallel: true
           flag-name: Unit Tests
+          base-path: src
 
   coverage:
     name: "Merge and upload coverage"
@@ -51,3 +52,4 @@ jobs:
         uses: AndreMiras/coveralls-python-action@v20201129
         with:
           parallel-finished: true
+          base-path: src
