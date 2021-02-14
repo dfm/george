@@ -24,7 +24,7 @@ class GP(ModelSet):
     The basic Gaussian Process object.
 
     :param kernel:
-        An instance of a subclass of :class:`kernels.Kernel`. If no kernel 
+        An instance of a subclass of :class:`kernels.Kernel`. If no kernel
         is specified then an EmptyKernel shall be used as default.
 
     :param fit_kernel: (optional)
@@ -60,26 +60,39 @@ class GP(ModelSet):
 
     """
 
-    def __init__(self,
-                 kernel=None,
-                 fit_kernel=True,
-                 mean=None,
-                 fit_mean=None,
-                 white_noise=None,
-                 fit_white_noise=None,
-                 solver=None,
-                 **kwargs):
+    def __init__(
+        self,
+        kernel=None,
+        fit_kernel=True,
+        mean=None,
+        fit_mean=None,
+        white_noise=None,
+        fit_white_noise=None,
+        solver=None,
+        **kwargs
+    ):
         self._computed = False
         self._alpha = None
         self._y = None
 
-        super(GP, self).__init__([
-            ("mean",
-             ConstantModel(0.0) if mean is None else _parse_model(mean)),
-            ("white_noise", ConstantModel(np.log(TINY))
-             if white_noise is None else _parse_model(white_noise)),
-            ("kernel", kernels.EmptyKernel() if kernel is None else kernel),
-        ])
+        super(GP, self).__init__(
+            [
+                (
+                    "mean",
+                    ConstantModel(0.0) if mean is None else _parse_model(mean),
+                ),
+                (
+                    "white_noise",
+                    ConstantModel(np.log(TINY))
+                    if white_noise is None
+                    else _parse_model(white_noise),
+                ),
+                (
+                    "kernel",
+                    kernels.EmptyKernel() if kernel is None else kernel,
+                ),
+            ]
+        )
 
         # Default behavior for fit_mean and fit_white_noise. If a constant is
         # provided and the fit_* parameter is not, we shouldn't try to fit
@@ -104,14 +117,15 @@ class GP(ModelSet):
             self.models["kernel"].freeze_all_parameters()
         if mean is None or (fit_mean is not None and not fit_mean):
             self.models["mean"].freeze_all_parameters()
-        if white_noise is None or (fit_white_noise is not None and
-                                   not fit_white_noise):
+        if white_noise is None or (
+            fit_white_noise is not None and not fit_white_noise
+        ):
             self.models["white_noise"].freeze_all_parameters()
 
         if solver is None:
             trivial = (
-                kernel is None or
-                kernel.kernel_type == kernels.EmptyKernel.kernel_type
+                kernel is None
+                or kernel.kernel_type == kernels.EmptyKernel.kernel_type
             )
             solver = TrivialSolver if trivial else BasicSolver
         self.solver_type = solver
@@ -138,10 +152,12 @@ class GP(ModelSet):
         else:
             mu = self.mean.get_value(x).flatten()
         if not np.all(np.isfinite(mu)):
-            raise ValueError("mean function returned NaN or Inf for "
-                             "parameters:\n{0}".format(
-                                 self.mean.get_parameter_dict(
-                                     include_frozen=True)))
+            raise ValueError(
+                "mean function returned NaN or Inf for "
+                "parameters:\n{0}".format(
+                    self.mean.get_parameter_dict(include_frozen=True)
+                )
+            )
         return mu
 
     def _call_mean_gradient(self, x):
@@ -150,10 +166,12 @@ class GP(ModelSet):
         else:
             mu = self.mean.get_gradient(x)
         if np.any(np.isnan(mu)) or np.any(np.isinf(mu)):
-            raise ValueError("mean gradient function returned NaN or Inf for "
-                             "parameters:\n{0}".format(
-                                 self.mean.get_parameter_dict(
-                                     include_frozen=True)))
+            raise ValueError(
+                "mean gradient function returned NaN or Inf for "
+                "parameters:\n{0}".format(
+                    self.mean.get_parameter_dict(include_frozen=True)
+                )
+            )
         return mu
 
     @property
@@ -191,9 +209,9 @@ class GP(ModelSet):
 
         """
         return (
-            self._computed and
-            self.solver.computed and
-            (self.kernel is None or not self.kernel.dirty)
+            self._computed
+            and self.solver.computed
+            and (self.kernel is None or not self.kernel.dirty)
         )
 
     @computed.setter
@@ -223,8 +241,9 @@ class GP(ModelSet):
             t = np.atleast_2d(t).T
 
         # Double check the dimensions against the kernel.
-        if len(t.shape) != 2 or (self.kernel is not None and
-                                 t.shape[1] != self.kernel.ndim):
+        if len(t.shape) != 2 or (
+            self.kernel is not None and t.shape[1] != self.kernel.ndim
+        ):
             raise ValueError("Dimension mismatch")
 
         return t
@@ -241,15 +260,17 @@ class GP(ModelSet):
     def _compute_alpha(self, y, cache):
         # Recalculate alpha only if y is not the same as the previous y.
         if not cache:
-            r = np.ascontiguousarray(self._check_dimensions(y) -
-                                     self._call_mean(self._x),
-                                     dtype=np.float64)
+            r = np.ascontiguousarray(
+                self._check_dimensions(y) - self._call_mean(self._x),
+                dtype=np.float64,
+            )
             return self.solver.apply_inverse(r, in_place=True).flatten()
         if self._alpha is None or not np.array_equiv(y, self._y):
             self._y = y
-            r = np.ascontiguousarray(self._check_dimensions(y) -
-                                     self._call_mean(self._x),
-                                     dtype=np.float64)
+            r = np.ascontiguousarray(
+                self._check_dimensions(y) - self._call_mean(self._x),
+                dtype=np.float64,
+            )
             self._alpha = self.solver.apply_inverse(r, in_place=True).flatten()
         return self._alpha
 
@@ -270,7 +291,7 @@ class GP(ModelSet):
 
         # Broadcast the mean function
         m = [slice(None)] + [np.newaxis for _ in range(len(r.shape) - 1)]
-        r -= self._call_mean(self._x)[m]
+        r -= self._call_mean(self._x)[tuple(m)]
 
         # Do the solve
         if len(r.shape) == 1:
@@ -297,7 +318,7 @@ class GP(ModelSet):
         self._x = self.parse_samples(x)
         self._x = np.ascontiguousarray(self._x, dtype=np.float64)
         try:
-            self._yerr2 = float(yerr)**2 * np.ones(len(x))
+            self._yerr2 = float(yerr) ** 2 * np.ones(len(x))
         except TypeError:
             self._yerr2 = self._check_dimensions(yerr) ** 2
         self._yerr2 = np.ascontiguousarray(self._yerr2, dtype=np.float64)
@@ -309,8 +330,9 @@ class GP(ModelSet):
         yerr = np.sqrt(self._yerr2 + np.exp(self._call_white_noise(self._x)))
         self.solver.compute(self._x, yerr, **kwargs)
 
-        self._const = -0.5 * (len(self._x) * np.log(2 * np.pi) +
-                              self.solver.log_determinant)
+        self._const = -0.5 * (
+            len(self._x) * np.log(2 * np.pi) + self.solver.log_determinant
+        )
         self.computed = True
         self._alpha = None
 
@@ -338,8 +360,10 @@ class GP(ModelSet):
         return True
 
     def lnlikelihood(self, y, quiet=False):
-        warnings.warn("'lnlikelihood' is deprecated. Use 'log_likelihood'",
-                      DeprecationWarning)
+        warnings.warn(
+            "'lnlikelihood' is deprecated. Use 'log_likelihood'",
+            DeprecationWarning,
+        )
         return self.log_likelihood(y, quiet=quiet)
 
     def log_likelihood(self, y, quiet=False):
@@ -366,15 +390,17 @@ class GP(ModelSet):
             if quiet:
                 return -np.inf
             raise
-        r = np.ascontiguousarray(self._check_dimensions(y) - mu,
-                                 dtype=np.float64)
+        r = np.ascontiguousarray(
+            self._check_dimensions(y) - mu, dtype=np.float64
+        )
         ll = self._const - 0.5 * self.solver.dot_solve(r)
         return ll if np.isfinite(ll) else -np.inf
 
     def grad_lnlikelihood(self, y, quiet=False):
-        warnings.warn("'grad_lnlikelihood' is deprecated. "
-                      "Use 'grad_log_likelihood'",
-                      DeprecationWarning)
+        warnings.warn(
+            "'grad_lnlikelihood' is deprecated. " "Use 'grad_log_likelihood'",
+            DeprecationWarning,
+        )
         return self.grad_log_likelihood(y, quiet=quiet)
 
     def grad_log_likelihood(self, y, quiet=False):
@@ -422,21 +448,22 @@ class GP(ModelSet):
                 if quiet:
                     return np.zeros(len(self), dtype=np.float64)
                 raise
-            grad[n:n+l] = np.dot(mu, alpha)
+            grad[n : n + l] = np.dot(mu, alpha)
             n += l
 
         l = len(self.white_noise)
         if l:
             wn = self._call_white_noise(self._x)
             wng = self._call_white_noise_gradient(self._x)
-            grad[n:n+l] = 0.5 * np.sum((np.exp(wn)*np.diag(A))[None, :]*wng,
-                                       axis=1)
+            grad[n : n + l] = 0.5 * np.sum(
+                (np.exp(wn) * np.diag(A))[None, :] * wng, axis=1
+            )
             n += l
 
         l = len(self.kernel)
         if l:
             Kg = self.kernel.get_gradient(self._x)
-            grad[n:n+l] = 0.5 * np.einsum("ijk,ij", Kg, A)
+            grad[n : n + l] = 0.5 * np.einsum("ijk,ij", Kg, A)
 
         return grad
 
@@ -452,11 +479,9 @@ class GP(ModelSet):
             return np.zeros(len(vector))
         return -self.grad_log_likelihood(y, quiet=quiet)
 
-    def predict(self, y, t,
-                return_cov=True,
-                return_var=False,
-                cache=True,
-                kernel=None):
+    def predict(
+        self, y, t, return_cov=True, return_var=False, cache=True, kernel=None
+    ):
         """
         Compute the conditional predictive distribution of the model. You must
         call :func:`GP.compute` before this function.
@@ -512,7 +537,7 @@ class GP(ModelSet):
         KinvKxs = self.solver.apply_inverse(Kxs.T)
         if return_var:
             var = kernel.get_value(xs, diag=True)
-            var -= np.sum(Kxs.T*KinvKxs, axis=0)
+            var -= np.sum(Kxs.T * KinvKxs, axis=0)
             return mu, var
 
         cov = kernel.get_value(xs)
@@ -570,8 +595,9 @@ class GP(ModelSet):
         x = self.parse_samples(t)
         cov = self.get_matrix(x)
         cov[np.diag_indices_from(cov)] += TINY
-        return multivariate_gaussian_samples(cov, size,
-                                             mean=self._call_mean(x))
+        return multivariate_gaussian_samples(
+            cov, size, mean=self._call_mean(x)
+        )
 
     def get_matrix(self, x1, x2=None):
         """
