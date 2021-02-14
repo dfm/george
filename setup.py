@@ -49,9 +49,7 @@ if __name__ == "__main__":
 
     # The include directory for the Eigen headers
     localincl = "vendor"
-    if not os.path.exists(
-        os.path.join(localincl, "eigen_3.3.4", "Eigen", "Core")
-    ):
+    if not os.path.exists(os.path.join(localincl, "eigen", "Eigen", "Core")):
         raise RuntimeError("couldn't find Eigen headers")
 
     # If the kernel specifications are included (development mode) re-compile
@@ -65,7 +63,7 @@ if __name__ == "__main__":
 
     include_dirs = [
         os.path.join("src", "george", "include"),
-        os.path.join(localincl, "eigen_3.3.4"),
+        os.path.join(localincl, "eigen"),
     ]
     extensions = [
         Pybind11Extension(

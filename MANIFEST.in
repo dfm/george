@@ -3,4 +3,3 @@ exclude .*
 prune .github
 prune docs
 prune paper
-prune .ci
