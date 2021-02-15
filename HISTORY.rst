@@ -1,5 +1,11 @@
 .. :changelog:
 
+0.4.0 (2021-02-15)
+++++++++++++++++++
+
+- Updated packaging and installation issues
+- Updated CI and Python version testing
+
 0.3.1 (2018-01-08)
 ++++++++++++++++++
 

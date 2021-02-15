@@ -11,8 +11,9 @@ dist
 build
 *.cpp
 .coverage
-george/kernels.py
-george/kerneldefs.pxd
-george/solvers/kerneldefs.pxd
-george/include/george/kernels.h
+src/george/george_version.py
+src/george/kernels.py
+src/george/kerneldefs.pxd
+src/george/solvers/kerneldefs.pxd
+src/george/include/george/kernels.h
 kernels/MyLocalGaussian.yml

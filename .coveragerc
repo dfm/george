@@ -1,8 +1,10 @@
-[report]
+[run]
 omit =
     docs/*
     *__init__*
+relative_files = True
 
+[report]
 exclude_lines =
     pragma: no cover
     raise NotImplementedError

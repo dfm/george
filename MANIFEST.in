@@ -1,3 +1,5 @@
-include README.rst LICENSE HISTORY.rst AUTHORS.rst
-graft george/include
-graft vendor
+
+exclude .*
+prune .github
+prune docs
+prune paper

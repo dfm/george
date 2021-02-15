@@ -21,13 +21,11 @@ George is being actively developed in `a public repository on GitHub
 .. image:: https://img.shields.io/badge/GitHub-dfm%2Fgeorge-blue.svg?style=flat
     :target: https://github.com/dfm/george
 .. image:: http://img.shields.io/badge/license-MIT-blue.svg?style=flat
-    :target: https://github.com/dfm/george/blob/master/LICENSE
-.. image:: http://img.shields.io/travis/dfm/george/master.svg?style=flat
-    :target: https://travis-ci.org/dfm/george
-.. image:: https://ci.appveyor.com/api/projects/status/xy4ts3v3sk5lo5ll?svg=true&style=flat
-    :target: https://ci.appveyor.com/project/dfm/george
-.. image:: https://coveralls.io/repos/github/dfm/george/badge.svg?branch=master&style=flat
-    :target: https://coveralls.io/github/dfm/george?branch=master
+    :target: https://github.com/dfm/george/blob/main/LICENSE
+.. image:: https://github.com/dfm/george/workflows/Tests/badge.svg?style=flat
+    :target: https://github.com/dfm/george/actions?query=workflow%3ATests
+.. image:: https://coveralls.io/repos/github/dfm/george/badge.svg?branch=main&style=flat
+    :target: https://coveralls.io/github/dfm/george?branch=main
 
 
 .. toctree::
@@ -63,7 +61,7 @@ Contributors
 License & Attribution
 ---------------------
 
-Copyright 2012-2017 Daniel Foreman-Mackey and contributors.
+Copyright 2012-2021 Daniel Foreman-Mackey and contributors.
 
 George is being developed by `Dan Foreman-Mackey <http://dan.iel.fm>`_ in a
 `public GitHub repository <https://github.com/dfm/george>`_.
