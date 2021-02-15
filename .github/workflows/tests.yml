@@ -104,7 +104,7 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    needs: [build_wheels, build_sdist]
+    needs: [tests, build_wheels, build_sdist]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && github.event.action == 'published'
     steps:
@@ -113,7 +113,7 @@ jobs:
           name: artifact
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@master
+      - uses: pypa/gh-action-pypi-publish@v1.4.2
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}

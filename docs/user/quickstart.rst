@@ -31,7 +31,7 @@ George can also be installed using `pip <https://pip.pypa.io>`_:
 
 .. code-block:: bash
 
-    pip install george
+    python -m pip install george
 
 .. _source:
 
@@ -43,7 +43,7 @@ The source code for george can be downloaded `from GitHub
 
 .. code-block:: bash
 
-    git clone https://github.com/dfm/george.git
+    git clone --recursive https://github.com/dfm/george.git
 
 
 .. _python-deps:
@@ -73,7 +73,7 @@ After installing the dependencies, you can build george by running:
 
 .. code-block:: bash
 
-    python setup.py install
+    python -m pip install -e .
 
 in the root directory of the source tree.
 
@@ -85,7 +85,7 @@ execute:
 
 .. code-block:: bash
 
-    py.test -v
+    python -m pytest -v tests
 
 All of the tests should (of course) pass.
 If any of the tests don't pass and if you can't sort out why, `open an issue
