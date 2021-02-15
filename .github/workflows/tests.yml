@@ -37,12 +37,6 @@ jobs:
           MSSdk: 1
       - name: Run tests
         run: python -m pytest -v tests
-      - name: Coveralls
-        uses: AndreMiras/coveralls-python-action@v20201129
-        if: runner.os == 'Linux'
-        with:
-          parallel: true
-          flag-name: Unit Tests
 
   coverage:
     name: "Run tests with coverage"
