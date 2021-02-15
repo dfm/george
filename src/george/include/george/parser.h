@@ -61,26 +61,6 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
     
     case 1: {
       
-      size_t ndim = py::int_(kernel_spec.attr("ndim"));
-      py::list axes = py::list(kernel_spec.attr("axes"));
-      kernel = new kernels::MyLocalGaussianKernel (
-          
-          py::float_(kernel_spec.attr("x0")),
-          py::float_(kernel_spec.attr("log_w")),
-          
-          ndim,
-          py::len(axes)
-      );
-      
-
-      for (size_t i = 0; i < py::len(axes); ++i) {
-        kernel->set_axis(i, py::int_(axes[py::int_(i)]));
-      }
-
-      break; }
-    
-    case 2: {
-      
       py::object metric = kernel_spec.attr("metric");
       size_t metric_type = py::int_(metric.attr("metric_type"));
       size_t ndim = py::int_(metric.attr("ndim"));
@@ -143,7 +123,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 3: {
+    case 2: {
       
       py::object metric = kernel_spec.attr("metric");
       size_t metric_type = py::int_(metric.attr("metric_type"));
@@ -204,7 +184,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 4: {
+    case 3: {
       
       size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
@@ -224,7 +204,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 5: {
+    case 4: {
       
       size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
@@ -242,7 +222,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 6: {
+    case 5: {
       
       size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
@@ -261,7 +241,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 7: {
+    case 6: {
       
       py::object metric = kernel_spec.attr("metric");
       size_t metric_type = py::int_(metric.attr("metric_type"));
@@ -322,7 +302,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 8: {
+    case 7: {
       
       size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
@@ -342,7 +322,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 9: {
+    case 8: {
       
       size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
@@ -361,7 +341,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 10: {
+    case 9: {
       
       py::object metric = kernel_spec.attr("metric");
       size_t metric_type = py::int_(metric.attr("metric_type"));
@@ -422,7 +402,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 11: {
+    case 10: {
       
       py::object metric = kernel_spec.attr("metric");
       size_t metric_type = py::int_(metric.attr("metric_type"));
@@ -483,7 +463,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 12: {
+    case 11: {
       
       size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));
@@ -503,7 +483,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
 
       break; }
     
-    case 13: {
+    case 12: {
       
       size_t ndim = py::int_(kernel_spec.attr("ndim"));
       py::list axes = py::list(kernel_spec.attr("axes"));

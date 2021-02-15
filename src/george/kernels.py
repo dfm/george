@@ -5,7 +5,6 @@ from __future__ import division, print_function
 __all__ = [
     "Kernel", "Sum", "Product",
     "LinearKernel",
-    "MyLocalGaussianKernel",
     "RationalQuadraticKernel",
     "ExpKernel",
     "LocalGaussianKernel",
@@ -301,42 +300,6 @@ class LinearKernel (Kernel):
         self.dirty = True
     
 
-class BaseMyLocalGaussianKernel (Model):
-    parameter_names = ("x0", "log_w", )
-
-
-class MyLocalGaussianKernel (Kernel):
-    r"""
-    You should always document your code.
-
-    """
-
-    kernel_type = 1
-    stationary = False
-
-    def __init__(self,
-                 x0=None,
-                 log_w=None,
-                 bounds=None,
-                 ndim=1,
-                 axes=None):
-        
-        self.subspace = Subspace(ndim, axes=axes)
-        self.ndim = self.subspace.ndim
-        self.axes = self.subspace.axes
-
-        kwargs = dict(x0=x0, log_w=log_w, )
-        if bounds is not None:
-            kwargs["bounds"] = bounds
-        base = BaseMyLocalGaussianKernel(**kwargs)
-        super(MyLocalGaussianKernel, self).__init__([
-            (None, base), 
-        ])
-
-        # Common setup.
-        self.dirty = True
-    
-
 class BaseRationalQuadraticKernel (Model):
     parameter_names = ("log_alpha", )
 
@@ -356,7 +319,7 @@ class RationalQuadraticKernel (Kernel):
 
     """
 
-    kernel_type = 2
+    kernel_type = 1
     stationary = True
 
     def __init__(self,
@@ -425,7 +388,7 @@ class ExpKernel (Kernel):
 
     """
 
-    kernel_type = 3
+    kernel_type = 2
     stationary = True
 
     def __init__(self,
@@ -498,7 +461,7 @@ class LocalGaussianKernel (Kernel):
 
     """
 
-    kernel_type = 4
+    kernel_type = 3
     stationary = False
 
     def __init__(self,
@@ -534,7 +497,7 @@ class EmptyKernel (Kernel):
 
     """
 
-    kernel_type = 5
+    kernel_type = 4
     stationary = False
 
     def __init__(self,
@@ -580,7 +543,7 @@ class CosineKernel (Kernel):
 
     """
 
-    kernel_type = 6
+    kernel_type = 5
     stationary = False
 
     def __init__(self,
@@ -622,7 +585,7 @@ class Matern52Kernel (Kernel):
 
     """
 
-    kernel_type = 7
+    kernel_type = 6
     stationary = True
 
     def __init__(self,
@@ -700,7 +663,7 @@ class ExpSine2Kernel (Kernel):
 
     """
 
-    kernel_type = 8
+    kernel_type = 7
     stationary = False
 
     def __init__(self,
@@ -746,7 +709,7 @@ class ConstantKernel (Kernel):
 
     """
 
-    kernel_type = 9
+    kernel_type = 8
     stationary = False
 
     def __init__(self,
@@ -787,7 +750,7 @@ class ExpSquaredKernel (Kernel):
 
     """
 
-    kernel_type = 10
+    kernel_type = 9
     stationary = True
 
     def __init__(self,
@@ -856,7 +819,7 @@ class Matern32Kernel (Kernel):
 
     """
 
-    kernel_type = 11
+    kernel_type = 10
     stationary = True
 
     def __init__(self,
@@ -931,7 +894,7 @@ class PolynomialKernel (Kernel):
 
     """
 
-    kernel_type = 12
+    kernel_type = 11
     stationary = False
 
     def __init__(self,
@@ -978,7 +941,7 @@ class DotProductKernel (Kernel):
 
     """
 
-    kernel_type = 13
+    kernel_type = 12
     stationary = False
 
     def __init__(self,
