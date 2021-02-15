@@ -2,6 +2,7 @@
 omit =
     docs/*
     *__init__*
+relative_files = True
 
 [report]
 exclude_lines =
@@ -11,8 +12,3 @@ exclude_lines =
     except ImportError
     def __len__
     def __repr__
-
-[paths]
-source =
-    src/george
-    */site-packages/george
