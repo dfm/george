@@ -44,9 +44,6 @@ def compile_kernels(fns):
 
 
 if __name__ == "__main__":
-    import sys
-    import glob
-
     # The include directory for the Eigen headers
     localincl = "vendor"
     if not os.path.exists(os.path.join(localincl, "eigen", "Eigen", "Core")):
