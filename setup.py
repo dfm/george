@@ -44,22 +44,10 @@ def compile_kernels(fns):
 
 
 if __name__ == "__main__":
-    import sys
-    import glob
-
     # The include directory for the Eigen headers
     localincl = "vendor"
     if not os.path.exists(os.path.join(localincl, "eigen", "Eigen", "Core")):
         raise RuntimeError("couldn't find Eigen headers")
-
-    # If the kernel specifications are included (development mode) re-compile
-    # them first.
-    kernel_specs = glob.glob(os.path.join("kernels", "*.yml"))
-    if len(kernel_specs):
-        print("Compiling kernels")
-        compile_kernels(kernel_specs)
-        if "kernels" in sys.argv:
-            sys.exit()
 
     include_dirs = [
         os.path.join("src", "george", "include"),
