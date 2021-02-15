@@ -1,5 +1,9 @@
 
+graft vendor/eigen/Eigen
+
 exclude .*
 prune .github
 prune docs
 prune paper
+prune kernels
+prune templates
