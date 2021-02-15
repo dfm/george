@@ -2,7 +2,6 @@
 omit =
     docs/*
     *__init__*
-source = src/george
 relative_files = True
 
 [report]
