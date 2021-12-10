@@ -78,6 +78,9 @@ class Model(object):
         else:
             # Loop over the kwargs and set the parameter values
             params = []
+            if isinstance(self.parameter_names, str):
+                self.parameter_names = (self.parameter_names,)
+
             for k in self.parameter_names:
                 v = kwargs.pop(k, None)
                 if v is None:
