@@ -61,25 +61,34 @@ Contributors
 License & Attribution
 ---------------------
 
-Copyright 2012-2021 Daniel Foreman-Mackey and contributors.
+Copyright 2012-2022 Daniel Foreman-Mackey and contributors.
 
 George is being developed by `Dan Foreman-Mackey <http://dan.iel.fm>`_ in a
 `public GitHub repository <https://github.com/dfm/george>`_.
 The source code is made available under the terms of the MIT license.
 
-If you make use of this code, please cite `the paper which is currently on the
-ArXiv <http://arxiv.org/abs/1403.6015>`_:
+If you make use of this code, please cite `the paper which is in
+IEEE Transactions on Pattern Analysis and Machine Intelligence
+<https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A/abstract>`_:
 
 .. code-block:: tex
 
-    @article{hodlr,
-        author = {{Ambikasaran}, S. and {Foreman-Mackey}, D. and
-                  {Greengard}, L. and {Hogg}, D.~W. and {O'Neil}, M.},
-         title = "{Fast Direct Methods for Gaussian Processes}",
-          year = 2014,
-         month = mar,
-           url = http://arxiv.org/abs/1403.6015
-    }
+   @ARTICLE{2015ITPAM..38..252A,
+       author = {{Ambikasaran}, Sivaram and {Foreman-Mackey}, Daniel and {Greengard}, Leslie and {Hogg}, David W. and {O'Neil}, Michael},
+        title = "{Fast Direct Methods for Gaussian Processes}",
+      journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+     keywords = {Mathematics - Numerical Analysis, Astrophysics - Instrumentation and Methods for Astrophysics, Mathematics - Statistics Theory, Mathematics - Numerical Analysis, Astrophysics - Instrumentation and Methods for Astrophysics, Mathematics - Statistics Theory},
+         year = 2015,
+        month = jun,
+       volume = {38},
+        pages = {252},
+          doi = {10.1109/TPAMI.2015.2448083},
+archivePrefix = {arXiv},
+       eprint = {1403.6015},
+ primaryClass = {math.NA},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+   }
 
 
 Changelog
