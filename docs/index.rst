@@ -74,20 +74,20 @@ IEEE Transactions on Pattern Analysis and Machine Intelligence
 .. code-block:: tex
 
    @ARTICLE{2015ITPAM..38..252A,
-       author = {{Ambikasaran}, Sivaram and {Foreman-Mackey}, Daniel and {Greengard}, Leslie and {Hogg}, David W. and {O'Neil}, Michael},
-        title = "{Fast Direct Methods for Gaussian Processes}",
-      journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
-     keywords = {Mathematics - Numerical Analysis, Astrophysics - Instrumentation and Methods for Astrophysics, Mathematics - Statistics Theory, Mathematics - Numerical Analysis, Astrophysics - Instrumentation and Methods for Astrophysics, Mathematics - Statistics Theory},
-         year = 2015,
-        month = jun,
-       volume = {38},
-        pages = {252},
-          doi = {10.1109/TPAMI.2015.2448083},
-archivePrefix = {arXiv},
-       eprint = {1403.6015},
- primaryClass = {math.NA},
-       adsurl = {https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A},
-      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+           author = {{Ambikasaran}, Sivaram and {Foreman-Mackey}, Daniel and {Greengard}, Leslie and {Hogg}, David W. and {O'Neil}, Michael},
+            title = "{Fast Direct Methods for Gaussian Processes}",
+          journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+         keywords = {Mathematics - Numerical Analysis, Astrophysics - Instrumentation and Methods for Astrophysics, Mathematics - Statistics Theory, Mathematics - Numerical Analysis, Astrophysics - Instrumentation and Methods for Astrophysics, Mathematics - Statistics Theory},
+             year = 2015,
+            month = jun,
+           volume = {38},
+            pages = {252},
+              doi = {10.1109/TPAMI.2015.2448083},
+    archivePrefix = {arXiv},
+           eprint = {1403.6015},
+     primaryClass = {math.NA},
+           adsurl = {https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A},
+          adsnote = {Provided by the SAO/NASA Astrophysics Data System}
    }
 
 
