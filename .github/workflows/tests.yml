@@ -72,7 +72,7 @@ jobs:
           submodules: true
           fetch-depth: 0
       - uses: ilammy/msvc-dev-cmd@v1
-      - uses: joerick/cibuildwheel@v1.9.0
+      - uses: pypa/cibuildwheel@2.5.0
         env:
           CIBW_BUILD: "cp3?-*"
           CIBW_SKIP: "cp35-* *-win32 *-manylinux_i686"

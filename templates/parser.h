@@ -100,7 +100,7 @@ kernels::Kernel* parse_kernel_spec (const py::object& kernel_spec) {
       py::function f = py::function(metric.attr("get_parameter_vector"));
       py::array_t<double> vector = py::array_t<double>(f(true));
       auto data = vector.unchecked<1>();
-      for (ssize_t i = 0; i < data.shape(0); ++i) {
+      for (py::ssize_t i = 0; i < data.shape(0); ++i) {
         kernel->set_metric_parameter(i, data(i));
       }
 
