@@ -48,7 +48,7 @@ Docs...
     auto x1p = x1.unchecked<2>();
     auto x2p = x2.unchecked<2>();
     size_t n1 = x1p.shape(0), n2 = x2p.shape(0);
-    if (x1p.shape(1) != ssize_t(self.ndim()) || x2p.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
+    if (x1p.shape(1) != py::ssize_t(self.ndim()) || x2p.shape(1) != py::ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result({n1, n2});
     auto resultp = result.mutable_unchecked<2>();
     for (size_t i = 0; i < n1; ++i) {
@@ -62,7 +62,7 @@ Docs...
   interface.def("value_symmetric", [](KernelInterface& self, py::array_t<double> x) {
     auto xp = x.unchecked<2>();
     size_t n = xp.shape(0);
-    if (xp.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
+    if (xp.shape(1) != py::ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result({n, n});
     auto resultp = result.mutable_unchecked<2>();
     for (size_t i = 0; i < n; ++i) {
@@ -80,7 +80,7 @@ Docs...
     auto x1p = x1.unchecked<2>();
     auto x2p = x2.unchecked<2>();
     size_t n = x1p.shape(0);
-    if (ssize_t(n) != x2p.shape(0) || x1p.shape(1) != ssize_t(self.ndim()) || x2p.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
+    if (py::ssize_t(n) != x2p.shape(0) || x1p.shape(1) != py::ssize_t(self.ndim()) || x2p.shape(1) != py::ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result(n);
     auto resultp = result.mutable_unchecked<1>();
     for (size_t i = 0; i < n; ++i) {
@@ -93,7 +93,7 @@ Docs...
     auto x1p = x1.unchecked<2>();
     auto x2p = x2.unchecked<2>();
     size_t n1 = x1p.shape(0), n2 = x2p.shape(0), size = self.size();
-    if (x1p.shape(1) != ssize_t(self.ndim()) || x2p.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
+    if (x1p.shape(1) != py::ssize_t(self.ndim()) || x2p.shape(1) != py::ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result({n1, n2, size});
     auto resultp = result.mutable_unchecked<3>();
     auto w = which.unchecked<1>();
@@ -109,7 +109,7 @@ Docs...
   interface.def("gradient_symmetric", [](KernelInterface& self, py::array_t<unsigned> which, py::array_t<double> x) {
     auto xp = x.unchecked<2>();
     size_t n = xp.shape(0), size = self.size();
-    if (xp.shape(1) != ssize_t(self.ndim())) throw george::dimension_mismatch();
+    if (xp.shape(1) != py::ssize_t(self.ndim())) throw george::dimension_mismatch();
     py::array_t<double> result({n, n, size});
     auto resultp = result.mutable_unchecked<3>();
     auto w = which.unchecked<1>();
@@ -128,7 +128,7 @@ Docs...
     auto x1p = x1.unchecked<2>();
     auto x2p = x2.unchecked<2>();
     size_t n1 = x1p.shape(0), n2 = x2p.shape(0), ndim = self.ndim();
-    if (x1p.shape(1) != ssize_t(ndim) || x2p.shape(1) != ssize_t(ndim)) throw george::dimension_mismatch();
+    if (x1p.shape(1) != py::ssize_t(ndim) || x2p.shape(1) != py::ssize_t(ndim)) throw george::dimension_mismatch();
     py::array_t<double> result({n1, n2, ndim});
     auto resultp = result.mutable_unchecked<3>();
     for (size_t i = 0; i < n1; ++i) {
@@ -144,7 +144,7 @@ Docs...
     auto x1p = x1.unchecked<2>();
     auto x2p = x2.unchecked<2>();
     size_t n1 = x1p.shape(0), n2 = x2p.shape(0), ndim = self.ndim();
-    if (x1p.shape(1) != ssize_t(ndim) || x2p.shape(1) != ssize_t(ndim)) throw george::dimension_mismatch();
+    if (x1p.shape(1) != py::ssize_t(ndim) || x2p.shape(1) != py::ssize_t(ndim)) throw george::dimension_mismatch();
     py::array_t<double> result({n1, n2, ndim});
     auto resultp = result.mutable_unchecked<3>();
     for (size_t i = 0; i < n1; ++i) {
