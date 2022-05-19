@@ -26,15 +26,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Set up windows compilers
-        uses: ilammy/msvc-dev-cmd@v1
       - name: Install dependencies
         run: |
           python -m pip install -U pip pytest
           python -m pip install .
-        env:
-          DISTUTILS_USE_SDK: 1
-          MSSdk: 1
       - name: Run tests
         run: python -m pytest -v tests
 
@@ -71,13 +66,10 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-      - uses: ilammy/msvc-dev-cmd@v1
       - uses: pypa/cibuildwheel@2.5.0
         env:
           CIBW_SKIP: "*-win32 *-manylinux_i686"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          DISTUTILS_USE_SDK: 1
-          MSSdk: 1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
