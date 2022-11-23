@@ -72,12 +72,33 @@ class LinearWhiteNoise(Model):
         return dict(m=x, b=np.ones(len(x)))
 
 
+class LinearWhiteNoiseWithoutGrad(Model):
+    parameter_names = ("m", "b")
+
+    def get_value(self, x):
+        return self.m * x + self.b
+
+
 def test_gp_callable_white_noise(N=50, seed=1234):
     np.random.seed(seed)
     x = np.random.uniform(0, 5)
     y = 5 + np.sin(x)
     gp = GP(10. * kernels.ExpSquaredKernel(1.3), mean=5.0,
             white_noise=LinearWhiteNoise(-6, 0.01),
+            fit_white_noise=True)
+    gp.compute(x)
+    check_gradient(gp, y)
+
+    gp.freeze_parameter("white_noise:m")
+    check_gradient(gp, y)
+
+
+def test_gp_callable_white_noise_without_grad(N=50, seed=1234):
+    np.random.seed(seed)
+    x = np.random.uniform(0, 5)
+    y = 5 + np.sin(x)
+    gp = GP(10. * kernels.ExpSquaredKernel(1.3), mean=5.0,
+            white_noise=LinearWhiteNoiseWithoutGrad(-6, 0.01),
             fit_white_noise=True)
     gp.compute(x)
     check_gradient(gp, y)
