@@ -11,6 +11,34 @@ from ._hodlr import HODLRSolver as HODLRSolverInterface
 
 
 class HODLRSolver(BasicSolver):
+    r"""
+    A solver using `Sivaram Amambikasaran's HODLR algorithm
+    <http://arxiv.org/abs/1403.6015>`_ to approximately solve the GP linear
+    algebra in :math:`\mathcal{O}(N\,\log^2 N)`.
+
+    :param kernel:
+        An instance of a subclass of :class:`kernels.Kernel`.
+    :param min_size: (optional[int])
+        The block size where the solver switches to a general direct 
+        factorization algorithm. This can be tuned for platform and 
+        problem specific performance and accuracy. As a general rule,
+        larger values will be more accurate and slower, but there is some
+        overhead for very small values, so we recommend choosing values in the
+        hundreds. (default: ``100``)
+    :param tol: (optional[float])
+        The precision tolerance for the low-rank approximation. 
+        This value is used as an approximate limit on the Frobenius norm 
+        between the low-rank approximation and the true matrix
+        when reconstructing the off-diagonal blocks. Smaller values of ``tol``
+        will generally give more accurate results with higher computational
+        cost. (default: ``0.1``)
+    :param seed: (optional[int])
+        The low-rank approximation method within the HODLR algorithm
+        is not deterministic and, without a fixed seed, the method
+        can give different results for the same matrix. Therefore, we require
+        that the user provide a seed for the random number generator.
+        (default: ``42``)
+    """
 
     def __init__(self, kernel, min_size=100, tol=0.1, seed=42):
         self.min_size = min_size
