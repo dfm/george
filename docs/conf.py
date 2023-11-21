@@ -54,22 +54,16 @@ exclude_patterns = ["_build"]
 pygments_style = "sphinx"
 
 # Readthedocs.
-on_rtd = os.environ.get("READTHEDOCS", None) == "True"
-if not on_rtd:
-    import sphinx_rtd_theme
-
-    html_theme = "sphinx_rtd_theme"
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
+html_theme = "pydata_sphinx_theme"
 htmp_theme_options = dict(
     analytics_id="analytics_id",
 )
-html_context = dict(
-    display_github=True,
-    github_user="dfm",
-    github_repo="george",
-    github_version="main",
-    conf_py_path="/docs/",
-)
+# html_context = dict(
+#     display_github=True,
+#     github_user="dfm",
+#     github_repo="george",
+#     github_version="main",
+#     conf_py_path="/docs/",
+# )
 html_static_path = ["_static"]
-html_show_sourcelink = False
+# html_show_sourcelink = False
