@@ -15,7 +15,7 @@ if len(fns):
     specs = []
     for i, fn in enumerate(fns):
         with open(fn, "r") as f:
-            specs.append(yaml.load(f.read()))
+            specs.append(yaml.safe_load(f.read()))
     tokens = []
     for spec in specs:
         if spec["stationary"]:
