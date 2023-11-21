@@ -30,26 +30,9 @@ George is being actively developed in `a public repository on GitHub
 
 .. toctree::
    :maxdepth: 2
-   :caption: User Guide
 
-   user/quickstart
-   user/kernels
-   user/gp
-   user/solvers
-   user/modeling
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorials
-
-   tutorials/first
-   tutorials/model
-   tutorials/hyper
-   tutorials/scaling
-   tutorials/new-kernel
-   tutorials/mixture
-   tutorials/bayesopt
+   user/index
+   tutorials/index
 
 
 Contributors
@@ -61,9 +44,9 @@ Contributors
 License & Attribution
 ---------------------
 
-Copyright 2012-2022 Daniel Foreman-Mackey and contributors.
+Copyright 2012-2023 Daniel Foreman-Mackey and contributors.
 
-George is being developed by `Dan Foreman-Mackey <http://dan.iel.fm>`_ in a
+George is being developed by `Dan Foreman-Mackey <https://dfm.io>`_ in a
 `public GitHub repository <https://github.com/dfm/george>`_.
 The source code is made available under the terms of the MIT license.
 

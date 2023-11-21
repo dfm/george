@@ -44,8 +44,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"George"
-copyright = u"2012-2021 Dan Foreman-Mackey"
+project = "george"
+copyright = "2012-2023 Dan Foreman-Mackey"
 
 version = george.__version__
 release = george.__version__
@@ -55,6 +55,7 @@ pygments_style = "sphinx"
 
 # Readthedocs.
 html_theme = "pydata_sphinx_theme"
+html_title = "george"
 htmp_theme_options = dict(
     analytics_id="analytics_id",
 )
