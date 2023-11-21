@@ -68,7 +68,7 @@ This makes the code fast and consistent across interfaces but it also means
 that it isn't currently possible to implement new kernel functions without
 recompiling the code.
 Almost every kernel has hyperparameters that you can set to control its
-behavior and these are controlled using the :ref:`modeling`.
+behavior and these are controlled using the :ref:`modeling-protocol`.
 
 .. code-block:: python
 

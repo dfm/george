@@ -1,8 +1,6 @@
 {%- extends 'display_priority.tpl' -%}
 
 {% block header %}
-.. module:: george
-
 .. note:: This tutorial was generated from an IPython notebook that can be
           downloaded `here <../../_static/notebooks/{{ resources.metadata.name }}.ipynb>`_.
 

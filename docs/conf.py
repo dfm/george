@@ -44,8 +44,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"George"
-copyright = u"2012-2021 Dan Foreman-Mackey"
+project = "george"
+copyright = "2012-2023 Dan Foreman-Mackey"
 
 version = george.__version__
 release = george.__version__
@@ -54,22 +54,17 @@ exclude_patterns = ["_build"]
 pygments_style = "sphinx"
 
 # Readthedocs.
-on_rtd = os.environ.get("READTHEDOCS", None) == "True"
-if not on_rtd:
-    import sphinx_rtd_theme
-
-    html_theme = "sphinx_rtd_theme"
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
+html_theme = "pydata_sphinx_theme"
+html_title = "george"
 htmp_theme_options = dict(
     analytics_id="analytics_id",
 )
-html_context = dict(
-    display_github=True,
-    github_user="dfm",
-    github_repo="george",
-    github_version="main",
-    conf_py_path="/docs/",
-)
+# html_context = dict(
+#     display_github=True,
+#     github_user="dfm",
+#     github_repo="george",
+#     github_version="main",
+#     conf_py_path="/docs/",
+# )
 html_static_path = ["_static"]
-html_show_sourcelink = False
+# html_show_sourcelink = False
