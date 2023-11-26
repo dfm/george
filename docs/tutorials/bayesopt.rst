@@ -35,8 +35,8 @@ computationally expensive. I think that the classic reference is `Jones
 et al. (1998) <https://doi.org/10.1023/A:1008306431147>`__ and the
 example here will look a bit like their section 4.1.
 
-First, we'll define the scalar objective that we want to minimize in the
-range :math:`-5 \le x \le 5`.
+First, we'll define the scalar objective, parametrized by :math:`\theta`,
+that we want to minimize in the range :math:`-5 \le \theta \le 5`.
 
 .. code:: python
 
@@ -64,7 +64,7 @@ Now, for the "Bayesian" optimization, the basic procedure that we'll
 follow is:
 
 1. Start by evaluating the model at a set of points. In this case, we'll
-   start with a uniform grid in :math:`x`.
+   start with a uniform grid in :math:`\theta`.
 2. Fit a GP (optimize the hyperparameters) to the set of training
    points.
 3. Find the input coordinate that maximizes the "expected improvement"
