@@ -3,7 +3,7 @@ name = "george"
 description = "Blazingly fast Gaussian Processes for regression."
 readme = "README.rst"
 authors = [{ name = "Daniel Foreman-Mackey", email = "foreman.mackey@gmail.com" }]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { file = "LICENSE" }
 urls = { Homepage = "https://github.com/dfm/george" }
 dependencies = ["numpy", "scipy"]
@@ -22,3 +22,6 @@ build-dir = "build/{wheel_tag}"
 
 [tool.setuptools_scm]
 write_to = "src/george/george_version.py"
+
+[tool.cibuildwheel]
+skip = "pp* *-win32 *-musllinux_* *-manylinux_i686"
