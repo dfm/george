@@ -48,7 +48,6 @@ jobs:
         run: python -m pytest -v tests
 
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -62,10 +61,7 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-      - uses: pypa/cibuildwheel@v2.16.2
-        env:
-          CIBW_SKIP: "pp-* *-win32 *-musllinux_* *_i686"
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+      - uses: pypa/cibuildwheel@v2.19.0
       - uses: actions/upload-artifact@v4
         with:
           name: binary-${{ matrix.os }}
