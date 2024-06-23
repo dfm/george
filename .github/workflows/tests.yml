@@ -71,7 +71,7 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-      - uses: pypa/cibuildwheel@v2.16.2
+      - uses: pypa/cibuildwheel@v2.19.1
         env:
           CIBW_SKIP: "*-win32 *_i686"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
