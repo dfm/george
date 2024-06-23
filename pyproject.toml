@@ -22,3 +22,6 @@ build-dir = "build/{wheel_tag}"
 
 [tool.setuptools_scm]
 write_to = "src/george/george_version.py"
+
+[tool.cibuildwheel]
+skip = "pp* *-win32 *-musllinux_* *-manylinux_i686"
