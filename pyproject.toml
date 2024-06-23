@@ -3,7 +3,7 @@ name = "george"
 description = "Blazingly fast Gaussian Processes for regression."
 readme = "README.rst"
 authors = [{ name = "Daniel Foreman-Mackey", email = "foreman.mackey@gmail.com" }]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { file = "LICENSE" }
 urls = { Homepage = "https://github.com/dfm/george" }
 dependencies = ["numpy", "scipy"]
