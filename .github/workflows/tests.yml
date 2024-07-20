@@ -86,6 +86,10 @@ jobs:
         run: python -m build --sdist .
       - name: Check the sdist
         run: python -m twine check dist/*.tar.gz
+      - name: Check sdist build
+        run: |
+          python -m pip install dist/*.tar.gz
+          python -c "import george"
       - uses: actions/upload-artifact@v4
         with:
           name: sdist
