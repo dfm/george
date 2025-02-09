@@ -115,15 +115,15 @@ class Model(object):
 
         """
         _EPS = 1.254e-5
-        vector = self.get_parameter_vector()
+        vector = self.get_parameter_vector(include_frozen=True)
         value0 = self.get_value(*args, **kwargs)
         grad = np.empty([len(vector)] + list(value0.shape), dtype=np.float64)
         for i, v in enumerate(vector):
             vector[i] = v + _EPS
-            self.set_parameter_vector(vector)
+            self.set_parameter_vector(vector, include_frozen=True)
             value = self.get_value(*args, **kwargs)
             vector[i] = v
-            self.set_parameter_vector(vector)
+            self.set_parameter_vector(vector, include_frozen=True)
             grad[i] = (value - value0) / _EPS
         return grad
 
