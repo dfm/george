@@ -53,7 +53,6 @@ jobs:
       matrix:
         os:
           - "ubuntu-22.04"
-          - "macos-12"
           - "macos-14"
           - "windows-latest"
     steps:
