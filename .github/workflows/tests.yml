@@ -61,7 +61,7 @@ jobs:
           submodules: true
           fetch-depth: 0
       - uses: pypa/cibuildwheel@v3.0.1
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: binary-${{ matrix.os }}
           path: ./wheelhouse/*.whl
@@ -89,7 +89,7 @@ jobs:
         run: |
           python -m pip install dist/*.tar.gz
           python -c "import george"
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: sdist
           path: dist/*.tar.gz
