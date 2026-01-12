@@ -60,7 +60,7 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-      - uses: pypa/cibuildwheel@v3.0.1
+      - uses: pypa/cibuildwheel@v3.3.1
       - uses: actions/upload-artifact@v6
         with:
           name: binary-${{ matrix.os }}
