@@ -101,3 +101,14 @@ def test_axis_algined_metric(seed=1234, N=100, ndim=3):
     # Compute the expected matrix.
     M2 = 0.1*np.exp(-0.5*np.sum((x[None, :, :] - x[:, None, :])**2, axis=-1))
     assert np.allclose(M0, M2)
+
+
+def test_metric_repr_rebuilds_kernel():
+    # The printed metric is a Metric, and the kernel wraps that in another
+    # Metric. That copy has to keep the same matrix.
+    original = kernels.Matern32Kernel(metric=18.9, ndim=3)
+    rebuilt = kernels.Matern32Kernel(
+        metric=original.metric,
+        block=None,
+    )
+    assert np.allclose(rebuilt.metric.to_matrix(), original.metric.to_matrix())
