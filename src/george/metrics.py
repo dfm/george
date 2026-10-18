@@ -32,12 +32,12 @@ class Metric(Model):
                  lower=True):
         if isinstance(metric, Metric):
             self.metric_type = metric.metric_type
-            self.parameter_names = metric.parameter_names
-            self.unfrozen_mask = metric.unfrozen_mask
-            self.set_parameter_vector(
-                metric.get_parameter_vector(include_frozen=True),
-                include_frozen=True)
-            self.parameter_bounds = metric.parameter_bounds
+            self.parameter_names = tuple(metric.parameter_names)
+            super(Metric, self).__init__(
+                *metric.get_parameter_vector(include_frozen=True),
+                bounds=list(metric.parameter_bounds),
+            )
+            self.unfrozen_mask = np.array(metric.unfrozen_mask, copy=True)
             self.ndim = metric.ndim
             self.axes = metric.axes
             return
